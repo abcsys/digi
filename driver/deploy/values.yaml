@@ -1,0 +1,8 @@
+name: room
+namespace: default
+group: mock.digi.dev
+version: v1
+plural: rooms
+mounter: true
+
+image: silveryfu/room:latest

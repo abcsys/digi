@@ -1,0 +1,7 @@
+# kopf
+kubernetes
+pyyaml
+inflection
+pyjq
+python-box
+# digi
