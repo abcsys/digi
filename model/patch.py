@@ -50,6 +50,9 @@ def patch():
     # crd dependencies, tracked by the mounting model
     crd_deps = defaultdict(set)
 
+    # tracks which crds belong in the same file; each group is id by the first crd's gvr
+    crd_groups = defaultdict(list)
+
     # load crds
     for md in model_dirs:
         if md.startswith("."):
@@ -58,10 +61,11 @@ def patch():
         if not os.path.isfile(f_crd):
             continue
         with open(f_crd) as f:
-            crd = yaml.load(f, Loader=yaml.FullLoader)
-            if crd is None:
+            _crds = list(yaml.load_all(f, Loader=yaml.FullLoader))
+            if _crds is None:
                 continue
-
+        crd_group = None
+        for crd in _crds:
             group = crd["spec"]["group"]
             plural = crd["spec"]["names"]["plural"]
             for v in crd["spec"]["versions"]:
@@ -76,6 +80,10 @@ def patch():
 
                 for m_gvr, _ in spec["mount"]["properties"].items():
                     crd_deps[_gvr].add(m_gvr)
+            if crd_group is None:
+                crd_group = [crd]
+                crd_groups[_gvr] = crd_group
+            crd_group.append(crd)
 
     # fix the mounts, starting from the dependency-free crds
     while len(crds) > 0:
@@ -92,9 +100,9 @@ def patch():
                 parent_deps.remove(_gvr)
         crd = crds.pop(_gvr)
 
-        # write out the crd
+    for _gvr, _crds in crd_groups.items():
         with open(f_crds[_gvr], "w") as f:
-            yaml.dump(crd, f)
+            yaml.dump_all(_crds, f)
 
 
 if __name__ == '__main__':

@@ -6,10 +6,6 @@ ifndef WORKDIR
 override WORKDIR = .
 endif
 
-ifndef IMAGEPULL
-override IMAGEPULL = Always
-endif
-
 ifndef REPO
 override REPO = silveryfu
 endif
@@ -26,7 +22,7 @@ kc := kubectl
 digi_src := $(GOPATH)/src/digi.dev/digi
 driver_dir := $(digi_src)/driver
 driver_handler := $(WORKDIR)/$(KIND)/driver/*
-digi_config := $(WORKDIR)/$(KIND)/deploy/*.yaml
+digi_config := $(WORKDIR)/$(KIND)/deploy/*
 build_dir := /tmp/digi-build-$(KIND)-$(TAG)
 
 define model
@@ -76,6 +72,7 @@ prepare:
 	mkdir -p $(build_dir)/deploy/
 	rsync -r $(driver_dir) $(build_dir) || true
 	rsync -r $(driver_dir)/deploy $(build_dir) || true
+	rsync -r $(digi_config) $(build_dir)/deploy || true
 	rsync -r $(driver_dir)/requirements.txt $(build_dir) || true
 
 .PHONY: build

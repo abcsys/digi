@@ -192,8 +192,10 @@ def gen(name):
     _dir_path = os.path.join(os.path.curdir, name)
 
     with open(os.path.join(_dir_path, "model.yaml")) as f:
-        model = yaml.load(f, Loader=yaml.FullLoader)
+        models = list(yaml.load_all(f, Loader=yaml.FullLoader))
 
+    crds = list()
+    for model in models:
         # assemble the crd
         header = _header.format(name=plural(model) + "." + model["group"],
                                 group=model["group"],
@@ -260,11 +262,10 @@ def gen(name):
         header["spec"]["versions"].append(version)
 
         crd = header
-
-        with open(os.path.join(_dir_path, "crd.yaml"), "w") as f_:
-            yaml.dump(crd, f_)
+        crds.append(crd)
 
         # generate a CR if missing
+        # only the first model's cr will be generated
         def _gen_cr(parent_dir, name_=model["kind"].lower()):
             if not os.path.exists(os.path.join(_dir_path, parent_dir)):
                 os.makedirs(os.path.join(_dir_path, parent_dir))
@@ -331,6 +332,9 @@ def gen(name):
 
             with open(handler_file, "w") as f_:
                 f_.write(handler)
+
+    with open(os.path.join(_dir_path, "crd.yaml"), "w") as f_:
+        yaml.dump_all(crds, f_)
 
 
 if __name__ == '__main__':

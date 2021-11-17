@@ -1,2 +1,3 @@
-> TBD move code-gens under /mocks here
-> TBD point dq to use REPO/model/* 
+# Model
+
+Code generators and scripts to build, share, and deploy digis.

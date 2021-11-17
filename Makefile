@@ -2,7 +2,7 @@ NAME=digi
 HOMEDIR=~/.dq
 
 .PHONY: dq install
-dq: 
+dq:
 	cd cmd/dq/; go install .
 install: | dq
 	$(info dq)
@@ -13,3 +13,6 @@ install: | dq
 .PHONY: k8s
 k8s:
 	minikube start
+
+# Use the following command to invoke build directly without dq
+# WORKDIR=. KIND=lake make -f ~/.dq/Makefile build

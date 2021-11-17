@@ -11,6 +11,4 @@ RUN (ls thirdparty.txt >> /dev/null 2>&1 && pip install -r thirdparty.txt) || tr
 # comment out to use dist
 RUN (cd driver; pip install -e .)
 
-RUN
-
 CMD python3 handler.py
