@@ -7,11 +7,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Values.name }}
+      name: {{ .Values.name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.name }}
+        name: {{ .Values.name }}
     spec:
       serviceAccountName: {{ .Values.name }}
       containers:
@@ -40,13 +40,13 @@ kind: Service
 metadata:
   name: {{ .Values.name }}
   labels:
-    app: {{ .Values.name }}
+    name: {{ .Values.name }}
 spec:
   ports:
   - port: {{ .Values.port }}
     targetPort: 9867
     protocol: TCP
   selector:
-    app: {{ .Values.name }}
+    name: {{ .Values.name }}
 
 
