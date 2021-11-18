@@ -15,7 +15,7 @@ override DIGIREPO = /tmp/digirepo
 endif
 
 ifndef TAG
-override TAG = mock
+override TAG = latest
 endif
 
 kc := kubectl
@@ -72,12 +72,14 @@ prepare:
 	mkdir -p $(build_dir)/deploy/
 	rsync -r $(driver_dir) $(build_dir) || true
 	rsync -r $(driver_dir)/deploy $(build_dir) || true
+	# app specific configs overwrite the generic ones
 	rsync -r $(digi_config) $(build_dir)/deploy || true
 	rsync -r $(driver_dir)/requirements.txt $(build_dir) || true
 
 .PHONY: build
 build: | prepare gen patch
 	rsync $(driver_handler) $(build_dir)/ || true
+	# use DOCKER_BUILDKIT=0 to enable more messages
 	cd $(build_dir); docker build -t $(REPO)/$(KIND):$(TAG) -f deploy/image/Dockerfile . || true
 	docker push $(REPO)/$(KIND):$(TAG)|| true
 	rm -r $(build_dir) || true
@@ -93,7 +95,6 @@ pull:
 # deploy
 .PHONY: run stop print
 run: | stop prepare model
-	rsync $(digi_config) $(build_dir)/deploy || true
 	cd $(build_dir)/deploy; mv cr.yaml ./templates; \
 	helm install -f values.yaml --set name=$(NAME) $(NAME) . >/dev/null || true \
 	rm -r $(build_dir) || true

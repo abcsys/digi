@@ -387,6 +387,7 @@ func Execute() {
 	// TBD dq space ...
 	// RootCmd.AddCommand(mountCmd)
 	// RootCmd.AddCommand(pipeCmd)
+	// TBD dq kc ... forward command to kubectl
 
 	RootCmd.AddCommand(aliasCmd)
 	aliasCmd.AddCommand(aliasClearCmd)
