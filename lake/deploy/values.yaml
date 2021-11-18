@@ -1,0 +1,9 @@
+group: digi.dev
+image: silveryfu/lake:latest
+imagepull: Always
+port: 6534
+mounter: false
+name: lake
+namespace: default
+plural: lakes
+version: v1
