@@ -1,11 +1,15 @@
 group: digi.dev
 version: v1
 kind: lake
-
----
-
-group: digi.dev
-version: v1
-kind: pool
-meta:
-  name: string
+pools:
+  openapi:
+    additionalProperties:
+      properties:
+        head:
+          type: string
+        last_updated:
+          type: string
+        size:
+          type: number
+      type: object
+    type: object

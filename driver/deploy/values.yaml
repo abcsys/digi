@@ -1,8 +1,8 @@
-name: room
+name: digi
 namespace: default
-group: mock.digi.dev
+group: digi.dev
 version: v1
-plural: rooms
+plural: digis
 mounter: true
-
-image: silveryfu/room:latest
+image: library/digi
+pool_provider: zed

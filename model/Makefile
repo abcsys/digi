@@ -18,7 +18,6 @@ ifndef TAG
 override TAG = latest
 endif
 
-kc := kubectl
 digi_src := $(GOPATH)/src/digi.dev/digi
 driver_dir := $(digi_src)/driver
 driver_handler := $(WORKDIR)/$(KIND)/driver/*
@@ -38,15 +37,15 @@ init:
 	cd $(WORKDIR) && mkdir $(KIND) >/dev/null 2>&1 || true && \
 	echo "$$model" > $(KIND)/model.yaml
 gen:
-	cd $(WORKDIR); python $(DIGIHOME)/gen.py $(KIND)
+	cd $(WORKDIR); REPO=$(REPO) python $(DIGIHOME)/gen.py $(KIND)
 patch:
 	cd $(WORKDIR); python $(DIGIHOME)/patch.py $(KIND)
 model:
-	cd $(WORKDIR)/$(KIND) && $(kc) apply -f crd.yaml >/dev/null
+	cd $(WORKDIR)/$(KIND) && kubectl apply -f crd.yaml >/dev/null
 all: | gen patch model
 	$(info model)
 delete:
-	cd $(WORKDIR)/$(KIND) >/dev/null 2>&1; $(kc) delete -f crd.yaml 2>/dev/null || true
+	cd $(WORKDIR)/$(KIND) >/dev/null 2>&1; kubectl delete -f crd.yaml 2>/dev/null || true
 	rm -r $(WORKDIR)/$(KIND) >/dev/null 2>&1 || true
 list:
 	cd $(WORKDIR); ls -d */* 2> /dev/null | grep "model.yaml" | xargs dirname
@@ -61,7 +60,7 @@ n := $(KIND)-test
 ns := default
 
 test: | model all
-	cd $(WORKDIR)/$(KIND)/test; $(kc) delete $(KIND) $(n); $(kc) apply -f cr.yaml
+	cd $(WORKDIR)/$(KIND)/test; kubectl delete $(KIND) $(n); kubectl apply -f cr.yaml
 	GROUP=$(g) VERSION=$(v) PLURAL=$(r) NAME=$(n) NAMESPACE=$(ns) MOUNTER=$(MOUNTER) \
 	python $(WORKDIR)/$(KIND)/driver/handler.py
 
@@ -80,8 +79,8 @@ prepare:
 build: | prepare gen patch
 	rsync $(driver_handler) $(build_dir)/ || true
 	# use DOCKER_BUILDKIT=0 to enable more messages
-	cd $(build_dir); docker build -t $(REPO)/$(KIND):$(TAG) -f deploy/image/Dockerfile . || true
-	docker push $(REPO)/$(KIND):$(TAG)|| true
+	cd $(build_dir); sudo docker build -t $(REPO)/$(KIND):$(TAG) -f deploy/image/Dockerfile . || true
+	sudo docker push $(REPO)/$(KIND):$(TAG)|| true
 	rm -r $(build_dir) || true
 
 # image
@@ -94,15 +93,25 @@ pull:
 
 # deploy
 .PHONY: run stop print
-run: | stop prepare model
+run: | prepare model
+	# stop any existing: delete model, driver, pool
+	kubectl delete $(KIND) $(NAME) >/dev/null 2>&1 || true
+	helm uninstall $(NAME) >/dev/null 2>&1 || true
+	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
+    -- zapi drop -f $(NAME) >/dev/null 2>&1 || true
+	# deploy anew: create model, driver, pool
 	cd $(build_dir)/deploy; mv cr.yaml ./templates; \
-	helm install -f values.yaml --set name=$(NAME) $(NAME) . >/dev/null || true \
+	helm install -f values.yaml --set name=$(NAME) $(NAME) . >/dev/null && \
+	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
+    -- zapi create $(NAME) >/dev/null
 	rm -r $(build_dir) || true
 stop:
-	$(kc) delete $(KIND) $(NAME) >/dev/null 2>&1 || true
-	helm uninstall $(NAME) >/dev/null 2>&1 || true
+	kubectl delete $(KIND) $(NAME) >/dev/null && \
+	helm uninstall $(NAME) >/dev/null && \
+	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
+    -- zapi drop -f $(NAME) >/dev/null
 print:
-	$(kc) get samples sample -oyaml | $(kc) neat
+	kubectl get samples sample -oyaml | kubectl neat
 
 # debug
 .PHONY: log

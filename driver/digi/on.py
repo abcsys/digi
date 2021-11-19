@@ -96,6 +96,7 @@ def attr(*args, **kwargs):
 
     return decorator
 
+model = attr
 
 def _attr(fn, path=".", prio=0):
     # preprocess the path str -> tuple of str

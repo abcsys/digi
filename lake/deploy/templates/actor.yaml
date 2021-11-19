@@ -8,10 +8,12 @@ spec:
   selector:
     matchLabels:
       name: {{ .Values.name }}
+      app: lake
   template:
     metadata:
       labels:
         name: {{ .Values.name }}
+        app: lake
     spec:
       serviceAccountName: {{ .Values.name }}
       containers:
@@ -31,8 +33,11 @@ spec:
             value: {{ .Values.namespace }}
           - name: MOUNTER
             value: {{ quote .Values.mounter }}
+          - name: POOL_PROVIDER
+            value: {{ .Values.pool_provider }}
           ports:
           - containerPort: 9867
+
 ---
 
 apiVersion: v1
@@ -41,6 +46,7 @@ metadata:
   name: {{ .Values.name }}
   labels:
     name: {{ .Values.name }}
+    app: lake
 spec:
   ports:
   - port: {{ .Values.port }}

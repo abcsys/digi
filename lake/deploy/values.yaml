@@ -3,6 +3,7 @@ image: silveryfu/lake:latest
 imagepull: Always
 port: 6534
 mounter: false
+pool_provider: none
 name: lake
 namespace: default
 plural: lakes

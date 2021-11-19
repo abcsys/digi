@@ -1,9 +1,11 @@
 import os
+import sys
 import logging
 import kopf
 
 import digi.util as util
 from digi.mount import Mounter
+import digi.pool as pool
 
 
 def run():
@@ -12,6 +14,7 @@ def run():
     r = os.environ["PLURAL"]
     n = os.environ["NAME"]
     ns = os.environ.get("NAMESPACE", "default")
+    pool_provider = os.environ.get("POOL_PROVIDER", "zed")
 
     # control the log level for k8s event and local/handler logging
     log_level = int(os.environ.get("LOGLEVEL", logging.INFO))
@@ -21,9 +24,10 @@ def run():
     # prevent printing root
     logging.getLogger().addHandler(logging.NullHandler())
 
-    if os.environ.get("MOUNTER", "true") != "false":
+    if os.environ.get("MOUNTER", "false") == "true":
         Mounter(g, v, r, n, ns, log_level=log_level).start()
 
+    # kopf embedded operator
     _model = {
         "group": g,
         "version": v,
@@ -36,7 +40,8 @@ def run():
     }
     _ready, _stop = None, None
 
-    from . import handler  # decorate the handlers
+    # force decorate the handlers
+    from . import handler
     _ = handler
 
     @kopf.on.startup(registry=_registry)
@@ -44,10 +49,10 @@ def run():
         settings.persistence.progress_storage = kopf.AnnotationsProgressStorage()
         settings.posting.level = log_level
 
+    # reconciler operations
     from digi.reconcile import rc
 
     # TBD selectively add decorator
-
     @kopf.on.create(**_model, **_kwargs)
     @kopf.on.resume(**_model, **_kwargs)
     @kopf.on.update(**_model, **_kwargs)
@@ -83,3 +88,27 @@ def run():
         # _stop.set()
 
     _ready, _stop = util.run_operator(_registry, log_level=log_level)
+
+    # data pool operations
+    _providers = {
+        "zed": pool.ZedPool
+    }
+
+    if pool_provider == "":
+        pool_provider = "zed"
+    if pool_provider in {"none", "false"}:
+        return
+    if pool_provider not in _providers:
+        logger.fatal(f"unknown pool provider {pool_provider}")
+        sys.exit(1)
+
+    _pool = _providers[pool_provider](
+        pool.pool_name(g, v, r, n, ns)
+    )
+
+    @kopf.on.create(**_model, **_kwargs)
+    @kopf.on.resume(**_model, **_kwargs)
+    @kopf.on.update(**_model, **_kwargs)
+    def load(spec, *args, **kwargs):
+        _, _ = args, kwargs
+        _pool.load(spec)

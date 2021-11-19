@@ -2,4 +2,7 @@ apiVersion: digi.dev/v1
 kind: lake
 metadata:
   name: {{ .Values.name }}
-spec: {}
+spec:
+  pools:
+    default:
+      size: 0

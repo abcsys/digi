@@ -131,6 +131,13 @@ reflex:
 _reflex_attr = """
 """
 
+_misc = """
+{name}:
+"""
+_misc_attr = """
+type: {datatype}
+"""
+
 _cr = """
 apiVersion: {groupVersion}
 kind: {kind}
@@ -156,25 +163,6 @@ import digi.on as on
 
 # validation
 @on.attr
-def h():
-    ...
-
-
-# intent back-prop
-@on.mount
-def h():
-    ...
-
-
-# status
-@on.mount
-def h():
-    ...
-
-
-# intent
-@on.mount
-@on.control
 def h():
     ...
 
@@ -214,15 +202,21 @@ def gen(name):
 
             for _n, t in src_attrs.items():
                 if not isinstance(t, str):
-                    # TBD refactor the gen rules
                     assert isinstance(t, dict)
-                    attrs[_n] = t.get("openapi", t)
+                    # TBD simplify the gen rules
+                    if _n == "openapi":
+                        attrs = t
+                    else:
+                        attrs[_n] = t.get("openapi", t)
                 else:
                     attrs[_n] = yaml.load(_attr_tpl.format(name=_n, datatype=t),
                                           Loader=yaml.FullLoader)
             if len(attrs) > 0:
                 result = yaml.load(_main_tpl, Loader=yaml.FullLoader)
-                result[_name]["properties"] = attrs
+                if result[_name] is not None and "properties" in result[_name]:
+                    result[_name]["properties"] = attrs
+                else:
+                    result[_name] = attrs
             return result
 
         def make_data_attr():
@@ -256,6 +250,13 @@ def gen(name):
         spec["properties"].update(obs)
         spec["properties"].update(mount)
         spec["properties"].update(reflex)
+
+        # custom attribute
+        for k, v in model.items():
+            # TBD clean the attribute generation by making the attribute templates a map
+            if k not in {"group", "version", "kind",
+                         "meta", "control", "data", "obs", "mount", "reflex"}:
+                spec["properties"].update(make_attr(k, _misc_attr, _misc.format(name=k), src_attrs=v))
 
         # main TBD: multiple version or incremental versions
         header["spec"]["versions"] = list()
