@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import zed
 
-lake_url = "http://lake:6534/"
+lake_url = "http://lake:6534"
 
 class Pool(ABC):
     @abstractmethod

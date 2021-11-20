@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import logging
@@ -49,6 +50,31 @@ def run():
         settings.persistence.progress_storage = kopf.AnnotationsProgressStorage()
         settings.posting.level = log_level
 
+    # data pool operations
+    _providers = {
+        "zed": pool.ZedPool
+    }
+
+    load_pool = lambda *args, **kwargs: ...
+
+    if pool_provider == "":
+        pool_provider = "zed"
+    if pool_provider in {"none", "false"}:
+        pass
+    elif pool_provider not in _providers:
+        logger.fatal(f"unknown pool provider {pool_provider}")
+        sys.exit(1)
+    else:
+        _pool = _providers[pool_provider](
+            pool.pool_name(g, v, r, n, ns)
+        )
+
+        def load_pool(spec, *args, **kwargs):
+            _, _ = args, kwargs
+            _data = json.dumps(dict(spec))
+            logger.info(f"before load: {_data}")
+            _pool.load(_data)
+
     # reconciler operations
     from digi.reconcile import rc
 
@@ -82,6 +108,13 @@ def run():
             rc.skip_gen = new_gen
         logger.info(f"Done reconciliation")
 
+        try:
+            load_pool(*args, **kwargs)
+            logger.info(f"Done loading to pool.")
+        except Exception as e:
+            logger.warning(f"unable to load to pool: {e}")
+
+
     @kopf.on.delete(**_model, **_kwargs, optional=True)
     def on_delete(*args, **kwargs):
         _, _ = args, kwargs
@@ -89,26 +122,4 @@ def run():
 
     _ready, _stop = util.run_operator(_registry, log_level=log_level)
 
-    # data pool operations
-    _providers = {
-        "zed": pool.ZedPool
-    }
 
-    if pool_provider == "":
-        pool_provider = "zed"
-    if pool_provider in {"none", "false"}:
-        return
-    if pool_provider not in _providers:
-        logger.fatal(f"unknown pool provider {pool_provider}")
-        sys.exit(1)
-
-    _pool = _providers[pool_provider](
-        pool.pool_name(g, v, r, n, ns)
-    )
-
-    @kopf.on.create(**_model, **_kwargs)
-    @kopf.on.resume(**_model, **_kwargs)
-    @kopf.on.update(**_model, **_kwargs)
-    def load(spec, *args, **kwargs):
-        _, _ = args, kwargs
-        _pool.load(spec)

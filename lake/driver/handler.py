@@ -3,9 +3,8 @@ import subprocess
 
 import digi
 
-@digi.on.model
-def h(pools, old):
-    digi.logger.info("old", old)
+@digi.on.model("pools")
+def h(pools):
     digi.logger.info(pools)
 
 

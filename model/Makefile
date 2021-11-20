@@ -100,6 +100,7 @@ run: | prepare model
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zapi drop -f $(NAME) >/dev/null 2>&1 || true
 	# deploy anew: create model, driver, pool
+	# TBD make pool optional by checking values.yaml
 	cd $(build_dir)/deploy; mv cr.yaml ./templates; \
 	helm install -f values.yaml --set name=$(NAME) $(NAME) . >/dev/null && \
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\

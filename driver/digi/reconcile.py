@@ -76,7 +76,6 @@ class __Reconciler:
                     self._logger.error(traceback.format_exc())
                     # TBD: expose driver status on model, e.g., obs.reason/or some debug attribute
                     return proc_spec
-
         return proc_spec
 
     def add(self, handler: typing.Callable,
