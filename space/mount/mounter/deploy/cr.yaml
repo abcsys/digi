@@ -1,0 +1,7 @@
+apiVersion: digi.dev/v1
+kind: Mounter
+metadata:
+  name: \{\{ .Values.name \}\}
+spec:
+  meta:
+    digi: -1

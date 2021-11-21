@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: syncer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: syncer
+  template:
+    metadata:
+      labels:
+        name: syncer
+    spec:
+      serviceAccountName: syncer
+      containers:
+        - name: syncer
+          # Fill in the image repository
+          image: {{REPO}}/syncer:latest
+          command:
+          - sync
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "syncer"

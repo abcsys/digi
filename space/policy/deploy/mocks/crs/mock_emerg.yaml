@@ -1,0 +1,11 @@
+apiVersion: digi.dev/v1
+kind: MockEmergencyAppliance
+metadata:
+  name: mock-emerg-app
+spec:
+  mounts:
+    mocklamps:
+      default/mock-lamp:
+        mode: replace
+        status: inactive
+

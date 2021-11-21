@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 import logging
@@ -71,9 +70,7 @@ def run():
 
         def load_pool(spec, *args, **kwargs):
             _, _ = args, kwargs
-            _data = json.dumps(dict(spec))
-            logger.info(f"before load: {_data}")
-            _pool.load(_data)
+            _pool.load(dict(spec))
 
     # reconciler operations
     from digi.reconcile import rc
@@ -83,6 +80,12 @@ def run():
     @kopf.on.resume(**_model, **_kwargs)
     @kopf.on.update(**_model, **_kwargs)
     def reconcile(meta, *args, **kwargs):
+        try:
+            load_pool(*args, **kwargs)
+            logger.info(f"Done loading to pool.")
+        except Exception as e:
+            logger.warning(f"unable to load to pool: {e}")
+
         gen = meta["generation"]
         # skip the last self-write
         # TBD for parallel reconciliation may need to lock rc.gen before patch
@@ -107,13 +110,6 @@ def run():
         if gen + 1 == new_gen:
             rc.skip_gen = new_gen
         logger.info(f"Done reconciliation")
-
-        try:
-            load_pool(*args, **kwargs)
-            logger.info(f"Done loading to pool.")
-        except Exception as e:
-            logger.warning(f"unable to load to pool: {e}")
-
 
     @kopf.on.delete(**_model, **_kwargs, optional=True)
     def on_delete(*args, **kwargs):

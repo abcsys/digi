@@ -1,0 +1,20 @@
+apiVersion: digi.dev/v1
+kind: YieldPolicy
+metadata:
+  name: example-yieldpolicy-reverse
+spec:
+  source:
+    kind:
+      group: digi.dev
+      version: v1
+      name: MockEmergencyAppliance
+    name: mock-emerg-app
+    namespace: default
+  target:
+    kind:
+      group: digi.dev
+      version: v1
+      name: MockRoom
+    name: mock-room
+    namespace: default
+  condition: "if (.target.spec.mode != \"emergency\") then true else false end"

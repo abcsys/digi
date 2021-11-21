@@ -1,11 +1,14 @@
+import json
+import datetime
 from abc import ABC, abstractmethod
+
 import zed
 
 lake_url = "http://lake:6534"
 
 class Pool(ABC):
     @abstractmethod
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
 
     @abstractmethod
@@ -13,11 +16,15 @@ class Pool(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def load(self, data):
+    def load(self, data: dict):
         raise NotImplementedError
 
     @abstractmethod
-    def query(self, query):
+    def query(self, query: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _augment(self, data: dict, ts: bool = True) -> dict:
         raise NotImplementedError
 
 
@@ -30,10 +37,15 @@ class ZedPool(Pool):
         self.client.create_pool(self.name)
 
     def load(self, data):
-        self.client.load(self.name, data)
+        data = self._augment(data)
+        self.client.load(self.name, json.dumps(data))
 
     def query(self, query):
         self.client.query(query)
+
+    def _augment(self, data, ts=True):
+        data["ts"] = get_ts()
+        return data
 
 
 def pool_name(g, v, r, n, ns):
@@ -42,3 +54,6 @@ def pool_name(g, v, r, n, ns):
         return f"{n}"
     else:
         return f"{ns}-{n}"
+
+def get_ts():
+    return datetime.datetime.now().isoformat() + "Z"

@@ -1,0 +1,20 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: dspace-webhook
+  labels:
+    app: dspace-webhook
+    kind: validating
+webhooks:
+  - name: dspace-webhook.digi.dev
+    clientConfig:
+      service:
+        name: dspace-webhook
+        namespace: default
+        path: "/validating"
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN4akNDQWE0Q0NRQ21lZU5ZU3cxNU56QU5CZ2txaGtpRzl3MEJBUVVGQURBbE1TTXdJUVlEVlFRRERCcGsKYzNCaFkyVXRkMlZpYUc5dmF5NWtaV1poZFd4MExuTjJZekFlRncweU1EQTVNekF3TXpJNE1ESmFGdzB5TVRBNQpNekF3TXpJNE1ESmFNQ1V4SXpBaEJnTlZCQU1NR21SemNHRmpaUzEzWldKb2IyOXJMbVJsWm1GMWJIUXVjM1pqCk1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBeVdjVDRDMHVtcnJJTU94d0ZPNE0KemNpTDVGMmRtNTNGZEh1alhKQnhIdmJaRGQ4SDRidk5Bano1MnVmSllUWjZmMUJUaVJxcFUrbklXRmpXcWhSUgpOd25rd21ZcURRR2wxc1p2MHYwaVF5eFErSWFCQ2ZaNXlaeElmOC9KWEJGbmtmMXhSQnF2dlFSL2pST0VvbC9NClV5b2ZkYnk4V2djdkRTdENocENCN0NWL3V6TjlTdHpnSWpoa3hvSEt3WU5sUDhhblhQU3NQMm5xaTNVZ3lKcHUKMTErWEQ2cmQwUlE5STA1Wi9EcXJlelpVcUI0QUtGWjlHK0tRMmIvZExoVHNhQ1c5cnJmNkxHTi9ISkdYd2hRcAp1WjZ3MUk4YVJzN1BYQ3BiZk5mQ0Z0bWpVNGljQkV3aDRDWHVRaXhzQXpiVk93V0lpeVkvNE9Yc3RJMllyUEZrCkpRSURBUUFCTUEwR0NTcUdTSWIzRFFFQkJRVUFBNElCQVFBTTNFSHQ0V1R4RU1HYWNZRzdueitoTDdSVGYzVkEKbFAwYzdhYmxDdHVieVduUmZES1lGT0liWGIwUDR4NnM2UzlrblJVYlVYQklPMTFicTBiUWN5L2JKMmg1RkViUgpPNFgwQWtIRDZSNGZRRzhCMlZCM2RyRHFFTGhaM2h6UVR0bGpYQUlzQyszakw4UHBnMC9kS294clh1MGpYckRiCmdtMXhlS1VZQ3hxRGVQd21kQlZPNnN1WmNYN0Z6STBjaXZ5Nm5hdWl1dE9LWHVSbXNqV1p1VitDcjcraVNSMjMKUzVja2JLZnBuWGtBSXpPT0ZqQWJ5eEFoN0xwWUpFNUw1b05YcGVQcVhNSXBhVWIyOGVxSEdYODVlOWxSLzZqagprOXNqMFZEelhXVzFNWUpNT29OdGo0Njd3M3hoLyt1K1VIM3l6M1BpUGl4ek1WajBHVVpab0hnUgotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    rules:
+      - operations: ["*"]
+        apiGroups: ["kome.io"]
+        apiVersions: ["*"]
+        resources: ["*"]

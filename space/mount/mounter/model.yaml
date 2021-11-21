@@ -1,0 +1,10 @@
+group: digi.dev
+version: v1
+kind: Mounter
+meta:
+  digi:
+    group: string
+    version: string
+    plural: string
+    name: string
+    namespace: string

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dspace-webhook
+  labels:
+    app: dspace-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dspace-webhook
+  template:
+    metadata:
+      labels:
+        app: dspace-webhook
+    spec:
+      containers:
+        - name: dspace-webhook
+          image: silveryfu/dac:latest
+          imagePullPolicy: Always
+          args:
+            - -tls-cert-file=/etc/webhook/certs/cert.pem
+            - -tls-key-file=/etc/webhook/certs/key.pem
+            # add api versioned groups in comma separated list; this is for speeding up graph discovery
+            - -api-versioned-groups=kome.io/v1
+          volumeMounts:
+            - name: webhook-certs
+              mountPath: /etc/webhook/certs
+              readOnly: true
+            # update this for non-minikube deployment
+            - name: minikube
+              mountPath: /var/lib/minikube
+              readOnly: true
+            - name: kube-config-file
+              mountPath: /etc/kubeconfig
+              readOnly: true
+      volumes:
+        - name: webhook-certs
+          secret:
+            secretName: dspace-webhook-certs
+        # update this for non-minikube deployment
+        # XXX use a service account instead
+        - name: minikube
+          hostPath:
+            path: /var/lib/minikube/
+        - name: kube-config-file
+          hostPath:
+            # copy from the master's kubeconfig and replace localhost with cluster ip
+            path: /var/lib/minikube/kubeconfig-dac
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dspace-webhook
+  labels:
+    app: dspace-webhook
+spec:
+  ports:
+  - port: 443
+    targetPort: 8080
+  selector:
+    app: dspace-webhook

@@ -1,0 +1,7 @@
+apiVersion: digi.dev/v1
+kind: MockLamp
+metadata:
+  name: mock-lamp
+spec:
+  power: "off"
+  brightness: "0.1"

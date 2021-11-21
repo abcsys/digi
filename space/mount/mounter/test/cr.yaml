@@ -1,0 +1,12 @@
+apiVersion: digi.dev/v1
+kind: Mounter
+metadata:
+  name: room-test-mounter
+spec:
+  meta:
+    digi:
+      group: room-test
+      version: room-test
+      kind: Room
+      name: room-test
+      namespace:

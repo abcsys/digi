@@ -1,0 +1,11 @@
+apiVersion: digi.dev/v1
+kind: MockRoom
+metadata:
+  name: mock-room
+spec:
+  mode: work
+  mounts:
+    mocklamps:
+      default/mock-lamp:
+        mode: replace
+        status: active

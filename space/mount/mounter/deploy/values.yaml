@@ -1,0 +1,8 @@
+group: digi.dev
+image: local/mounter:latest
+imagepull: Always
+mounter: false
+name: mounter
+namespace: default
+plural: mounters
+version: v1

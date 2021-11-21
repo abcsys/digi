@@ -1,0 +1,38 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: mounters.digi.dev
+spec:
+  group: digi.dev
+  names:
+    kind: Mounter
+    listKind: MounterList
+    plural: mounters
+    singular: mounter
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              meta:
+                properties:
+                  digi:
+                    group: string
+                    name: string
+                    namespace: string
+                    plural: string
+                    version: string
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
