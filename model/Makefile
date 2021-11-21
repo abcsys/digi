@@ -49,6 +49,8 @@ delete:
 	rm -r $(WORKDIR)/$(KIND) >/dev/null 2>&1 || true
 list:
 	cd $(WORKDIR); ls -d */* 2> /dev/null | grep "model.yaml" | xargs dirname
+edit:
+	kubectl edit $(KIND) $(NAME)
 
 .PHONY: test
 

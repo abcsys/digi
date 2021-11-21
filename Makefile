@@ -1,10 +1,10 @@
 NAME=digi
-HOMEDIR=~/.dq
+HOMEDIR=~/.digi
 
-.PHONY: dq install
-dq:
-	cd cmd/dq/; go install .
-install: | dq
+.PHONY: digi install
+digi:
+	cd cmd/digi/; go install .
+install: | digi
 	$(info dq)
 	cp ./model/Makefile $(HOMEDIR) && \
 	cp ./model/gen.py $(HOMEDIR) && \

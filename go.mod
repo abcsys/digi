@@ -3,6 +3,7 @@ module digi.dev/digi
 go 1.16
 
 require (
+	digi.dev/digi/space/sync v0.0.0
 	github.com/Azure/go-autorest v13.3.2+incompatible // indirect
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.0.0 // indirect
@@ -10,7 +11,7 @@ require (
 	github.com/Masterminds/squirrel v1.5.0 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/appscode/jsonpatch v0.0.0-20180911074601-5af499cf01c8 // indirect
-	github.com/banzaicloud/k8s-objectmatcher v1.6.1 // indirect
+	github.com/banzaicloud/k8s-objectmatcher v1.6.1
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cloudflare/cfssl v1.5.0 // indirect
 	github.com/deislabs/oras v0.11.1 // indirect
@@ -36,15 +37,15 @@ require (
 	github.com/operator-framework/operator-lib v0.2.0 // indirect
 	github.com/operator-framework/operator-registry v1.15.1 // indirect
 	github.com/operator-framework/operator-sdk v0.18.0 // indirect
-	github.com/slok/kubewebhook v0.10.0 // indirect
+	github.com/slok/kubewebhook v0.10.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
 	github.com/thoas/go-funk v0.8.0 // indirect
-	github.com/tidwall/sjson v1.2.3 // indirect
+	github.com/tidwall/sjson v1.2.3
 	github.com/uber-go/atomic v1.4.0 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.0+incompatible // indirect
-	github.com/xlab/treeprint v1.1.0 // indirect
+	github.com/xlab/treeprint v1.1.0
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200910180754-dd1b699fc489 // indirect
 	go.etcd.io/etcd/server/v3 v3.5.0 // indirect
 	go.uber.org/zap v1.19.0 // indirect
@@ -53,7 +54,7 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.3.0 // indirect
-	k8s.io/api v0.18.6 // indirect
+	k8s.io/api v0.18.6
 	k8s.io/apimachinery v0.22.3
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/code-generator v0.22.2 // indirect
@@ -69,4 +70,8 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.10.21 // indirect
 )
 
-replace k8s.io/client-go => k8s.io/client-go v0.18.2
+replace (
+	digi.dev/digi v0.0.0 => ./
+	digi.dev/digi/space/sync v0.0.0 => ./space/sync
+	k8s.io/client-go => k8s.io/client-go v0.18.2
+)

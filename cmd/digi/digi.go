@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"digi.dev/digi/api"
+	"digi.dev/digi/cmd/digi/query"
+	"digi.dev/digi/cmd/digi/space"
 	"digi.dev/digi/pkg/core"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
@@ -18,7 +20,7 @@ import (
 
 var (
 	RootCmd = &cobra.Command{
-		Use:   "digi [command]",
+		Use:   "digi <command> [options] [arguments...]",
 		Short: "command line digi manager",
 		Long: `
     Command-line digi manager.
@@ -33,7 +35,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	homeDir = filepath.Join(homeDir, ".dq")
+	homeDir = filepath.Join(homeDir, ".digi")
 }
 
 func runMake(args map[string]string, cmd string, quiet bool) error {
@@ -198,6 +200,23 @@ var logCmd = &cobra.Command{
 	},
 }
 
+var editCmd = &cobra.Command{
+	Use:     "edit KIND [NAME]",
+	Short:   "Edit a digi model.",
+	Args:    cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		var kind, name string
+		kind = args[0]
+		if len(args) > 2 {
+			name = args[1]
+		}
+		_ = runMake(map[string]string{
+			"KIND": kind,
+			"NAME": name,
+		}, "log", false)
+	},
+}
+
 var runCmd = &cobra.Command{
 	Use:   "run KIND NAME",
 	Short: "Run a digi given kind and name",
@@ -344,7 +363,7 @@ var (
 	}
 	aliasClearCmd = &cobra.Command{
 		Use:   "clear",
-		Short: "clear all aliases",
+		Short: "Clear all aliases",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := api.ClearAlias(); err != nil {
@@ -355,7 +374,7 @@ var (
 	}
 	aliasResolveCmd = &cobra.Command{
 		Use:   "resolve ALIAS",
-		Short: "resolve an alias",
+		Short: "Resolve an alias",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := api.ResolveFromLocal(args[0]); err != nil {
@@ -384,14 +403,15 @@ func Execute() {
 	runCmd.Flags().BoolP("show-kopf-log", "k", false, "Enable kopf logging")
 	RootCmd.AddCommand(stopCmd)
 	RootCmd.AddCommand(logCmd)
-	// TBD dq space ...
-	// RootCmd.AddCommand(mountCmd)
-	// RootCmd.AddCommand(pipeCmd)
-	// TBD dq kc ... forward command to kubectl
 
 	RootCmd.AddCommand(aliasCmd)
 	aliasCmd.AddCommand(aliasClearCmd)
 	aliasCmd.AddCommand(aliasResolveCmd)
+
+	RootCmd.AddCommand(editCmd)
+	RootCmd.AddCommand(space.RootCmd)
+	RootCmd.AddCommand(query.RootCmd)
+	// TBD digi kc ... forward command to kubectl
 
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Hide output")
 	if err := RootCmd.Execute(); err != nil {
