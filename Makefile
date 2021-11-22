@@ -1,14 +1,17 @@
 NAME=digi
 HOMEDIR=~/.digi
 
-.PHONY: digi install
+.PHONY: digi install dep
 digi:
-	cd cmd/digi/; go install .
+	cd cmd/; go install ./digi ./dq ./ds
 install: | digi
-	$(info dq)
+	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
 	cp ./model/Makefile $(HOMEDIR) && \
 	cp ./model/gen.py $(HOMEDIR) && \
 	cp ./model/patch.py $(HOMEDIR)
+dep:
+	go get github.com/brimdata/zed
+
 # Use the following command to invoke build directly without dq:
 # WORKDIR=. KIND=lake make -f ~/.dq/Makefile build
 # Use minikube registry: eval $(minikube docker-env)

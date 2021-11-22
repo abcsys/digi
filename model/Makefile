@@ -1,5 +1,5 @@
 ifndef DIGIHOME
-override DIGIHOME = ~/.dq
+override DIGIHOME = ~/.digi
 endif
 
 ifndef WORKDIR
@@ -32,7 +32,7 @@ endef
 export model
 
 # model
-.PHONY: init gen patch model all delete list
+.PHONY: init gen patch model all delete list edit
 init:
 	cd $(WORKDIR) && mkdir $(KIND) >/dev/null 2>&1 || true && \
 	echo "$$model" > $(KIND)/model.yaml
@@ -53,7 +53,6 @@ edit:
 	kubectl edit $(KIND) $(NAME)
 
 .PHONY: test
-
 # test configs
 g := $(TAG).digi.dev
 v := v1
@@ -115,6 +114,13 @@ stop:
     -- zapi drop -f $(NAME) >/dev/null
 print:
 	kubectl get samples sample -oyaml | kubectl neat
+
+# pool
+.PHONY: query
+query:
+	# TBD enforce single lake or use service to identify lake
+	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
+        -- zapi query "$(QUERY)"
 
 # debug
 .PHONY: log
