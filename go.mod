@@ -13,6 +13,7 @@ require (
 	github.com/appscode/jsonpatch v0.0.0-20180911074601-5af499cf01c8 // indirect
 	github.com/banzaicloud/k8s-objectmatcher v1.6.1
 	github.com/blang/semver/v4 v4.0.0 // indirect
+	github.com/brimdata/zed v0.33.0 // indirect
 	github.com/cloudflare/cfssl v1.5.0 // indirect
 	github.com/deislabs/oras v0.11.1 // indirect
 	github.com/fatih/color v1.12.0 // indirect
@@ -49,7 +50,7 @@ require (
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200910180754-dd1b699fc489 // indirect
 	go.etcd.io/etcd/server/v3 v3.5.0 // indirect
 	go.uber.org/zap v1.19.0 // indirect
-	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0

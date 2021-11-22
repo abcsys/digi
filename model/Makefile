@@ -115,12 +115,17 @@ stop:
 print:
 	kubectl get samples sample -oyaml | kubectl neat
 
-# pool
-.PHONY: query
+# lake
+ifndef LAKE
+override LAKE = lake
+endif
+.PHONY: query port
 query:
 	# TBD enforce single lake or use service to identify lake
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
         -- zapi query "$(QUERY)"
+port:
+	kubectl port-forward service/$(LAKE) 9867:6534 || tru
 
 # debug
 .PHONY: log

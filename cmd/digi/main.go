@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"digi.dev/digi/cmd/digi/query"
+	"digi.dev/digi/cmd/digi/lake"
 	"digi.dev/digi/cmd/digi/space"
 )
 
@@ -33,7 +33,8 @@ func main() {
 
 	RootCmd.AddCommand(editCmd)
 	RootCmd.AddCommand(space.RootCmd)
-	RootCmd.AddCommand(query.RootCmd)
+	RootCmd.AddCommand(lake.QueryCmd)
+	RootCmd.AddCommand(lake.ManageCmd)
 	// TBD digi kc ... forward command to kubectl
 
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Hide output")

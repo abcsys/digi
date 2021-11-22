@@ -42,7 +42,7 @@ var initCmd = &cobra.Command{
 
 var genCmd = &cobra.Command{
 	Use:   "gen KIND",
-	Short: "Generate files in a digi image",
+	Short: "Generate configs and scripts in an image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -59,6 +59,7 @@ var genCmd = &cobra.Command{
 var buildCmd = &cobra.Command{
 	Use:   "build KIND",
 	Short: "Build a digi image",
+	Aliases: []string{"images"},
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
