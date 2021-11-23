@@ -158,17 +158,16 @@ imagepull: {imagepull}
 """
 
 _handler = """import digi
-import digi.on as on
 
 
-# validation
-@on.attr
-def h():
+@digi.on.model
+def h(model):
     ...
 
 
 if __name__ == '__main__':
     digi.run()
+
 """
 
 
