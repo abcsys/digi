@@ -59,6 +59,13 @@ def test():
         dv.root.control.brightness.status = "away"
     print(f"-----\nafter: {v}\n")
 
+    v = copy.deepcopy(orig_v)
+    print("flattened model view, before:", v)
+    print(f"-----\nafter: {ModelView(v, 'room').view()}\n")
+
+    v = copy.deepcopy(orig_v)
+    print("flattened type view, before:", v)
+    print(f"-----\nafter: {TypeView(v, 'rooms').view()}\n")
 
 if __name__ == '__main__':
     test()

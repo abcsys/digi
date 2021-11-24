@@ -6,7 +6,7 @@ digi:
 	cd cmd/; go install ./digi ./dq ./ds
 dep:
 	go get github.com/brimdata/zed
-install: | digi dep
+install: | digi
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
 	cp ./model/Makefile $(HOMEDIR) && \
 	cp ./model/gen.py $(HOMEDIR) && \

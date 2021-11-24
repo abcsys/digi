@@ -143,7 +143,7 @@ var logCmd = &cobra.Command{
 
 var editCmd = &cobra.Command{
 	Use:     "edit KIND [NAME]",
-	Short:   "Edit a digi model.",
+	Short:   "Edit a digi model",
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var kind, name string

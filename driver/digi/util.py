@@ -311,13 +311,13 @@ def mount_size(mounts: dict, gvr_set: set = None,
         if gvr_set is not None and typ not in gvr_set:
             continue
 
-        if not all(cond(m) for m in models):
-            continue
-
-        if has_spec:
-            count += sum(1 if "spec" in m else 0 for m in models)
-        else:
-            count += len(models)
+        for _, m in models.items():
+            if not cond(m):
+                continue
+            if has_spec:
+                count += 1 if "spec" in m else 0
+            else:
+                count += 1
     return count
 
 

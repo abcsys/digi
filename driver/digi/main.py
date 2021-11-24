@@ -1,3 +1,4 @@
+import copy
 import os
 import sys
 import logging
@@ -68,9 +69,15 @@ def run():
             pool.pool_name(g, v, r, n, ns)
         )
 
+        from digi.view import NameView, KindView
         def load_pool(spec, *args, **kwargs):
             _, _ = args, kwargs
-            _pool.load(dict(spec))
+            spec = dict(spec)
+            _pool.load([
+                {"view": "orig", **spec},
+                {"view": "name", **NameView(spec).view()},
+                {"view": "kind", **KindView(spec).view()},
+            ])
 
     # reconciler operations
     from digi.reconcile import rc
@@ -117,5 +124,3 @@ def run():
         # _stop.set()
 
     _ready, _stop = util.run_operator(_registry, log_level=log_level)
-
-
