@@ -61,11 +61,11 @@ def test():
 
     v = copy.deepcopy(orig_v)
     print("flattened model view, before:", v)
-    print(f"-----\nafter: {ModelView(v, 'room').view()}\n")
+    print(f"-----\nafter: {ModelView(v, 'room').m()}\n")
 
     v = copy.deepcopy(orig_v)
     print("flattened type view, before:", v)
-    print(f"-----\nafter: {TypeView(v, 'rooms').view()}\n")
+    print(f"-----\nafter: {TypeView(v, 'rooms').m()}\n")
 
 if __name__ == '__main__':
     test()

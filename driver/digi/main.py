@@ -74,9 +74,10 @@ def run():
             _, _ = args, kwargs
             spec = dict(spec)
             _pool.load([
-                {"view": "orig", **spec},
-                {"view": "name", **NameView(spec).view()},
-                {"view": "kind", **KindView(spec).view()},
+                spec,
+                # {"view": "orig", **spec},
+                # {"view": "name", **NameView(spec).view()},
+                # {"view": "kind", **KindView(spec).view()},
             ])
 
     # reconciler operations

@@ -1,14 +1,57 @@
-"""Views used for manipulation."""
+"""Views used for model manipulation."""
 import os
 import copy
 from box import Box
+from abc import ABC, abstractmethod
 from kopf.structs.diffs import diff
 
 import digi.util as util
 from digi.util import deep_set
 
 
-class NameView:
+class View(ABC):
+    @abstractmethod
+    def __init__(self,
+                 root: dict,
+                 root_key: str = "root",
+                 trim_gv: bool = True,
+                 trim_mount: bool = True,
+                 trim_name: bool = True,
+                 ):
+        self._src = root
+        self._root = copy.deepcopy(self._src)
+        self._root_key = root_key
+        self._old, self._new = None, None
+
+        self._trim_gv = trim_gv
+        self._trim_mount = trim_mount
+        self._trim_name = trim_name
+
+        self._name = os.environ["NAME"]
+        self._ns = os.environ.get("NAMESPACE", "default")
+
+    @abstractmethod
+    def __enter__(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __exit__(self, typ, value, traceback):
+        raise NotImplementedError
+
+    @abstractmethod
+    def transform(self, root: dict, view: dict):
+        raise NotImplementedError
+
+    @abstractmethod
+    def materialize(self) -> dict:
+        raise NotImplementedError
+
+    def m(self) -> dict:
+        # shorthand
+        return self.materialize()
+
+
+class NameView(View):
     """
     Return all models in the current world/root view
     keyed by the namespaced name; if the nsn starts
@@ -22,22 +65,12 @@ class NameView:
 
     TBD: add mounts recursively but trim off mounts
       record the path and append on the diff path at exit;
-      use _flatten_mount in __enter__
-    TBD: add trim hint to reduce the size of view
-    TBD: support source views besides root
+      use _transform in __enter__
     """
 
-    def __init__(self, root: dict,
-                 root_key: str = "root",
-                 trim_mount=True):
-        self._src = root
-        self._root = copy.deepcopy(self._src)
-        self._root_key = root_key
-        self._old, self._new = None, None
-
-        self._trim_mount = trim_mount
-
+    def __init__(self, *args, **kwargs):
         self._nsn_gvr = dict()
+        super().__init__(*args, **kwargs)
 
     def __enter__(self):
         _view = {"root": self._root}
@@ -69,7 +102,7 @@ class NameView:
                 path = ["mount", typ, nsn, "spec"] + list(path[1:])
                 deep_set(_src, path, new)
 
-    def _flatten_mount(self, root: dict, view: dict):
+    def transform(self, root: dict, view: dict):
         _mount = root.get("mount", {})
         if self._trim_mount:
             root.pop("mount", "")
@@ -80,17 +113,17 @@ class NameView:
                     continue
 
                 spec: dict = model["spec"]
-                self._flatten_mount(spec, view)
+                self.transform(spec, view)
                 view.update({name: spec})
 
-    def view(self):
+    def materialize(self):
         root = self._root
         view = {self._root_key: root}
-        self._flatten_mount(root, view)
+        self.transform(root, view)
         return view
 
 
-class KindView:
+class KindView(View):
     """
     Return models group-by their gvr, if the gv is
     the same as the parent's gv, it will be trimmed
@@ -99,22 +132,7 @@ class KindView:
     TBDs: ditto
     """
 
-    def __init__(self, root: dict,
-                 root_key: str = "root",
-                 gvr_str: str = None,
-                 trim_gv: bool = True,
-                 trim_mount: bool = True,
-                 trim_name: bool = True
-                 ):
-        self._src = root
-        self._root = copy.deepcopy(self._src)
-        self._root_key = root_key
-        self._old, self._new = None, None
-
-        self._trim_gv = trim_gv
-        self._trim_mount = trim_mount
-        self._trim_name = trim_name
-
+    def __init__(self, *args, gvr_str=None, **kwargs):
         if gvr_str is None:
             assert "GROUP" in os.environ and \
                    "VERSION" in os.environ and \
@@ -128,10 +146,9 @@ class KindView:
             self._r = util.parse_gvr(gvr_str)[-1]
             self._gv_str = "/".join(util.parse_gvr(gvr_str)[:-1])
             self._gvr_str = gvr_str
-        self._name = os.environ["NAME"]
-        self._ns = os.environ.get("NAMESPACE", "default")
 
         self._typ_full_typ = dict()
+        super().__init__(*args, **kwargs)
 
     def __enter__(self):
         # _view = {self._r: {"root": self._root_view}}
@@ -166,7 +183,7 @@ class KindView:
                 path = ["mount", typ, nsn, "spec"] + list(path[2:])
                 deep_set(_src, path, new)
 
-    def _flatten_mount(self, root: dict, view: dict):
+    def transform(self, root: dict, view: dict):
         _mount = root.get("mount", {})
         if self._trim_mount:
             root.pop("mount", "")
@@ -184,26 +201,32 @@ class KindView:
                     continue
 
                 spec: dict = model["spec"]
-                self._flatten_mount(spec, view)
+                self.transform(spec, view)
 
                 if self._trim_name:
                     view[_typ].append(spec)
                 else:
                     view[_typ].update({name: spec})
 
-    def view(self):
+    def materialize(self):
         root = self._root
         if self._trim_name:
             view = {self._root_key: [root]}
         else:
             view = {self._root_key: {self._name: root}}
-        self._flatten_mount(root, view)
+        self.transform(root, view)
         return view
 
-# aliases
-ModelView, TypeView = NameView, KindView
 
-class DotView:
+class CleanView(View):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def materialize(self) -> dict:
+        pass
+
+
+class DotView(View):
     """Dot accessible models."""
     _char_map = {
         "-": "_",
@@ -213,8 +236,10 @@ class DotView:
         "\\": "_",
     }
 
-    def __init__(self, src_view):
-        self._src_view = src_view
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._src_view = self._src
         self._dot_view = None
         self._dot_view_old = None
         # map between unsafe attributes
@@ -238,6 +263,12 @@ class DotView:
             path = [self._attr_map.get(p, p) for p in path]
             deep_set(_src, path, new)
 
+    def transform(self, root: dict, view: dict):
+        pass
+
+    def materialize(self) -> dict:
+        return self.__enter__()
+
     def _to_safe_dict(self, d: dict) -> dict:
         safe_d = dict()
         for k, v in d.items():
@@ -254,3 +285,7 @@ class DotView:
         for k, v in DotView._char_map.items():
             s = s.replace(k, v)
         return s
+
+
+# aliases
+ModelView, TypeView = NameView, KindView
