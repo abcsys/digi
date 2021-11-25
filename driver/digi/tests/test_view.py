@@ -7,6 +7,7 @@ from digi.view import (
     ModelView,
     TypeView,
     DotView,
+    CleanView,
 )
 
 
@@ -66,6 +67,10 @@ def test():
     v = copy.deepcopy(orig_v)
     print("flattened type view, before:", v)
     print(f"-----\nafter: {TypeView(v, 'rooms').m()}\n")
+
+    v = copy.deepcopy(orig_v)
+    print("clean view, before:", v)
+    print(f"-----\nafter: {CleanView(v, 'rooms').m()}\n")
 
 if __name__ == '__main__':
     test()

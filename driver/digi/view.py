@@ -14,6 +14,7 @@ class View(ABC):
     def __init__(self,
                  root: dict,
                  root_key: str = "root",
+                 gvr_str = None,
                  trim_gv: bool = True,
                  trim_mount: bool = True,
                  trim_name: bool = True,
@@ -29,6 +30,17 @@ class View(ABC):
 
         self._name = os.environ["NAME"]
         self._ns = os.environ.get("NAMESPACE", "default")
+
+        if gvr_str is None:
+            self._r = os.environ["PLURAL"]
+            self._gv_str = f"{os.environ['GROUP']}" \
+                           f"/{os.environ['VERSION']}"
+            self._gvr_str = f"{self._gv_str}/{os.environ['PLURAL']}"
+        else:
+            gvr_str = util.full_gvr(gvr_str)
+            self._r = util.parse_gvr(gvr_str)[-1]
+            self._gv_str = "/".join(util.parse_gvr(gvr_str)[:-1])
+            self._gvr_str = gvr_str
 
     @abstractmethod
     def __enter__(self):
@@ -132,21 +144,7 @@ class KindView(View):
     TBDs: ditto
     """
 
-    def __init__(self, *args, gvr_str=None, **kwargs):
-        if gvr_str is None:
-            assert "GROUP" in os.environ and \
-                   "VERSION" in os.environ and \
-                   "PLURAL" in os.environ
-            self._r = os.environ["PLURAL"]
-            self._gv_str = f"{os.environ['GROUP']}" \
-                           f"/{os.environ['VERSION']}"
-            self._gvr_str = f"{self._gv_str}/{os.environ['PLURAL']}"
-        else:
-            gvr_str = util.full_gvr(gvr_str)
-            self._r = util.parse_gvr(gvr_str)[-1]
-            self._gv_str = "/".join(util.parse_gvr(gvr_str)[:-1])
-            self._gvr_str = gvr_str
-
+    def __init__(self, *args, **kwargs):
         self._typ_full_typ = dict()
         super().__init__(*args, **kwargs)
 
@@ -222,8 +220,35 @@ class CleanView(View):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __enter__(self):
+        raise NotImplementedError
+
+    def __exit__(self, typ, value, traceback):
+        raise NotImplementedError
+
+    def transform(self, root: dict, view: dict):
+        _mount = root.get("mount", {})
+        view.update(copy.deepcopy(root))
+        if len(_mount) > 0:
+            view["mount"] = dict()
+
+        for typ, models in _mount.items():
+            _typ = typ.replace(self._gv_str + "/", "")
+            view["mount"][_typ] = dict()
+
+            for name, model in models.items():
+                new_name = name.replace("default/", "")
+                if "spec" not in model:
+                    continue
+
+                spec: dict = model["spec"]
+                view["mount"][_typ][new_name] = dict()
+                self.transform(spec, view["mount"][_typ][new_name])
+
     def materialize(self) -> dict:
-        pass
+        root, view = self._root, dict()
+        self.transform(root, view)
+        return view
 
 
 class DotView(View):
