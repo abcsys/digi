@@ -32,7 +32,7 @@ endef
 export model
 
 # model
-.PHONY: init gen patch model all delete list edit
+.PHONY: init gen patch model all delete image list edit
 init:
 	cd $(WORKDIR) && mkdir $(KIND) >/dev/null 2>&1 || true && \
 	echo "$$model" > $(KIND)/model.yaml
@@ -47,6 +47,8 @@ all: | gen patch model
 delete:
 	cd $(WORKDIR)/$(KIND) >/dev/null 2>&1; kubectl delete -f crd.yaml 2>/dev/null || true
 	rm -r $(WORKDIR)/$(KIND) >/dev/null 2>&1 || true
+image:
+	cd $(WORKDIR) && ls -d */* 2> /dev/null | grep "model.yaml" | xargs -I {} dirname {}
 list:
 	kubectl get deploy --no-headers -o custom-columns=":metadata.name"
 edit:
@@ -120,9 +122,9 @@ ifndef LAKE
 override LAKE = lake
 endif
 .PHONY: query port
+# TBD enforce single lake or use service to identify lake
 query:
-	# TBD enforce single lake or use service to identify lake
-	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
+	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
         -- zapi query "$(QUERY)"
 port:
 	kubectl port-forward service/$(LAKE) 9867:6534 || tru
