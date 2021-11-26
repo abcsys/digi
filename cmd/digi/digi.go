@@ -147,7 +147,7 @@ var editCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var kind, name string
 		kind = args[0]
-		if len(args) > 2 {
+		if len(args) > 1 {
 			name = args[1]
 		}
 		_ = helper.RunMake(map[string]string{
