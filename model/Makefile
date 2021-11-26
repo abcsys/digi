@@ -48,7 +48,7 @@ delete:
 	cd $(WORKDIR)/$(KIND) >/dev/null 2>&1; kubectl delete -f crd.yaml 2>/dev/null || true
 	rm -r $(WORKDIR)/$(KIND) >/dev/null 2>&1 || true
 list:
-	cd $(WORKDIR); ls -d */* 2> /dev/null | grep "model.yaml" | xargs dirname
+	kubectl get deploy --no-headers -o custom-columns=":metadata.name"
 edit:
 	kubectl edit $(KIND) $(NAME)
 

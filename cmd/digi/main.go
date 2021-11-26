@@ -26,6 +26,7 @@ func main() {
 	runCmd.Flags().BoolP("show-kopf-log", "k", false, "Enable kopf logging")
 	RootCmd.AddCommand(stopCmd)
 	RootCmd.AddCommand(logCmd)
+	RootCmd.AddCommand(listCmd)
 
 	RootCmd.AddCommand(aliasCmd)
 	aliasCmd.AddCommand(aliasClearCmd)

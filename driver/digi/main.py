@@ -69,15 +69,12 @@ def run():
             pool.pool_name(g, v, r, n, ns)
         )
 
-        from digi.view import NameView, KindView
+        from digi.view import CleanView
         def load_pool(spec, *args, **kwargs):
             _, _ = args, kwargs
             spec = dict(spec)
             _pool.load([
-                spec,
-                # {"view": "orig", **spec},
-                # {"view": "name", **NameView(spec).view()},
-                # {"view": "kind", **KindView(spec).view()},
+                CleanView(spec).m(),
             ])
 
     # reconciler operations

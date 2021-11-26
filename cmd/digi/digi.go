@@ -325,3 +325,13 @@ var (
 		},
 	}
 )
+
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Aliases: []string{"ps"},
+	Short: "Get a list of running digis",
+	Args:  cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = helper.RunMake(nil, "list", false)
+	},
+}
