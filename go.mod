@@ -15,6 +15,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/brimdata/zed v0.33.0 // indirect
 	github.com/cloudflare/cfssl v1.5.0 // indirect
+	github.com/creack/pty v1.1.17 // indirect
 	github.com/deislabs/oras v0.11.1 // indirect
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fvbommel/sortorder v1.0.1 // indirect
