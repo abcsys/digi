@@ -147,7 +147,7 @@ def _attr(fn, path=".", prio=0):
             kwarg_filter.update({"subview": p})
             args[p] = None
 
-    for p in ["proc_view", "pv", "cur", "parent", "root"]:
+    for p in ["proc_view", "pv", "cur", "parent", "root", "model"]:
         if p in sig.parameters:
             kwarg_filter.update({"proc_view": p})
             args[p] = None
