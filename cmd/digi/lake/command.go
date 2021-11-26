@@ -1,18 +1,30 @@
 package lake
 
 import (
-	"github.com/spf13/cobra"
+	"fmt"
+	"strings"
 
 	"digi.dev/digi/cmd/digi/helper"
+	"github.com/spf13/cobra"
 )
 
 var (
 	QueryCmd = &cobra.Command{
-		Use:   "query [command]",
-		Short: "Query the digi lake",
-		Args:  cobra.ExactArgs(1),
+		Use:   "query [NAME] QUERY",
+		Short: "Query a digi or the digi lake",
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			_ = Query(args[0])
+			var name, query string
+			if len(args) > 1 {
+				name, query = args[0], args[1]
+			} else {
+				if isQuery(args[0]) {
+					name, query = "", args[0]
+				} else {
+					name, query = args[0], ""
+				}
+			}
+			_ = Query(name, query)
 		},
 	}
 
@@ -36,10 +48,22 @@ var (
 	}
 )
 
-func Query(q string) error {
+func Query(name, query string) error {
+	if name != "" {
+		if query != "" {
+			query = fmt.Sprintf("from %s | %s", name, query)
+		} else {
+			query = fmt.Sprintf("from %s", name)
+		}
+	}
+
 	return helper.RunMake(map[string]string{
-		"QUERY": q,
+		"QUERY": query,
 	}, "query", false)
+}
+
+func isQuery(s string) bool {
+	return len(strings.Split(s, " ")) > 1
 }
 
 func init() {

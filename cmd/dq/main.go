@@ -9,12 +9,10 @@ import (
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "dq [options] QUERY",
-	Short: "Query a digi",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		_ = lake.Query(args[0])
-	},
+	Use:   "dq [NAME] QUERY",
+	Short: lake.QueryCmd.Short,
+	Args:  lake.QueryCmd.Args,
+	Run: lake.QueryCmd.Run,
 }
 
 // TBD add lake management commands

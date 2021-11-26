@@ -59,7 +59,6 @@ var genCmd = &cobra.Command{
 var buildCmd = &cobra.Command{
 	Use:   "build KIND",
 	Short: "Build a digi image",
-	Aliases: []string{"images"},
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -82,7 +81,7 @@ var imageCmd = &cobra.Command{
 		if !q {
 			fmt.Println("IMAGE ID")
 		}
-		_ = helper.RunMake(nil, "list", q)
+		_ = helper.RunMake(nil, "image", q)
 	},
 }
 

@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"os"
 
+	"digi.dev/digi/cmd/digi/space"
 	"github.com/spf13/cobra"
 )
 
 var RootCmd = &cobra.Command{
 	Use:   "ds [options] [arguments...]",
-	Short: "Manage digis in a dSpace",
+	Short: space.RootCmd.Short,
+	Args:  space.RootCmd.Args,
+	Run:   space.RootCmd.Run,
 }
 
-// TBD
-
-func main(){
+func main() {
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
 
 	if err := RootCmd.Execute(); err != nil {
@@ -22,4 +23,3 @@ func main(){
 		os.Exit(1)
 	}
 }
-
