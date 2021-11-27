@@ -81,7 +81,7 @@ def patch():
                 for m_gvr, _ in spec["mount"]["properties"].items():
                     crd_deps[_gvr].add(m_gvr)
             if crd_group is None:
-                crd_group = [crd]
+                crd_group = list()
                 crd_groups[_gvr] = crd_group
             crd_group.append(crd)
 
@@ -98,7 +98,7 @@ def patch():
             if _gvr in parent_deps:
                 patch_mount(_gvr, crds[_gvr], parent_gvr, crds[parent_gvr])
                 parent_deps.remove(_gvr)
-        crd = crds.pop(_gvr)
+        _ = crds.pop(_gvr)
 
     for _gvr, _crds in crd_groups.items():
         with open(f_crds[_gvr], "w") as f:
