@@ -6,12 +6,12 @@ URLS = {
 
 setup(
     name="digi",
-    version="0.1.6",
+    version="0.1.7",
     description="dSpace driver library",
     url=URLS,
     author="Silvery Fu",
     author_email="silveryfu@gmail.com",
-    license="Apache 2.0",
+    license="BSD-3-Clause License",
     packages=find_packages(exclude=("tests",)),
     python_requires='>=3.7',
     include_package_data=True,
