@@ -125,7 +125,7 @@ var pushCmd = &cobra.Command{
 }
 
 var logCmd = &cobra.Command{
-	Use:     "log KIND",
+	Use:     "log NAME",
 	Short:   "Print log of a digi driver",
 	Aliases: []string{"logs"},
 	Args:    cobra.ExactArgs(1),
@@ -141,15 +141,24 @@ var logCmd = &cobra.Command{
 }
 
 var editCmd = &cobra.Command{
-	Use:   "edit KIND [NAME]",
+	Use:   "edit [KIND] NAME",
 	Short: "Edit a digi model",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var kind, name string
-		kind = args[0]
-		if len(args) > 1 {
-			name = args[1]
+		var name, kind string
+
+		if len(args) == 1 {
+			name = args[0]
+			auri, err := api.Resolve(name)
+			if err != nil {
+				fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
+				os.Exit(1)
+			}
+			kind = auri.Kind.Plural()
+		} else {
+			kind, name = args[0], args[1]
 		}
+
 		_ = helper.RunMake(map[string]string{
 			"KIND": kind,
 			"NAME": name,
@@ -236,16 +245,31 @@ var runCmd = &cobra.Command{
 }
 
 var stopCmd = &cobra.Command{
-	Use:   "stop KIND NAME",
+	Use:   "stop [KIND] NAME",
 	Short: "Stop a digi given kind and name",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
+
+		var name, kind string
+
+		if len(args) == 1 {
+			name = args[0]
+			auri, err := api.Resolve(name)
+			if err != nil {
+				fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
+				os.Exit(1)
+			}
+			kind = auri.Kind.Plural()
+		} else {
+			kind, name = args[0], args[1]
+		}
+
 		if err := helper.RunMake(map[string]string{
-			"KIND": args[0],
-			"NAME": args[1],
+			"KIND": kind,
+			"NAME": name,
 		}, "stop", q); err == nil && !q {
-			fmt.Println(args[1])
+			fmt.Println(name)
 		}
 	},
 }
@@ -346,7 +370,7 @@ var watchCmd = &cobra.Command{
 		var name, kind string
 
 		if len(args) == 1 {
-			name = args[1]
+			name = args[0]
 			auri, err := api.Resolve(name)
 			if err != nil {
 				fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)

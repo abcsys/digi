@@ -6,6 +6,7 @@ digi:
 	cd cmd/; go install ./digi ./dq ./ds
 dep:
 	go get github.com/brimdata/zed
+	go get github.com/silveryfu/kubectl-neat $(which kubectl-neat) && .krew/bin/kubectl-neat
 install: | digi
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
 	cp ./model/Makefile $(HOMEDIR) && \
