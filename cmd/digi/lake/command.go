@@ -68,12 +68,11 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 		full  string
 	}{
 		{"f", "format"},
-		{"o", "output"},
 		// ...
 	} {
 		s, _ := flags.GetString(f.full)
 		if s != "" {
-			flagStr += fmt.Sprintf("-%s %s", f.short, s)
+			flagStr += fmt.Sprintf("-%s %s ", f.short, s)
 		}
 	}
 
@@ -87,6 +86,5 @@ func init() {
 	ManageCmd.AddCommand(ConnectCmd)
 
 	QueryCmd.Flags().StringP("format", "f", "", "Output data format.")
-	QueryCmd.Flags().StringP("output", "o", "", "Output data file.")
 	// ...
 }
