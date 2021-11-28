@@ -27,6 +27,8 @@ func main() {
 	RootCmd.AddCommand(stopCmd)
 	RootCmd.AddCommand(logCmd)
 	RootCmd.AddCommand(listCmd)
+	RootCmd.AddCommand(watchCmd)
+	watchCmd.Flags().Float64P("interval", "i", 1, "Refresh interval")
 
 	RootCmd.AddCommand(aliasCmd)
 	aliasCmd.AddCommand(aliasClearCmd)

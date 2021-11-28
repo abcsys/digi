@@ -95,7 +95,7 @@ pull:
 	cd $(WORKDIR) && rsync $(DIGIREPO)/$(KIND).gz . && tar xzf $(KIND).gz && rm $(KIND).gz > /dev/null
 
 # deploy
-.PHONY: run stop print
+.PHONY: run stop watch
 run: | prepare model
 	# stop any existing: delete model, driver, pool
 	kubectl delete $(KIND) $(NAME) >/dev/null 2>&1 || true
@@ -114,8 +114,8 @@ stop:
 	helm uninstall $(NAME) >/dev/null && \
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zapi drop -f $(NAME) >/dev/null
-print:
-	kubectl get samples sample -oyaml | kubectl neat
+watch:
+	watch -n$(INTERVAL) "kubectl get $(KIND) $(NAME) -oyaml | kubectl neat"
 
 # lake
 ifndef LAKE

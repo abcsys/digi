@@ -141,9 +141,9 @@ var logCmd = &cobra.Command{
 }
 
 var editCmd = &cobra.Command{
-	Use:     "edit KIND [NAME]",
-	Short:   "Edit a digi model",
-	Args:    cobra.MinimumNArgs(1),
+	Use:   "edit KIND [NAME]",
+	Short: "Edit a digi model",
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var kind, name string
 		kind = args[0]
@@ -326,11 +326,41 @@ var (
 )
 
 var listCmd = &cobra.Command{
-	Use:   "list",
+	Use:     "list",
+	Short:   "Get a list of running digis",
 	Aliases: []string{"ps"},
-	Short: "Get a list of running digis",
-	Args:  cobra.ExactArgs(0),
+	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = helper.RunMake(nil, "list", false)
+	},
+}
+
+var watchCmd = &cobra.Command{
+	Use:     "watch [KIND] NAME",
+	Short:   "Watch changes of a digi's model",
+	Aliases: []string{"w"},
+	Args:    cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		i, _ := cmd.Flags().GetFloat32("interval")
+
+		var name, kind string
+
+		if len(args) == 1 {
+			name = args[1]
+			auri, err := api.Resolve(name)
+			if err != nil {
+				fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
+				os.Exit(1)
+			}
+			kind = auri.Kind.Plural()
+		} else {
+			kind, name = args[0], args[1]
+		}
+
+		_ = helper.RunMake(map[string]string{
+			"NAME":     name,
+			"KIND":     kind,
+			"INTERVAL": fmt.Sprintf("%f", i),
+		}, "watch", false)
 	},
 }
