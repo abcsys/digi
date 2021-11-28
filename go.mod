@@ -41,6 +41,7 @@ require (
 	github.com/operator-framework/operator-sdk v0.18.0 // indirect
 	github.com/slok/kubewebhook v0.10.0
 	github.com/spf13/cobra v1.2.1
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.9.0
 	github.com/thoas/go-funk v0.8.0 // indirect
 	github.com/tidwall/sjson v1.2.3

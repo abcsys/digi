@@ -37,9 +37,9 @@ init:
 	cd $(WORKDIR) && mkdir $(KIND) >/dev/null 2>&1 || true && \
 	echo "$$model" > $(KIND)/model.yaml
 gen:
-	cd $(WORKDIR); REPO=$(REPO) python $(DIGIHOME)/gen.py $(KIND)
+	cd $(WORKDIR) && REPO=$(REPO) python $(DIGIHOME)/gen.py $(KIND)
 patch:
-	cd $(WORKDIR); python $(DIGIHOME)/patch.py $(KIND)
+	cd $(WORKDIR) && python $(DIGIHOME)/patch.py $(KIND)
 model:
 	cd $(WORKDIR)/$(KIND) && kubectl apply -f crd.yaml >/dev/null
 all: | gen patch model
@@ -63,7 +63,7 @@ n := $(KIND)-test
 ns := default
 
 test: | model all
-	cd $(WORKDIR)/$(KIND)/test; kubectl delete $(KIND) $(n); kubectl apply -f cr.yaml
+	cd $(WORKDIR)/$(KIND)/test && kubectl delete $(KIND) $(n); kubectl apply -f cr.yaml
 	GROUP=$(g) VERSION=$(v) PLURAL=$(r) NAME=$(n) NAMESPACE=$(ns) MOUNTER=$(MOUNTER) \
 	python $(WORKDIR)/$(KIND)/driver/handler.py
 
@@ -82,7 +82,7 @@ prepare:
 build: | prepare gen patch
 	rsync $(driver_handler) $(build_dir)/ || true
 	# use DOCKER_BUILDKIT=0 to enable more messages
-	cd $(build_dir); sudo docker build -t $(REPO)/$(KIND):$(TAG) -f deploy/image/Dockerfile . || true
+	cd $(build_dir) && sudo docker build -t $(REPO)/$(KIND):$(TAG) -f deploy/image/Dockerfile . || true
 	sudo docker push $(REPO)/$(KIND):$(TAG)|| true
 	rm -r $(build_dir) || true
 
@@ -90,9 +90,9 @@ build: | prepare gen patch
 .PHONY: push pull
 push:
 	mkdir $(DIGIREPO) >/dev/null 2>&1 || true
-	cd $(WORKDIR); tar czf $(KIND).gz $(KIND) && mv $(KIND).gz $(DIGIREPO)/ >/dev/null || true
+	cd $(WORKDIR) && tar czf $(KIND).gz $(KIND) && mv $(KIND).gz $(DIGIREPO)/ >/dev/null || true
 pull:
-	cd $(WORKDIR); rsync $(DIGIREPO)/$(KIND).gz . && tar xzf $(KIND).gz && rm $(KIND).gz > /dev/null
+	cd $(WORKDIR) && rsync $(DIGIREPO)/$(KIND).gz . && tar xzf $(KIND).gz && rm $(KIND).gz > /dev/null
 
 # deploy
 .PHONY: run stop print
@@ -104,7 +104,7 @@ run: | prepare model
     -- zapi drop -f $(NAME) >/dev/null 2>&1 || true
 	# deploy anew: create model, driver, pool
 	# TBD make pool optional by checking values.yaml
-	cd $(build_dir)/deploy; mv cr.yaml ./templates; \
+	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
 	helm install -f values.yaml --set name=$(NAME) $(NAME) . >/dev/null && \
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
     -- zapi create $(NAME) >/dev/null
@@ -125,7 +125,7 @@ endif
 # TBD enforce single lake or use service to identify lake
 query:
 	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-        -- zapi query "$(QUERY)"
+        -- zapi query $(FLAG) "$(QUERY)"
 port:
 	kubectl port-forward service/$(LAKE) 9867:6534 || tru
 

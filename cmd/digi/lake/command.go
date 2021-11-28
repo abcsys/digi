@@ -6,6 +6,7 @@ import (
 
 	"digi.dev/digi/cmd/digi/helper"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -24,7 +25,7 @@ var (
 					name, query = args[0], ""
 				}
 			}
-			_ = Query(name, query)
+			_ = Query(name, query, cmd.Flags())
 		},
 	}
 
@@ -48,7 +49,11 @@ var (
 	}
 )
 
-func Query(name, query string) error {
+func isQuery(s string) bool {
+	return len(strings.Split(s, " ")) > 1
+}
+
+func Query(name, query string, flags *pflag.FlagSet) error {
 	if name != "" {
 		if query != "" {
 			query = fmt.Sprintf("from %s | %s", name, query)
@@ -57,15 +62,31 @@ func Query(name, query string) error {
 		}
 	}
 
-	return helper.RunMake(map[string]string{
-		"QUERY": query,
-	}, "query", false)
-}
+	var flagStr string
+	for _, f := range []struct {
+		short string
+		full  string
+	}{
+		{"f", "format"},
+		{"o", "output"},
+		// ...
+	} {
+		s, _ := flags.GetString(f.full)
+		if s != "" {
+			flagStr += fmt.Sprintf("-%s %s", f.short, s)
+		}
+	}
 
-func isQuery(s string) bool {
-	return len(strings.Split(s, " ")) > 1
+	return helper.RunMake(map[string]string{
+		"QUERY":  query,
+		"FLAG": flagStr,
+	}, "query", false)
 }
 
 func init() {
 	ManageCmd.AddCommand(ConnectCmd)
+
+	QueryCmd.Flags().StringP("format", "f", "", "Output data format.")
+	QueryCmd.Flags().StringP("output", "o", "", "Output data file.")
+	// ...
 }
