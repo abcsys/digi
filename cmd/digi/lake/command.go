@@ -11,7 +11,7 @@ import (
 
 var (
 	QueryCmd = &cobra.Command{
-		Use:   "query [NAME] QUERY",
+		Use:   "query [OPTIONS] [NAME] QUERY",
 		Short: "Query a digi or the digi lake",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -68,11 +68,21 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 		full  string
 	}{
 		{"f", "format"},
+		{"Z", ""},
 		// ...
 	} {
-		s, _ := flags.GetString(f.full)
-		if s != "" {
-			flagStr += fmt.Sprintf("-%s %s ", f.short, s)
+		switch f.full {
+		case "":
+			b, _ := flags.GetBool(f.short)
+			if b {
+				flagStr += fmt.Sprintf("-%s  ", f.short)
+			}
+			break
+		default:
+			s, _ := flags.GetString(f.full)
+			if s != "" {
+				flagStr += fmt.Sprintf("-%s %s ", f.short, s)
+			}
 		}
 	}
 
@@ -86,5 +96,6 @@ func init() {
 	ManageCmd.AddCommand(ConnectCmd)
 
 	QueryCmd.Flags().StringP("format", "f", "", "Output data format.")
+	QueryCmd.Flags().BoolP("Z", "Z", false, "Pretty formatted output.")
 	// ...
 }
