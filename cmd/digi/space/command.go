@@ -89,5 +89,10 @@ var pipeCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(mountCmd)
+	mountCmd.Flags().BoolP("delete", "d", false, "Unmount source from target")
+	mountCmd.Flags().BoolP("yield", "y", false, "Yield a mount")
+	mountCmd.Flags().BoolP("activate", "a", false, "Activate a mount")
+
 	RootCmd.AddCommand(pipeCmd)
+	pipeCmd.Flags().BoolP("delete", "d", false, "Unpipe source from target")
 }

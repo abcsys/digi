@@ -9,7 +9,7 @@ import (
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "dq [NAME] QUERY",
+	Use:   "dq [OPTIONS] [NAME] QUERY",
 	Short: lake.QueryCmd.Short,
 	Args:  lake.QueryCmd.Args,
 	Run: lake.QueryCmd.Run,

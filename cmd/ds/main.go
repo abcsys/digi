@@ -5,18 +5,13 @@ import (
 	"os"
 
 	"digi.dev/digi/cmd/digi/space"
-	"github.com/spf13/cobra"
 )
 
-var RootCmd = &cobra.Command{
-	Use:   "ds [options] [arguments...]",
-	Short: space.RootCmd.Short,
-	Args:  space.RootCmd.Args,
-	Run:   space.RootCmd.Run,
-}
+var RootCmd = space.RootCmd
 
 func main() {
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
+	RootCmd.Use = "ds [options] [arguments...]"
 
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
