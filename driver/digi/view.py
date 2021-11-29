@@ -230,6 +230,10 @@ class CleanView(View):
         _mount = root.get("mount", {})
         view.update(copy.deepcopy(root))
         if len(_mount) > 0:
+            if self._trim_mount:
+                del view["mount"]
+                return
+
             view["mount"] = dict()
 
         for typ, models in _mount.items():

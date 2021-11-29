@@ -74,7 +74,7 @@ def run():
             _, _ = args, kwargs
             spec = dict(spec)
             _pool.load([
-                CleanView(spec).m(),
+                CleanView(spec, trim_mount=os.environ.get("PARENT_TRIM_MOUNT", True)).m(),
             ])
 
     # reconciler operations

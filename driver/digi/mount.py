@@ -84,7 +84,7 @@ class Mounter:
             _, _ = args, kwargs
             _g, _v, _r = util.gvr_from_body(body)
             _sync_from_parent(_g, _v, _r,
-                              attrs_to_trim={"status", "output", "obs"},
+                              attrs_to_trim={"status", "output", "obs", "meta"},
                               *args, **kwargs)
             _sync_to_parent(_g, _v, _r,
                             attrs_to_trim={"intent", "input"},
@@ -345,7 +345,7 @@ class Mounter:
             if mount_entry.get("status", "inactive") == "active":
                 spec = mount_entry.get("spec", None)
                 if spec is not None:
-                    spec = util.trim_attr(spec, {"status", "output", "obs"})
+                    spec = util.trim_attr(spec, {"status", "output", "obs", "meta"})
 
                 gen = mount_entry.get("generation", sys.maxsize)
                 return spec, gen
