@@ -7,40 +7,33 @@ logger = logging.getLogger(__name__)
 __handler = logging.StreamHandler()
 __handler.setFormatter(loggers.make_formatter())
 logger.addHandler(__handler)
-logger.setLevel(int(os.environ.get("LOGLEVEL", logging.INFO)))
 
+# control the log level for k8s event and local/handler logging
+log_level = int(os.environ.get("LOGLEVEL", logging.INFO))
+logger.setLevel(log_level)
 
-# default auri
-def set_default_gvr():
-    if "GROUP" not in os.environ:
-        os.environ["GROUP"] = "nil.digi.dev"
-    if "VERSION" not in os.environ:
-        os.environ["VERSION"] = "v0"
-    if "PLURAL" not in os.environ:
-        os.environ["PLURAL"] = "nil"
-    if "NAME" not in os.environ:
-        os.environ["NAME"] = "nil"
-    if "NAMESPACE" not in os.environ:
-        os.environ["NAMESPACE"] = "default"
+# digi metadata and identifiers
+g = group = os.environ["GROUP"]
+v = version = os.environ["VERSION"]
+r = resource = os.environ["PLURAL"]
+n = name = os.environ["NAME"]
+ns = namespace = os.environ.get("NAMESPACE", "default")
+auri = (g, v, r, n, ns)
 
+pool_provider = os.environ.get("POOL_PROVIDER", "zed")
 
-set_default_gvr()
-
-
-# digi modules
+# digi modules; force init
 from digi import (
     on,
     util,
     view,
     filter,
     mount,
+    pool,
 )
 from digi.main import run
-from digi.reconcile import rc
-auri = (rc.g, rc.v, rc.r, rc.n, rc.ns)
-
 
 __all__ = [
     "on", "util", "view", "filter",
-    "run", "logger", "auri", "mount"
+    "run", "logger", "mount", "pool",
 ]

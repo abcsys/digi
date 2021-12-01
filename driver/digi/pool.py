@@ -1,9 +1,12 @@
+import sys
 import json
 import datetime
 from abc import ABC, abstractmethod
 from typing import List
 
 import zed
+import digi
+from digi import logger
 
 lake_url = "http://lake:6534"
 
@@ -56,3 +59,30 @@ def pool_name(g, v, r, n, ns):
 
 def get_ts():
     return datetime.datetime.now().isoformat() + "Z"
+
+
+providers = {
+    "zed": ZedPool
+    # ...
+}
+
+
+def new():
+    global providers
+    pool_provider = digi.pool_provider
+
+    if pool_provider == "":
+        pool_provider = "zed"
+
+    if pool_provider in {"none", "false"}:
+        return None
+
+    elif pool_provider not in providers:
+        logger.fatal(f"unknown pool provider {pool_provider}")
+        sys.exit(1)
+    else:
+        return providers[pool_provider](
+            pool_name(*digi.auri)
+        )
+
+pool = new()

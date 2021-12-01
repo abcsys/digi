@@ -4,6 +4,7 @@ import traceback
 import logging
 from collections import OrderedDict
 
+import digi
 import digi.util as util
 import digi.filter as filter_
 import digi.processor as processor
@@ -26,11 +27,11 @@ class __Reconciler:
 
         # sorted list of handlers in execution order
         self.handlers = list()
-        self.g = os.environ["GROUP"]
-        self.v = os.environ["VERSION"]
-        self.r = os.environ["PLURAL"]
-        self.n = os.environ["NAME"]
-        self.ns = os.environ["NAMESPACE"]
+        self.g = digi.g
+        self.v = digi.v
+        self.r = digi.r
+        self.n = digi.n
+        self.ns = digi.ns
 
         log_level = int(os.environ.get("LOGLEVEL", logging.INFO))
         self._logger = logging.getLogger(__name__)

@@ -1,42 +1,33 @@
-import copy
 import os
-import sys
 import logging
 import kopf
 
 import digi.util as util
 from digi.mount import Mounter
-import digi.pool as pool
 
 
 def run():
-    g = os.environ["GROUP"]
-    v = os.environ["VERSION"]
-    r = os.environ["PLURAL"]
-    n = os.environ["NAME"]
-    ns = os.environ.get("NAMESPACE", "default")
-    pool_provider = os.environ.get("POOL_PROVIDER", "zed")
+    import digi
 
-    # control the log level for k8s event and local/handler logging
-    log_level = int(os.environ.get("LOGLEVEL", logging.INFO))
     logger = logging.getLogger(__name__)
-    logger.setLevel(log_level)
+    logger.setLevel(digi.log_level)
 
     # prevent printing root
     logging.getLogger().addHandler(logging.NullHandler())
 
     if os.environ.get("MOUNTER", "false") == "true":
-        Mounter(g, v, r, n, ns, log_level=log_level).start()
+        Mounter(digi.g, digi.v, digi.r, digi.n, digi.ns,
+                log_level=digi.log_level).start()
 
     # kopf embedded operator
     _model = {
-        "group": g,
-        "version": v,
-        "plural": r,
+        "group": digi.g,
+        "version": digi.v,
+        "plural": digi.r,
     }
     _registry = util.KopfRegistry()
     _kwargs = {
-        "when": lambda name, namespace, **_: name == n and namespace == ns,
+        "when": lambda name, namespace, **_: name == digi.n and namespace == digi.ns,
         "registry": _registry,
     }
     _ready, _stop = None, None
@@ -48,48 +39,27 @@ def run():
     @kopf.on.startup(registry=_registry)
     def configure(settings: kopf.OperatorSettings, **_):
         settings.persistence.progress_storage = kopf.AnnotationsProgressStorage()
-        settings.posting.level = log_level
-
-    # data pool operations
-    _providers = {
-        "zed": pool.ZedPool
-    }
-
-    load_pool = lambda *args, **kwargs: ...
-
-    if pool_provider == "":
-        pool_provider = "zed"
-    if pool_provider in {"none", "false"}:
-        pass
-    elif pool_provider not in _providers:
-        logger.fatal(f"unknown pool provider {pool_provider}")
-        sys.exit(1)
-    else:
-        _pool = _providers[pool_provider](
-            pool.pool_name(g, v, r, n, ns)
-        )
-
-        from digi.view import CleanView
-        def load_pool(spec, *args, **kwargs):
-            _, _ = args, kwargs
-            spec = dict(spec)
-            _pool.load([
-                CleanView(spec, trim_mount=os.environ.get("PARENT_TRIM_MOUNT", True)).m(),
-            ])
+        settings.posting.level = digi.log_level
 
     # reconciler operations
     from digi.reconcile import rc
+    from digi.pool import pool
+    from digi.view import CleanView
+    _trim_mount = os.environ.get("PARENT_TRIM_MOUNT", True)
 
     # TBD selectively add decorator
     @kopf.on.create(**_model, **_kwargs)
     @kopf.on.resume(**_model, **_kwargs)
     @kopf.on.update(**_model, **_kwargs)
-    def reconcile(meta, *args, **kwargs):
-        try:
-            load_pool(*args, **kwargs)
-            logger.info(f"Done loading to pool.")
-        except Exception as e:
-            logger.warning(f"unable to load to pool: {e}")
+    def reconcile(spec, meta, *args, **kwargs):
+        if pool is not None:
+            try:
+                pool.load([
+                    CleanView(dict(spec), trim_mount=_trim_mount).m(),
+                ])
+                logger.info(f"Done loading model snapshot to pool.")
+            except Exception as e:
+                logger.warning(f"unable to load to pool: {e}")
 
         gen = meta["generation"]
         # skip the last self-write
@@ -98,8 +68,8 @@ def run():
             logger.info(f"Skipping gen {gen}")
             return
 
-        spec = rc.run(*args, **kwargs)
-        _, resp, e = util.check_gen_and_patch_spec(g, v, r, n, ns,
+        spec = rc.run(spec, *args, **kwargs)
+        _, resp, e = util.check_gen_and_patch_spec(digi.g, digi.v, digi.r, digi.n, digi.ns,
                                                    spec, gen=gen)
         if e is not None:
             if e.status == util.DriverError.GEN_OUTDATED:
@@ -121,4 +91,4 @@ def run():
         _, _ = args, kwargs
         # _stop.set()
 
-    _ready, _stop = util.run_operator(_registry, log_level=log_level)
+    _ready, _stop = util.run_operator(_registry, log_level=digi.log_level)
