@@ -1,5 +1,6 @@
 import os
 import uuid
+import time
 import asyncio
 import contextlib
 import threading
@@ -422,3 +423,25 @@ def parse_auri(s: str) -> Auri or None:
     if parsed is None:
         return None
     return Auri(**parsed)
+
+
+class Loader(threading.Thread):
+    def __init__(self, load_fn: callable, load_interval: float = 1):
+        threading.Thread.__init__(self)
+        self.load_fn = load_fn
+        self.load_interval = load_interval
+        self._stop_flag = threading.Event()
+
+    def run(self):
+        self._stop_flag.clear()
+        while not self._stop_flag.is_set():
+            self.load_fn()
+            time.sleep(self.load_interval)
+
+    def stop(self):
+        self._stop_flag.set()
+
+    def reset(self, load_interval: float = None) -> None:
+        if load_interval is not None:
+            self.load_interval = load_interval
+        self.stop()

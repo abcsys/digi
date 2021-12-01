@@ -1,6 +1,7 @@
 import sys
 import json
 import datetime
+import threading
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -15,6 +16,7 @@ class Pool(ABC):
     @abstractmethod
     def __init__(self, name: str):
         self.name = name
+        self.lock = threading.Lock()
 
     @abstractmethod
     def create(self, *args, **kwargs):
@@ -43,7 +45,12 @@ class ZedPool(Pool):
             # TBD if ts already exist, rename it to event_ts
             o["ts"] = ts
         data = "".join(json.dumps(o) for o in objects)
-        self.client.load(self.name, data)
+
+        self.lock.acquire()
+        try:
+            self.client.load(self.name, data)
+        finally:
+            self.lock.release()
 
     def query(self, query):
         self.client.query(query)

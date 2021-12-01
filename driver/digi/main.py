@@ -1,5 +1,4 @@
 import os
-import logging
 import kopf
 
 import digi.util as util
@@ -9,12 +8,7 @@ from digi.mount import Mounter
 def run():
     import digi
 
-    logger = logging.getLogger(__name__)
-    logger.setLevel(digi.log_level)
-
-    # prevent printing root
-    logging.getLogger().addHandler(logging.NullHandler())
-
+    # run mounter
     if os.environ.get("MOUNTER", "false") == "true":
         Mounter(digi.g, digi.v, digi.r, digi.n, digi.ns,
                 log_level=digi.log_level).start()
@@ -43,7 +37,6 @@ def run():
 
     # reconciler operations
     from digi.reconcile import rc
-    from digi.pool import pool
     from digi.view import CleanView
     _trim_mount = os.environ.get("PARENT_TRIM_MOUNT", True)
 
@@ -52,20 +45,20 @@ def run():
     @kopf.on.resume(**_model, **_kwargs)
     @kopf.on.update(**_model, **_kwargs)
     def reconcile(spec, meta, *args, **kwargs):
-        if pool is not None:
+        if digi.pool is not None:
             try:
-                pool.load([
+                digi.pool.load([
                     CleanView(dict(spec), trim_mount=_trim_mount).m(),
                 ])
-                logger.info(f"Done loading model snapshot to pool.")
+                digi.logger.info(f"Done loading model snapshot to pool.")
             except Exception as e:
-                logger.warning(f"unable to load to pool: {e}")
+                digi.logger.warning(f"unable to load to pool: {e}")
 
         gen = meta["generation"]
         # skip the last self-write
         # TBD for parallel reconciliation may need to lock rc.gen before patch
         if gen == rc.skip_gen:
-            logger.info(f"Skipping gen {gen}")
+            digi.logger.info(f"Skipping gen {gen}")
             return
 
         spec = rc.run(spec, *args, **kwargs)
@@ -84,7 +77,7 @@ def run():
         new_gen = resp["metadata"]["generation"]
         if gen + 1 == new_gen:
             rc.skip_gen = new_gen
-        logger.info(f"Done reconciliation")
+        digi.logger.info(f"Done reconciliation")
 
     @kopf.on.delete(**_model, **_kwargs, optional=True)
     def on_delete(*args, **kwargs):

@@ -1,12 +1,8 @@
 import os
 import logging
-from kopf.engines import loggers
 
-# default log level and format
+# default logger
 logger = logging.getLogger(__name__)
-__handler = logging.StreamHandler()
-__handler.setFormatter(loggers.make_formatter())
-logger.addHandler(__handler)
 
 # control the log level for k8s event and local/handler logging
 log_level = int(os.environ.get("LOGLEVEL", logging.INFO))
@@ -29,11 +25,12 @@ from digi import (
     view,
     filter,
     mount,
-    pool,
 )
 from digi.main import run
+from digi.pool import pool
+from digi.reconcile import rc
 
 __all__ = [
     "on", "util", "view", "filter",
-    "run", "logger", "mount", "pool",
+    "run", "logger", "mount", "pool", "rc"
 ]

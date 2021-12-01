@@ -1,7 +1,5 @@
-import os
 import typing
 import traceback
-import logging
 from collections import OrderedDict
 
 import digi
@@ -33,9 +31,7 @@ class __Reconciler:
         self.n = digi.n
         self.ns = digi.ns
 
-        log_level = int(os.environ.get("LOGLEVEL", logging.INFO))
-        self._logger = logging.getLogger(__name__)
-        self._logger.setLevel(log_level)
+        self._logger = digi.logger
 
         self.skip_gen = -1
 
@@ -171,6 +167,9 @@ class __Reconciler:
         self.handlers = sorted(self.handlers, key=lambda x: x[3])
         self._handler_info_updated = False
 
+    def view(self):
+        return self._view
+
 
 def safe_lookup(d: dict, path: tuple):
     if path == (".",):
@@ -199,5 +198,6 @@ def get_back_prop(diff):
             continue
         bp.append((op, path, old, new))
     return bp
+
 
 rc = __Reconciler()
