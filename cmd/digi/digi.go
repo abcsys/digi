@@ -32,9 +32,16 @@ var initCmd = &cobra.Command{
 		q, _ := cmd.Flags().GetBool("quiet")
 
 		kind := args[0]
-		if err := helper.RunMake(map[string]string{
+		params := map[string]string{
 			"KIND": kind,
-		}, "init", q); err == nil && !q {
+		}
+		if g, _ := cmd.Flags().GetString("group"); g != "" {
+			params["GROUP"] = g
+		}
+		if v, _ := cmd.Flags().GetString("version"); v != "" {
+			params["VERSION"] = v
+		}
+		if err := helper.RunMake(params, "init", q); err == nil && !q {
 			fmt.Println(kind)
 		}
 	},
@@ -62,10 +69,14 @@ var buildCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
-
+		var buildFlag string
+		if q {
+			buildFlag += "-q"
+		}
 		kind := args[0]
 		if err := helper.RunMake(map[string]string{
 			"KIND": kind,
+			"BUILDFLAG": buildFlag,
 		}, "build", q); err == nil && !q {
 			fmt.Println(kind)
 		}

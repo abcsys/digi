@@ -18,6 +18,14 @@ ifndef TAG
 override TAG = latest
 endif
 
+ifndef GROUP
+override GROUP = digi.dev
+endif
+
+ifndef VERSION
+override VERSION = v1
+endif
+
 digi_src := $(GOPATH)/src/digi.dev/digi
 driver_dir := $(digi_src)/driver
 driver_handler := $(WORKDIR)/$(KIND)/driver/*
@@ -25,8 +33,8 @@ digi_config := $(WORKDIR)/$(KIND)/deploy/*
 build_dir := /tmp/digi-build-$(KIND)-$(TAG)
 
 define model
-group: digi.dev
-version: v1
+group: $(GROUP)
+version: $(VERSION)
 kind: $(KIND)
 endef
 export model
@@ -82,8 +90,8 @@ prepare:
 build: | prepare gen patch
 	rsync $(driver_handler) $(build_dir)/ || true
 	# use DOCKER_BUILDKIT=0 to enable more messages
-	cd $(build_dir) && sudo docker build -t $(REPO)/$(KIND):$(TAG) -f deploy/image/Dockerfile . || true
-	sudo docker push $(REPO)/$(KIND):$(TAG)|| true
+	cd $(build_dir) && sudo docker build -t $(REPO)/$(KIND):$(TAG) $(BUILDFLAG) -f deploy/image/Dockerfile . || true
+	sudo docker push $(REPO)/$(KIND):$(TAG) $(BUILDFLAG) || true
 	rm -r $(build_dir) || true
 
 # image

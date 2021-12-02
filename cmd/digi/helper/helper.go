@@ -76,6 +76,7 @@ func RunMake(args map[string]string, cmd string, quiet bool) error {
 	// Copy stdin to the pty and the pty to stdout.
 	// NOTE: The goroutine will keep reading until the next keystroke before returning.
 	go func() { _, _ = io.Copy(ptmx, os.Stdin) }()
+
 	_, _ = io.Copy(os.Stdout, ptmx)
 
 	return nil

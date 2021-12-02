@@ -12,6 +12,8 @@ func main() {
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
 
 	RootCmd.AddCommand(initCmd)
+	initCmd.Flags().StringP("group", "g", "", "Model group.")
+	initCmd.Flags().StringP("version", "v", "", "Model version.")
 	RootCmd.AddCommand(genCmd)
 	RootCmd.AddCommand(buildCmd)
 

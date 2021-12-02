@@ -32,12 +32,12 @@ func (c *Client) GetResourceJson(ar *core.Auri) (string, error) {
 	gvr := ar.Gvr()
 	d, err := c.k.DynamicClient.Resource(gvr).Namespace(ar.Namespace).Get(context.TODO(), ar.Name, metav1.GetOptions{})
 	if err != nil {
-		return "", fmt.Errorf("unable to get digivice %v: %v", gvr, err)
+		return "", fmt.Errorf("unable to get digi %v: %v", gvr, err)
 	}
 
 	j, err := json.MarshalIndent(d, "", "  ")
 	if err != nil {
-		return "", fmt.Errorf("unable to parse digivice %s: %v", j, err)
+		return "", fmt.Errorf("unable to parse digi %s: %v", j, err)
 	}
 
 	return string(j), nil
