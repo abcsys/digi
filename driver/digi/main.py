@@ -68,7 +68,9 @@ def run():
             if e.status == util.DriverError.GEN_OUTDATED:
                 # retry s.t. the diff object contains the past changes
                 # TBD(@kopf) non-zero delay fix
-                raise kopf.TemporaryError(e, delay=0)
+                # raise kopf.TemporaryError(e, delay=0)
+                digi.logger.warning("gen outdated")
+                return
             else:
                 raise kopf.PermanentError(e.status)
 
