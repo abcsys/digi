@@ -377,6 +377,7 @@ var watchCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		i, _ := cmd.Flags().GetFloat32("interval")
+		l, _ := cmd.Flags().GetInt8("neat-level")
 
 		var name, kind string
 
@@ -392,10 +393,13 @@ var watchCmd = &cobra.Command{
 			kind, name = args[0], args[1]
 		}
 
-		_ = helper.RunMake(map[string]string{
+		params := map[string]string{
 			"NAME":     name,
 			"KIND":     kind,
 			"INTERVAL": fmt.Sprintf("%f", i),
-		}, "watch", false)
+			"NEATLEVEL": fmt.Sprintf("-l %d", l),
+		}
+
+		_ = helper.RunMake(params, "watch", false)
 	},
 }

@@ -103,6 +103,7 @@ def patch():
     for _gvr, _crds in crd_groups.items():
         with open(f_crds[_gvr], "w") as f:
             yaml.dump_all(_crds, f)
+            # ..,sort_keys=False
 
 
 if __name__ == '__main__':

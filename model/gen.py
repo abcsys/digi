@@ -347,6 +347,7 @@ def gen(name):
 
     with open(os.path.join(_dir_path, "crd.yaml"), "w") as f_:
         yaml.dump_all(crds, f_)
+        # ..,sort_keys=False
 
 
 if __name__ == '__main__':

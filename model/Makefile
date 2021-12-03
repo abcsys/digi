@@ -123,7 +123,7 @@ stop:
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zapi drop -f $(NAME) >/dev/null
 watch:
-	watch -n$(INTERVAL) "kubectl get $(KIND) $(NAME) -oyaml | kubectl neat"
+	watch -n$(INTERVAL) -t "kubectl get $(KIND) $(NAME) -oyaml | kubectl neat $(NEATLEVEL)"
 
 # lake
 ifndef LAKE
