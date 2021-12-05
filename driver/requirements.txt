@@ -2,6 +2,6 @@
 kubernetes
 pyyaml
 inflection
-pyjq
+# pyjq
 python-box
 # digi

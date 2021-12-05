@@ -19,7 +19,7 @@ setup(
         "kubernetes",
         'kopf',
         "pyyaml",
-        "pyjq",
+        # "pyjq",
         "inflection",
         "python-box",
     ],
