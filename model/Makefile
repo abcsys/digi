@@ -80,7 +80,6 @@ clean-test:
 	kubectl delete $(KIND) $(NAME) >/dev/null 2>&1 || true
 test: | all clean-test
 	kubectl apply -f $(WORKDIR)/$(KIND)/test/cr.yaml
-
 	cd $(WORKDIR) && GROUP=`head -n1 $(KIND)/model.yaml | cut -d' ' -f 2` \
 	VERSION=`head -n2 $(KIND)/model.yaml | tail -1 | cut -d' ' -f 2` \
     PLURAL=$(PLURAL) NAME=$(KIND)-test NAMESPACE=$(NAMESPACE) \

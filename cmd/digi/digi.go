@@ -137,22 +137,31 @@ var testCmd = &cobra.Command{
 	Short: "Test run a digi driver",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c, _ := cmd.Flags().GetBool("clean")
-		var cmdStr string
-		if cmdStr = "test"; c {
-			cmdStr = "clean-test"
+		kind := args[0]
+
+		var useMounter string
+		if um, _ := cmd.Flags().GetBool("mounter"); um {
+			useMounter = "true"
+		} else {
+			useMounter = "false"
 		}
 
-		noAlias, _ := cmd.Flags().GetBool("no-alias")
 		params := map[string]string{
-			"KIND":   args[0],
-			"PLURAL": inflection.Plural(strings.ToLower(args[0])),
+			"KIND":    kind,
+			"PLURAL":  inflection.Plural(strings.ToLower(kind)),
+			"MOUNTER": useMounter,
 		}
 
-		if !noAlias {
+		if noAlias, _ := cmd.Flags().GetBool("no-alias"); !noAlias {
 			// create alias beforehand because the test will hang
 			helper.CreateAlias(args[0], args[0]+"-test", "default")
 			// TBD defer remove alias
+		}
+
+		var cmdStr string
+		c, _ := cmd.Flags().GetBool("clean")
+		if cmdStr = "test"; c {
+			cmdStr = "clean-test"
 		}
 
 		if err := helper.RunMake(params, cmdStr, false); err != nil {
@@ -377,11 +386,11 @@ var watchCmd = &cobra.Command{
 		}
 
 		params := map[string]string{
-			"NAME":      name,
-			"KIND":      kind,
-			"INTERVAL":  fmt.Sprintf("%f", i),
+			"NAME":     name,
+			"KIND":     kind,
+			"INTERVAL": fmt.Sprintf("%f", i),
 			// TBD get max neat level from kubectl-neat
-			"NEATLEVEL": fmt.Sprintf("-l %d", 4 - v),
+			"NEATLEVEL": fmt.Sprintf("-l %d", 4-v),
 		}
 
 		_ = helper.RunMake(params, "watch", false)
