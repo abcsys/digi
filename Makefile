@@ -1,30 +1,29 @@
-NAME=digi
+# replace with your own container repo
+DRIVER_REPO = silveryfu
+
+# default to rootless docker; may set to
+# `sudo docker` depending on your setup
+DOCKER_CMD = docker
+
+# default location for scripts and configs
 HOMEDIR=~/.digi
 
-.PHONY: digi install dep
-digi:
-	cd cmd/; go install ./digi ./dq ./ds
+.PHONY: dep digi install
 dep:
 	go get github.com/brimdata/zed
-	go get github.com/silveryfu/kubectl-neat $(which kubectl-neat) && .krew/bin/kubectl-neat
+	go get github.com/silveryfu/kubectl-neat && \
+	cp $(which kubectl-neat) ~/.krew/bin/kubectl-neat
+digi:
+	cd cmd/; go install ./digi ./dq ./ds
 install: | digi
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
-	cp ./model/Makefile $(HOMEDIR) && \
+	sed 's/DRIVER_REPO_TEMP/$(DRIVER_REPO)/g; s/DOCKER_CMD_TEMP/$(DOCKER_CMD)/g' \
+	./model/Makefile > $(HOMEDIR)/Makefile && \
 	cp ./model/gen.py $(HOMEDIR) && \
 	cp ./model/patch.py $(HOMEDIR)
-
-# Use the following command to invoke build directly without dq:
-# WORKDIR=. KIND=lake make -f ~/.dq/Makefile build
-# Use minikube registry: eval $(minikube docker-env)
 
 .PHONY: k8s
 k8s:
 	minikube start
 
-# Lake
-ifndef LAKE
-override LAKE = lake
-endif
-.PHONY: port
-port:
-	kubectl port-forward service/$(LAKE) 9867:6534 || true
+# use minikube registry: eval $(minikube docker-env)

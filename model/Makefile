@@ -6,12 +6,12 @@ ifndef WORKDIR
 override WORKDIR = .
 endif
 
-ifndef REPO
-override REPO = silveryfu # YOUR_CONTAINER_REPO
+ifndef DRIVER_REPO
+override DRIVER_REPO = DRIVER_REPO_TEMP
 endif
 
-ifndef DIGIREPO
-override DIGIREPO = /tmp/digirepo
+ifndef DIGI_REPO
+override DIGI_REPO = /tmp/digirepo
 endif
 
 ifndef TAG
@@ -19,9 +19,7 @@ override TAG = latest
 endif
 
 ifndef DOCKER_CMD
-override DOCKER_CMD = docker
-# uncomment to run docker with root access
-#override DOCKER_CMD = sudo docker
+override DOCKER_CMD = DOCKER_CMD_TEMP
 endif
 
 digi_src := $(GOPATH)/src/digi.dev/digi
@@ -52,7 +50,7 @@ init:
 	cd $(WORKDIR) && mkdir $(KIND) >/dev/null 2>&1 || true && \
 	echo "$$model" > $(KIND)/model.yaml
 gen:
-	cd $(WORKDIR) && REPO=$(REPO) python $(DIGIHOME)/gen.py $(KIND)
+	cd $(WORKDIR) && REPO=$(DRIVER_REPO) python $(DIGIHOME)/gen.py $(KIND)
 patch:
 	cd $(WORKDIR) && python $(DIGIHOME)/patch.py $(KIND)
 model:
@@ -104,17 +102,17 @@ prepare:
 build: | prepare gen patch
 	rsync $(driver_handler) $(build_dir)/ || true
 	# use DOCKER_BUILDKIT=0 to enable more messages
-	cd $(build_dir) && $(DOCKER_CMD) build -t $(REPO)/$(KIND):$(TAG) $(BUILDFLAG) -f deploy/image/Dockerfile . || true
-	$(DOCKER_CMD) push $(REPO)/$(KIND):$(TAG) $(BUILDFLAG) || true
+	cd $(build_dir) && $(DOCKER_CMD) build -t $(DRIVER_REPO)/$(KIND):$(TAG) $(BUILDFLAG) -f deploy/image/Dockerfile . || true
+	$(DOCKER_CMD) push $(DRIVER_REPO)/$(KIND):$(TAG) $(BUILDFLAG) || true
 	rm -r $(build_dir) || true
 
 # image
 .PHONY: push pull
 push:
-	mkdir $(DIGIREPO) >/dev/null 2>&1 || true
-	cd $(WORKDIR) && tar czf $(KIND).gz $(KIND) && mv $(KIND).gz $(DIGIREPO)/ >/dev/null || true
+	mkdir $(DIGI_REPO) >/dev/null 2>&1 || true
+	cd $(WORKDIR) && tar czf $(KIND).gz $(KIND) && mv $(KIND).gz $(DIGI_REPO)/ >/dev/null || true
 pull:
-	cd $(WORKDIR) && rsync $(DIGIREPO)/$(KIND).gz . && tar xzf $(KIND).gz && rm $(KIND).gz > /dev/null
+	cd $(WORKDIR) && rsync $(DIGI_REPO)/$(KIND).gz . && tar xzf $(KIND).gz && rm $(KIND).gz > /dev/null
 
 # deploy
 .PHONY: run stop watch
