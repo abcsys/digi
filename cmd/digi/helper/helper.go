@@ -3,6 +3,7 @@ package helper
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -10,8 +11,11 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"digi.dev/digi/api"
+	"digi.dev/digi/pkg/core"
 	"github.com/creack/pty"
 	"golang.org/x/term"
+	"gopkg.in/yaml.v2"
 )
 
 var homeDir string
@@ -63,7 +67,7 @@ func RunMake(args map[string]string, cmd string, quiet bool) error {
 			}
 		}
 	}()
-	ch <- syscall.SIGWINCH // Initial resize.
+	ch <- syscall.SIGWINCH                        // Initial resize.
 	defer func() { signal.Stop(ch); close(ch) }() // Cleanup signals when done.
 
 	// Set stdin in raw mode.
@@ -80,4 +84,47 @@ func RunMake(args map[string]string, cmd string, quiet bool) error {
 	_, _ = io.Copy(os.Stdout, ptmx)
 
 	return nil
+}
+
+func CreateAlias(kind, name, namespace string) {
+	var workDir string
+	if workDir = os.Getenv("WORKDIR"); workDir == "" {
+		workDir = "."
+	}
+
+	// TBD parse gvr in separate method
+	type gvr struct {
+		Group   string `yaml:"group,omitempty"`
+		Version string `yaml:"version,omitempty"`
+		Kind    string `yaml:"kind,omitempty"`
+	}
+
+	raw := gvr{}
+	modelFile, err := ioutil.ReadFile(filepath.Join(workDir, kind, "model.yaml"))
+	if err != nil {
+		log.Printf("unable to create alias, cannot open model file: %v", err)
+	}
+
+	err = yaml.Unmarshal(modelFile, &raw)
+	if err != nil {
+		log.Fatalf("unable to create alias, cannot unmarshal model file: %v", err)
+	}
+
+	auri := &core.Auri{
+		Kind: core.Kind{
+			Group:   raw.Group,
+			Version: raw.Version,
+			Name:    raw.Kind,
+		},
+		Name:      name,
+		Namespace: namespace,
+	}
+	alias := api.Alias{
+		Name: name,
+		Auri: auri,
+	}
+
+	if err := alias.Set(); err != nil {
+		log.Fatalf("unable to create alias %v", err)
+	}
 }

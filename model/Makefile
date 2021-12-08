@@ -7,7 +7,7 @@ override WORKDIR = .
 endif
 
 ifndef REPO
-override REPO = silveryfu
+override REPO = silveryfu # YOUR_CONTAINER_REPO
 endif
 
 ifndef DIGIREPO
@@ -18,12 +18,10 @@ ifndef TAG
 override TAG = latest
 endif
 
-ifndef GROUP
-override GROUP = digi.dev
-endif
-
-ifndef VERSION
-override VERSION = v1
+ifndef DOCKER_CMD
+override DOCKER_CMD = docker
+# uncomment to run docker with root access
+#override DOCKER_CMD = sudo docker
 endif
 
 digi_src := $(GOPATH)/src/digi.dev/digi
@@ -32,6 +30,17 @@ driver_handler := $(WORKDIR)/$(KIND)/driver/*
 digi_config := $(WORKDIR)/$(KIND)/deploy/*
 build_dir := /tmp/digi-build-$(KIND)-$(TAG)
 
+# model
+.PHONY: init gen patch model all delete image list edit
+# init configs
+ifndef GROUP
+override GROUP = digi.dev
+endif
+
+ifndef VERSION
+override VERSION = v1
+endif
+
 define model
 group: $(GROUP)
 version: $(VERSION)
@@ -39,8 +48,6 @@ kind: $(KIND)
 endef
 export model
 
-# model
-.PHONY: init gen patch model all delete image list edit
 init:
 	cd $(WORKDIR) && mkdir $(KIND) >/dev/null 2>&1 || true && \
 	echo "$$model" > $(KIND)/model.yaml
@@ -51,7 +58,6 @@ patch:
 model:
 	cd $(WORKDIR)/$(KIND) && kubectl apply -f crd.yaml >/dev/null
 all: | gen patch model
-	$(info model)
 delete:
 	cd $(WORKDIR)/$(KIND) >/dev/null 2>&1; kubectl delete -f crd.yaml 2>/dev/null || true
 	rm -r $(WORKDIR)/$(KIND) >/dev/null 2>&1 || true
@@ -62,18 +68,26 @@ list:
 edit:
 	kubectl edit $(KIND) $(NAME)
 
-.PHONY: test
+.PHONY: clean-test test
 # test configs
-g := $(TAG).digi.dev
-v := v1
-r := $(KIND)s
-n := $(KIND)-test
-ns := default
+ifndef NAME
+override NAME = $(KIND)-test
+endif
 
-test: | model all
-	cd $(WORKDIR)/$(KIND)/test && kubectl delete $(KIND) $(n); kubectl apply -f cr.yaml
-	GROUP=$(g) VERSION=$(v) PLURAL=$(r) NAME=$(n) NAMESPACE=$(ns) MOUNTER=$(MOUNTER) \
-	python $(WORKDIR)/$(KIND)/driver/handler.py
+ifndef NAMESPACE
+override NAMESPACE = default
+endif
+
+clean-test:
+	kubectl delete $(KIND) $(NAME) >/dev/null 2>&1 || true
+test: | all clean-test
+	kubectl apply -f $(WORKDIR)/$(KIND)/test/cr.yaml
+
+	cd $(WORKDIR) && GROUP=`head -n1 $(KIND)/model.yaml | cut -d' ' -f 2` \
+	VERSION=`head -n2 $(KIND)/model.yaml | tail -1 | cut -d' ' -f 2` \
+    PLURAL=$(PLURAL) NAME=$(KIND)-test NAMESPACE=$(NAMESPACE) \
+    POOL_PROVIDER=none MOUNTER=$(MOUNTER) \
+	python $(KIND)/driver/handler.py
 
 # driver
 .PHONY: prepare
@@ -90,8 +104,8 @@ prepare:
 build: | prepare gen patch
 	rsync $(driver_handler) $(build_dir)/ || true
 	# use DOCKER_BUILDKIT=0 to enable more messages
-	cd $(build_dir) && sudo docker build -t $(REPO)/$(KIND):$(TAG) $(BUILDFLAG) -f deploy/image/Dockerfile . || true
-	sudo docker push $(REPO)/$(KIND):$(TAG) $(BUILDFLAG) || true
+	cd $(build_dir) && $(DOCKER_CMD) build -t $(REPO)/$(KIND):$(TAG) $(BUILDFLAG) -f deploy/image/Dockerfile . || true
+	$(DOCKER_CMD) push $(REPO)/$(KIND):$(TAG) $(BUILDFLAG) || true
 	rm -r $(build_dir) || true
 
 # image

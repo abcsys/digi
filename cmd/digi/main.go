@@ -24,9 +24,12 @@ func main() {
 
 	RootCmd.AddCommand(runCmd)
 	runCmd.Flags().BoolP("local", "l", false, "Run driver in local console")
-	runCmd.Flags().BoolP("skip-alias", "n", false, "Do not create alias to the model")
+	runCmd.Flags().BoolP("no-alias", "n", false, "Do not create alias to the model")
 	runCmd.Flags().BoolP("show-kopf-log", "k", false, "Enable kopf logging")
 	RootCmd.AddCommand(stopCmd)
+	RootCmd.AddCommand(testCmd)
+	testCmd.Flags().BoolP("clean", "c", false, "Remove test digi")
+	testCmd.Flags().BoolP("no-alias", "n", false, "Do not create alias to the model")
 	RootCmd.AddCommand(logCmd)
 	RootCmd.AddCommand(listCmd)
 	RootCmd.AddCommand(watchCmd)

@@ -2,16 +2,13 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
-	"path/filepath"
+	"strings"
 
 	"digi.dev/digi/api"
 	"digi.dev/digi/cmd/digi/helper"
-	"digi.dev/digi/pkg/core"
+	"github.com/jinzhu/inflection"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -75,7 +72,7 @@ var buildCmd = &cobra.Command{
 		}
 		kind := args[0]
 		if err := helper.RunMake(map[string]string{
-			"KIND": kind,
+			"KIND":      kind,
 			"BUILDFLAG": buildFlag,
 		}, "build", q); err == nil && !q {
 			fmt.Println(kind)
@@ -135,6 +132,34 @@ var pushCmd = &cobra.Command{
 	},
 }
 
+var testCmd = &cobra.Command{
+	Use:   "test KIND",
+	Short: "Test run a digi driver",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		c, _ := cmd.Flags().GetBool("clean")
+		var cmdStr string
+		if cmdStr = "test"; c {
+			cmdStr = "clean-test"
+		}
+
+		noAlias, _ := cmd.Flags().GetBool("no-alias")
+		params := map[string]string{
+			"KIND":   args[0],
+			"PLURAL": inflection.Plural(strings.ToLower(args[0])),
+		}
+
+		if !noAlias {
+			// create alias beforehand because the test will hang
+			helper.CreateAlias(args[0], args[0]+"-test", "default")
+			// TBD defer remove alias
+		}
+
+		if err := helper.RunMake(params, cmdStr, false); err != nil {
+		}
+	},
+}
+
 var logCmd = &cobra.Command{
 	Use:     "log NAME",
 	Short:   "Print log of a digi driver",
@@ -180,7 +205,8 @@ var editCmd = &cobra.Command{
 var runCmd = &cobra.Command{
 	Use:   "run KIND NAME",
 	Short: "Run a digi given kind and name",
-	Args:  cobra.ExactArgs(2),
+	// TBD enable passing namespace
+	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		var c string
 		if l, _ := cmd.Flags().GetBool("local"); l {
@@ -194,10 +220,7 @@ var runCmd = &cobra.Command{
 			kopfLog = "true"
 		}
 
-		createAlias := true
-		if noAlias, _ := cmd.Flags().GetBool("no-alias"); noAlias {
-			createAlias = false
-		}
+		noAlias, _ := cmd.Flags().GetBool("no-alias")
 
 		quiet, _ := cmd.Flags().GetBool("quiet")
 		kind, name := args[0], args[1]
@@ -208,48 +231,8 @@ var runCmd = &cobra.Command{
 		}, c, quiet); err == nil && !quiet {
 			fmt.Println(name)
 
-			// add alias
-			if createAlias {
-				var workDir string
-				if workDir = os.Getenv("WORKDIR"); workDir == "" {
-					workDir = "."
-				}
-
-				type gvr struct {
-					Group   string `yaml:"group,omitempty"`
-					Version string `yaml:"version,omitempty"`
-					Kind    string `yaml:"kind,omitempty"`
-				}
-
-				raw := gvr{}
-				modelFile, err := ioutil.ReadFile(filepath.Join(workDir, kind, "model.yaml"))
-				if err != nil {
-					log.Printf("unable to create alias, cannot open model file: %v", err)
-				}
-
-				err = yaml.Unmarshal(modelFile, &raw)
-				if err != nil {
-					log.Fatalf("unable to create alias, cannot unmarshal model file: %v", err)
-				}
-
-				auri := &core.Auri{
-					Kind: core.Kind{
-						Group:   raw.Group,
-						Version: raw.Version,
-						Name:    raw.Kind,
-					},
-					Name: name,
-					// XXX use ns from cmdline option once added
-					Namespace: "default",
-				}
-				alias := api.Alias{
-					Name: name,
-					Auri: auri,
-				}
-
-				if err := alias.Set(); err != nil {
-					log.Fatalf("unable to create alias %v", err)
-				}
+			if !noAlias {
+				helper.CreateAlias(kind, name, "default")
 			}
 		}
 	},
@@ -394,9 +377,9 @@ var watchCmd = &cobra.Command{
 		}
 
 		params := map[string]string{
-			"NAME":     name,
-			"KIND":     kind,
-			"INTERVAL": fmt.Sprintf("%f", i),
+			"NAME":      name,
+			"KIND":      kind,
+			"INTERVAL":  fmt.Sprintf("%f", i),
 			"NEATLEVEL": fmt.Sprintf("-l %d", l),
 		}
 
