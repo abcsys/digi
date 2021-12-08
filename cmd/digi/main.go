@@ -34,7 +34,7 @@ func main() {
 	RootCmd.AddCommand(listCmd)
 	RootCmd.AddCommand(watchCmd)
 	watchCmd.Flags().Float64P("interval", "i", 1, "Refresh interval")
-	watchCmd.Flags().Int8P("neat-level", "l", 4, "Neat level")
+	watchCmd.Flags().Int8P("verbosity", "v", 0, "Output verbosity, converted to neat level (4 - v)")
 
 	RootCmd.AddCommand(aliasCmd)
 	aliasCmd.AddCommand(aliasClearCmd)

@@ -360,7 +360,7 @@ var watchCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		i, _ := cmd.Flags().GetFloat32("interval")
-		l, _ := cmd.Flags().GetInt8("neat-level")
+		v, _ := cmd.Flags().GetInt8("verbosity")
 
 		var name, kind string
 
@@ -380,7 +380,8 @@ var watchCmd = &cobra.Command{
 			"NAME":      name,
 			"KIND":      kind,
 			"INTERVAL":  fmt.Sprintf("%f", i),
-			"NEATLEVEL": fmt.Sprintf("-l %d", l),
+			// TBD get max neat level from kubectl-neat
+			"NEATLEVEL": fmt.Sprintf("-l %d", 4 - v),
 		}
 
 		_ = helper.RunMake(params, "watch", false)
