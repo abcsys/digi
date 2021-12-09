@@ -90,6 +90,10 @@ def trim_default_space(s):
     return s.lstrip("default/")
 
 
+def simple_name(s):
+    return trim_default_space(s)
+
+
 def gvr_from_body(b):
     g, v = tuple(b["apiVersion"].split("/"))
     r = inflection.pluralize(b["kind"].lower())
@@ -269,7 +273,7 @@ def deep_get(d: dict, path: Union[str, Iterable], default=None) -> Any:
                   path.split(".") if isinstance(path, str) else path, d)
 
 
-def deep_set(d: dict, path: Union[str, Iterable], val: Any, create=False):
+def deep_set(d: dict, path: Union[str, Iterable], val: Any, create=True):
     if not isinstance(d, dict):
         return
     if isinstance(path, str):

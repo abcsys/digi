@@ -29,7 +29,7 @@ digi_config := $(WORKDIR)/$(KIND)/deploy/*
 build_dir := /tmp/digi-build-$(KIND)-$(TAG)
 
 # model
-.PHONY: init gen patch model all delete image list edit
+.PHONY: init gen model all delete image list edit
 # init configs
 ifndef GROUP
 override GROUP = digi.dev
@@ -50,12 +50,11 @@ init:
 	cd $(WORKDIR) && mkdir $(KIND) >/dev/null 2>&1 || true && \
 	echo "$$model" > $(KIND)/model.yaml
 gen:
-	cd $(WORKDIR) && REPO=$(DRIVER_REPO) python $(DIGIHOME)/gen.py $(KIND)
-patch:
-	cd $(WORKDIR) && python $(DIGIHOME)/patch.py $(KIND)
+	cd $(WORKDIR) && REPO=$(DRIVER_REPO) python $(DIGIHOME)/gen.py $(KIND) \
+	&& python $(DIGIHOME)/patch.py $(KIND)
 model:
 	cd $(WORKDIR)/$(KIND) && kubectl apply -f crd.yaml >/dev/null
-all: | gen patch model
+all: | gen model
 delete:
 	cd $(WORKDIR)/$(KIND) >/dev/null 2>&1; kubectl delete -f crd.yaml 2>/dev/null || true
 	rm -r $(WORKDIR)/$(KIND) >/dev/null 2>&1 || true
@@ -98,7 +97,7 @@ prepare:
 	rsync -r $(driver_dir)/requirements.txt $(build_dir) || true
 
 .PHONY: build
-build: | prepare gen patch
+build: | prepare gen
 	rsync $(driver_handler) $(build_dir)/ || true
 	# use DOCKER_BUILDKIT=0 to enable more messages
 	cd $(build_dir) && $(DOCKER_CMD) build -t $(DRIVER_REPO)/$(KIND):$(TAG) $(BUILDFLAG) -f deploy/image/Dockerfile . || true
