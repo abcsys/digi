@@ -3,11 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"digi.dev/digi/api"
 	"digi.dev/digi/cmd/digi/helper"
-	"github.com/jinzhu/inflection"
 	"github.com/spf13/cobra"
 )
 
@@ -24,6 +22,7 @@ var (
 var initCmd = &cobra.Command{
 	Use:   "init KIND",
 	Short: "Initialize a digi template",
+	Long:  "Create a digi template with the directory name defaults to the kind",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -31,13 +30,22 @@ var initCmd = &cobra.Command{
 		kind := args[0]
 		params := map[string]string{
 			"KIND": kind,
+			// default configs
+			"GROUP":     "digi.dev",
+			"VERSION":   "v1",
+			"IMAGE_DIR": kind,
 		}
+
 		if g, _ := cmd.Flags().GetString("group"); g != "" {
 			params["GROUP"] = g
 		}
 		if v, _ := cmd.Flags().GetString("version"); v != "" {
 			params["VERSION"] = v
 		}
+		if d, _ := cmd.Flags().GetString("directory"); d != "" {
+			params["IMAGE_DIR"] = d
+		}
+
 		if err := helper.RunMake(params, "init", q); err == nil && !q {
 			fmt.Println(kind)
 		}
@@ -45,23 +53,23 @@ var initCmd = &cobra.Command{
 }
 
 var genCmd = &cobra.Command{
-	Use:   "gen KIND",
+	Use:   "gen IMAGE_DIR",
 	Short: "Generate configs and scripts in an image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
-		kind := args[0]
+		imageDir := args[0]
 		if err := helper.RunMake(map[string]string{
-			"KIND": kind,
+			"IMAGE_DIR": imageDir,
 		}, "gen", q); err == nil && !q {
-			fmt.Println(kind)
+			fmt.Println(imageDir)
 		}
 	},
 }
 
 var buildCmd = &cobra.Command{
-	Use:   "build KIND",
+	Use:   "build IMAGE_DIR",
 	Short: "Build a digi image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -70,9 +78,18 @@ var buildCmd = &cobra.Command{
 		if q {
 			buildFlag += "-q"
 		}
-		kind := args[0]
+
+		imageDir := args[0]
+		kind, err := helper.GetKindFromImageDir(imageDir)
+		if err != nil {
+			panic(err)
+		}
+
 		if err := helper.RunMake(map[string]string{
-			"KIND":      kind,
+			"GROUP":     kind.Group,
+			"VERSION":   kind.Version,
+			"KIND":      kind.Name,
+			"IMAGE_DIR": imageDir,
 			"BUILDFLAG": buildFlag,
 		}, "build", q); err == nil && !q {
 			fmt.Println(kind)
@@ -95,37 +112,38 @@ var imageCmd = &cobra.Command{
 
 // TBD pull and push to a remote repo
 var pullCmd = &cobra.Command{
-	Use:   "pull KIND",
+	Use:   "pull IMAGE_NAME",
 	Short: "Pull a digi image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
-		kind := args[0]
 		if err := helper.RunMake(map[string]string{
-			"KIND": kind,
+			"IMAGE_NAME": args[0],
 		}, "pull", q); err != nil {
 			return
-		}
-
-		if err := helper.RunMake(map[string]string{
-			"KIND": kind,
-		}, "build", true); err == nil && !q {
-			fmt.Println(kind)
 		}
 	},
 }
 
 var pushCmd = &cobra.Command{
-	Use:   "push KIND",
+	Use:   "push IMAGE_DIR",
 	Short: "Push a digi image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
-		kind := args[0]
+		imageDir := args[0]
+		kind, err := helper.GetKindFromImageDir(imageDir)
+		if err != nil {
+			panic(err)
+		}
+
 		if err := helper.RunMake(map[string]string{
-			"KIND": kind,
+			"GROUP":     kind.Group,
+			"VERSION":   kind.Version,
+			"KIND":      kind.Name,
+			"IMAGE_DIR": imageDir,
 		}, "push", q); err == nil && !q {
 			fmt.Println(kind)
 		}
@@ -133,11 +151,19 @@ var pushCmd = &cobra.Command{
 }
 
 var testCmd = &cobra.Command{
-	Use:   "test KIND",
+	Use:   "test IMAGE_DIR",
 	Short: "Test run a digi driver",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		kind := args[0]
+		var name, imageDir string
+
+		imageDir = args[0]
+		kind, err := helper.GetKindFromImageDir(imageDir)
+		if err != nil {
+			panic(err)
+		}
+
+		name = kind.Name + "-test"
 
 		var useMounter string
 		if um, _ := cmd.Flags().GetBool("mounter"); um {
@@ -147,14 +173,21 @@ var testCmd = &cobra.Command{
 		}
 
 		params := map[string]string{
-			"KIND":    kind,
-			"PLURAL":  inflection.Plural(strings.ToLower(kind)),
-			"MOUNTER": useMounter,
+			"IMAGE_DIR": imageDir,
+			"GROUP":     kind.Group,
+			"VERSION":   kind.Version,
+			"KIND":      kind.Name,
+			"PLURAL":    kind.Plural(),
+			"NAME":      name,
+			"NAMESPACE": "default",
+			"MOUNTER":   useMounter,
 		}
 
 		if noAlias, _ := cmd.Flags().GetBool("no-alias"); !noAlias {
 			// create alias beforehand because the test will hang
-			helper.CreateAlias(args[0], args[0]+"-test", "default")
+			if err := helper.CreateAlias(kind, name, "default"); err != nil {
+				panic(err)
+			}
 			// TBD defer remove alias
 		}
 
@@ -186,37 +219,41 @@ var logCmd = &cobra.Command{
 }
 
 var editCmd = &cobra.Command{
-	Use:   "edit [KIND] NAME",
+	Use:   "edit NAME",
 	Short: "Edit a digi model",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var name, kind string
+		// TBD allow namespace
+		var name string
 
-		if len(args) == 1 {
-			name = args[0]
-			auri, err := api.Resolve(name)
-			if err != nil {
-				fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
-				os.Exit(1)
-			}
-			kind = auri.Kind.Plural()
-		} else {
-			kind, name = args[0], args[1]
+		name = args[0]
+		auri, err := api.Resolve(name)
+		if err != nil {
+			fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
+			os.Exit(1)
 		}
 
 		_ = helper.RunMake(map[string]string{
-			"KIND": kind,
-			"NAME": name,
+			"GROUP":  auri.Kind.Group,
+			"KIND":   auri.Kind.Name,
+			"PLURAL": auri.Kind.Plural(),
+			"NAME":   name,
 		}, "edit", false)
 	},
 }
 
 var runCmd = &cobra.Command{
-	Use:   "run KIND NAME",
-	Short: "Run a digi given kind and name",
+	Use:   "run IMAGE_DIR NAME",
+	Short: "Run a digi given image and name",
 	// TBD enable passing namespace
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
+		var imageDir, name = args[0], args[1]
+		kind, err := helper.GetKindFromImageDir(imageDir)
+		if err != nil {
+			panic(err)
+		}
+
 		var c string
 		if l, _ := cmd.Flags().GetBool("local"); l {
 			c = "test"
@@ -232,45 +269,49 @@ var runCmd = &cobra.Command{
 		noAlias, _ := cmd.Flags().GetBool("no-alias")
 
 		quiet, _ := cmd.Flags().GetBool("quiet")
-		kind, name := args[0], args[1]
 		if err := helper.RunMake(map[string]string{
-			"KIND":    kind,
-			"NAME":    name,
-			"KOPFLOG": kopfLog,
+			"IMAGE_DIR": imageDir,
+			"GROUP":     kind.Group,
+			"VERSION":   kind.Version,
+			"KIND":      kind.Name,
+			"PLURAL":    kind.Plural(),
+			"NAME":      name,
+			"KOPFLOG":   kopfLog,
 		}, c, quiet); err == nil && !quiet {
 			fmt.Println(name)
 
 			if !noAlias {
-				helper.CreateAlias(kind, name, "default")
+				err := helper.CreateAlias(kind, name, "default")
+				if err != nil {
+					fmt.Println("unable to create alias")
+				}
 			}
 		}
 	},
 }
 
 var stopCmd = &cobra.Command{
-	Use:   "stop [KIND] NAME",
-	Short: "Stop a digi given kind and name",
-	Args:  cobra.MinimumNArgs(1),
+	Use:   "stop NAME",
+	Short: "Stop a digi given name",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
-		var name, kind string
-
-		if len(args) == 1 {
-			name = args[0]
-			auri, err := api.Resolve(name)
-			if err != nil {
-				fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
-				os.Exit(1)
-			}
-			kind = auri.Kind.Plural()
-		} else {
-			kind, name = args[0], args[1]
+		name := args[0]
+		auri, err := api.Resolve(name)
+		if err != nil {
+			fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
+			os.Exit(1)
 		}
 
+		kind := auri.Kind
+
 		if err := helper.RunMake(map[string]string{
-			"KIND": kind,
-			"NAME": name,
+			"GROUP":   kind.Group,
+			"VERSION": kind.Version,
+			"KIND":    kind.Name,
+			"PLURAL":  kind.Plural(),
+			"NAME":    name,
 		}, "stop", q); err == nil && !q {
 			fmt.Println(name)
 		}
@@ -278,13 +319,13 @@ var stopCmd = &cobra.Command{
 }
 
 var rmiCmd = &cobra.Command{
-	Use:   "rmi KIND",
+	Use:   "rmi IMAGE_DIR",
 	Short: "Remove a digi image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 		if err := helper.RunMake(map[string]string{
-			"KIND": args[0],
+			"IMAGE_DIR": args[0],
 		}, "delete", q); err == nil && !q {
 			fmt.Printf("%s removed\n", args[0])
 		}
@@ -358,36 +399,34 @@ var listCmd = &cobra.Command{
 	Aliases: []string{"ps"},
 	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("NAME")
 		_ = helper.RunMake(nil, "list", false)
 	},
 }
 
 var watchCmd = &cobra.Command{
-	Use:     "watch [KIND] NAME",
+	Use:     "watch NAME",
 	Short:   "Watch changes of a digi's model",
 	Aliases: []string{"w"},
-	Args:    cobra.MinimumNArgs(1),
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		i, _ := cmd.Flags().GetFloat32("interval")
 		v, _ := cmd.Flags().GetInt8("verbosity")
 
-		var name, kind string
-
-		if len(args) == 1 {
-			name = args[0]
-			auri, err := api.Resolve(name)
-			if err != nil {
-				fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
-				os.Exit(1)
-			}
-			kind = auri.Kind.Plural()
-		} else {
-			kind, name = args[0], args[1]
+		name := args[0]
+		auri, err := api.Resolve(name)
+		if err != nil {
+			fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
+			os.Exit(1)
 		}
+		kind := auri.Kind
 
 		params := map[string]string{
+			"GROUP":    kind.Group,
+			"VERSION":  kind.Version,
+			"KIND":     kind.Name,
+			"PLURAL":   kind.Plural(),
 			"NAME":     name,
-			"KIND":     kind,
 			"INTERVAL": fmt.Sprintf("%f", i),
 			// TBD get max neat level from kubectl-neat
 			"NEATLEVEL": fmt.Sprintf("-l %d", 4-v),

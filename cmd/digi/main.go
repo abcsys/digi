@@ -14,6 +14,7 @@ func main() {
 	RootCmd.AddCommand(initCmd)
 	initCmd.Flags().StringP("group", "g", "", "Model group.")
 	initCmd.Flags().StringP("version", "v", "", "Model version.")
+	initCmd.Flags().StringP("directory", "d", "", "Image directory.")
 	RootCmd.AddCommand(genCmd)
 	RootCmd.AddCommand(buildCmd)
 
@@ -37,6 +38,7 @@ func main() {
 	watchCmd.Flags().Float64P("interval", "i", 1, "Refresh interval")
 	watchCmd.Flags().Int8P("verbosity", "v", 0, "Output verbosity, converted to neat level (4 - v)")
 
+	// TBD tidy to remove unused resources, e.g., crds
 	RootCmd.AddCommand(aliasCmd)
 	aliasCmd.AddCommand(aliasClearCmd)
 	aliasCmd.AddCommand(aliasResolveCmd)

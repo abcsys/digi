@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"digi.dev/digi/api"
@@ -86,36 +87,39 @@ func RunMake(args map[string]string, cmd string, quiet bool) error {
 	return nil
 }
 
-func CreateAlias(kind, name, namespace string) {
+func GetKindFromImageDir(dirName string) (*core.Kind, error) {
 	var workDir string
 	if workDir = os.Getenv("WORKDIR"); workDir == "" {
 		workDir = "."
 	}
 
-	// TBD parse gvr in separate method
-	type gvr struct {
+	// TBD add struct tags for yaml to core.Kind and core.Auri
+	raw := struct {
 		Group   string `yaml:"group,omitempty"`
 		Version string `yaml:"version,omitempty"`
 		Kind    string `yaml:"kind,omitempty"`
-	}
+	}{}
 
-	raw := gvr{}
-	modelFile, err := ioutil.ReadFile(filepath.Join(workDir, kind, "model.yaml"))
+	modelFile, err := ioutil.ReadFile(filepath.Join(workDir, dirName, "model.yaml"))
 	if err != nil {
-		log.Printf("unable to create alias, cannot open model file: %v", err)
+		return nil, fmt.Errorf("cannot open model file: %v", err)
 	}
 
 	err = yaml.Unmarshal(modelFile, &raw)
 	if err != nil {
-		log.Fatalf("unable to create alias, cannot unmarshal model file: %v", err)
+		return nil, fmt.Errorf("cannot unmarshal model file: %v", err)
 	}
 
+	return &core.Kind{
+		Group:   strings.ToLower(raw.Group),
+		Version: strings.ToLower(raw.Version),
+		Name:    strings.ToLower(raw.Kind),
+	}, nil
+}
+
+func CreateAlias(kind *core.Kind, name, namespace string) error {
 	auri := &core.Auri{
-		Kind: core.Kind{
-			Group:   raw.Group,
-			Version: raw.Version,
-			Name:    raw.Kind,
-		},
+		Kind:      *kind,
 		Name:      name,
 		Namespace: namespace,
 	}
@@ -125,6 +129,7 @@ func CreateAlias(kind, name, namespace string) {
 	}
 
 	if err := alias.Set(); err != nil {
-		log.Fatalf("unable to create alias %v", err)
+		return fmt.Errorf("unable to create alias: %v", err)
 	}
+	return nil
 }

@@ -307,7 +307,8 @@ def gen(name):
                 # XXX
                 with open(cr_file, "r+") as f_:
                     _s = f_.read().replace("'{", "{").replace("}'", "}")
-                    f_.seek(0); f_.truncate()
+                    f_.seek(0);
+                    f_.truncate()
                     f_.write(_s)
 
         # deployment cr
@@ -325,7 +326,7 @@ def gen(name):
                                          name=model["kind"].lower(),
                                          namespace=model.get("namespace", "default"),
                                          mounter="true" if "mount" in model else "false",
-                                         image=model["kind"].lower(),
+                                         image=f"{model['kind']}.{model['version']}.{model['group']}".lower(),
                                          repo=os.environ.get("REPO", "local"),
                                          imagepull=os.environ.get("IMAGEPULL", "Always"),
                                          )
