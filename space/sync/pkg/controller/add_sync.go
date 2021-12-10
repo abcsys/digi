@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"digi.dev/dspace/runtime/sync/pkg/controller/sync"
+	"digi.dev/digi/space/sync/pkg/controller/sync"
 )
 
 func init() {
