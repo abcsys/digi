@@ -56,9 +56,9 @@ func isQuery(s string) bool {
 func Query(name, query string, flags *pflag.FlagSet) error {
 	if name != "" {
 		if query != "" {
-			query = fmt.Sprintf("from %s | %s", name, query)
+			query = fmt.Sprintf("from '%s' | %s", name, query)
 		} else {
-			query = fmt.Sprintf("from %s", name)
+			query = fmt.Sprintf("from '%s'", name)
 		}
 	}
 
