@@ -25,7 +25,7 @@ require (
 	github.com/h2non/go-is-svg v0.0.0-20160927212452-35e8c4b0612c // indirect
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334 // indirect
 	github.com/itchyny/gojq v0.12.5 // indirect
-	github.com/jinzhu/inflection v1.0.0
+	github.com/silveryfu/inflection v1.1.0
 	github.com/jmoiron/sqlx v1.3.1 // indirect
 	github.com/joelanford/go-apidiff v0.1.0 // indirect
 	github.com/joelanford/ignore v0.0.0-20210607151042-0d25dc18b62d // indirect

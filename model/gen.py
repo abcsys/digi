@@ -171,8 +171,8 @@ if __name__ == '__main__':
 """
 
 
-def plural(model):
-    return inflection.pluralize(model["kind"]).lower()
+def pluralize(s):
+    return inflection.pluralize(s)
 
 
 def gen(name):
@@ -184,10 +184,10 @@ def gen(name):
     crds = list()
     for model in models:
         # assemble the crd
-        header = _header.format(name=plural(model) + "." + model["group"],
+        header = _header.format(name=pluralize(model["kind"].lower()) + "." + model["group"],
                                 group=model["group"],
                                 kind=model["kind"],
-                                plural=plural(model),
+                                plural=pluralize(model["kind"].lower()),
                                 singular=model["kind"].lower())
         header = yaml.load(header, Loader=yaml.FullLoader)
 
@@ -279,7 +279,7 @@ def gen(name):
                 cr["spec"] = dict()
 
                 # XXX improve CR generation
-                for _name in ["meta", "control", "data", "mount"]:
+                for _name in ["meta", "control", "data"]:
                     attrs = model.get(_name, {})
                     if len(attrs) == 0:
                         continue
@@ -307,7 +307,7 @@ def gen(name):
                 # XXX
                 with open(cr_file, "r+") as f_:
                     _s = f_.read().replace("'{", "{").replace("}'", "}")
-                    f_.seek(0);
+                    f_.seek(0)
                     f_.truncate()
                     f_.write(_s)
 

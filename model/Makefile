@@ -26,7 +26,7 @@ digi_src := $(GOPATH)/src/digi.dev/digi
 driver_dir := $(digi_src)/driver
 driver_handler := $(WORKDIR)/$(IMAGE_DIR)/driver/*
 digi_config := $(WORKDIR)/$(IMAGE_DIR)/deploy/*
-build_dir := /tmp/digi-build-$(IMAGE_NAME)
+build_dir := /tmp/digi-build-$(IMAGE_NAME)-$(NAME)
 
 # model
 .PHONY: init gen model all delete image list edit

@@ -102,6 +102,7 @@ func GetKindFromImageDir(dirName string) (*core.Kind, error) {
 
 	modelFile, err := ioutil.ReadFile(filepath.Join(workDir, dirName, "model.yaml"))
 	if err != nil {
+		// TBD report image missing
 		return nil, fmt.Errorf("cannot open model file: %v", err)
 	}
 

@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 from collections import defaultdict
@@ -21,6 +22,11 @@ Event propagation:
   the child's intent;
 """
 
+if os.environ.get("STRICT_MOUNT", True):
+    TRIM_FROM_PARENT = {"status", "output", "obs", "meta"}
+    TRIM_FROM_CHILD  = {"intent", "input"}
+else:
+    TRIM_FROM_PARENT = TRIM_FROM_CHILD = {}
 
 class Watch:
     def __init__(self, g, v, r, n, ns="default", *,
@@ -84,10 +90,10 @@ class Mounter:
             _, _ = args, kwargs
             _g, _v, _r = util.gvr_from_body(body)
             _sync_from_parent(_g, _v, _r,
-                              attrs_to_trim={"status", "output", "obs", "meta"},
+                              attrs_to_trim=TRIM_FROM_PARENT,
                               *args, **kwargs)
             _sync_to_parent(_g, _v, _r,
-                            attrs_to_trim={"intent", "input"},
+                            attrs_to_trim=TRIM_FROM_CHILD,
                             *args, **kwargs)
 
         def on_child_update(body, meta, name, namespace,
@@ -345,7 +351,7 @@ class Mounter:
             if mount_entry.get("status", "inactive") == "active":
                 spec = mount_entry.get("spec", None)
                 if spec is not None:
-                    spec = util.trim_attr(spec, {"status", "output", "obs", "meta"})
+                    spec = util.trim_attr(spec, TRIM_FROM_PARENT)
 
                 gen = mount_entry.get("generation", sys.maxsize)
                 return spec, gen
