@@ -21,7 +21,7 @@ var (
 
 var initCmd = &cobra.Command{
 	Use:   "init KIND",
-	Short: "Initialize a digi template",
+	Short: "Initialize a new digi kind",
 	Long:  "Create a digi template with the directory name defaults to the kind",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -53,8 +53,8 @@ var initCmd = &cobra.Command{
 }
 
 var genCmd = &cobra.Command{
-	Use:   "gen IMAGE_DIR",
-	Short: "Generate configs and scripts in an image",
+	Use:   "gen KIND",
+	Short: "Generate configs and scripts",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -69,7 +69,7 @@ var genCmd = &cobra.Command{
 }
 
 var buildCmd = &cobra.Command{
-	Use:   "build IMAGE_DIR",
+	Use:   "build KIND",
 	Short: "Build a digi image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -98,13 +98,14 @@ var buildCmd = &cobra.Command{
 }
 
 var imageCmd = &cobra.Command{
-	Use:   "image",
-	Short: "List available digi images",
+	Use:   "kind",
+	Aliases: []string{"kinds", "image", "images"},
+	Short: "List available kinds",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 		if !q {
-			fmt.Println("IMAGE ID")
+			fmt.Println("KIND")
 		}
 		_ = helper.RunMake(nil, "image", q)
 	},
@@ -112,8 +113,8 @@ var imageCmd = &cobra.Command{
 
 // TBD pull and push to a remote repo
 var pullCmd = &cobra.Command{
-	Use:   "pull IMAGE_NAME",
-	Short: "Pull a digi image",
+	Use:   "pull KIND",
+	Short: "Pull an image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -127,8 +128,8 @@ var pullCmd = &cobra.Command{
 }
 
 var pushCmd = &cobra.Command{
-	Use:   "push IMAGE_DIR",
-	Short: "Push a digi image",
+	Use:   "push KIND",
+	Short: "Push an image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -151,7 +152,7 @@ var pushCmd = &cobra.Command{
 }
 
 var testCmd = &cobra.Command{
-	Use:   "test IMAGE_DIR",
+	Use:   "test KIND",
 	Short: "Test run a digi driver",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -243,8 +244,8 @@ var editCmd = &cobra.Command{
 }
 
 var runCmd = &cobra.Command{
-	Use:   "run IMAGE_DIR NAME",
-	Short: "Run a digi given image and name",
+	Use:   "run KIND NAME",
+	Short: "Run a digi given kind and name",
 	// TBD enable passing namespace
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -292,7 +293,7 @@ var runCmd = &cobra.Command{
 
 var stopCmd = &cobra.Command{
 	Use:   "stop NAME",
-	Short: "Stop a digi given name",
+	Short: "Stop a digi given the name",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -318,9 +319,9 @@ var stopCmd = &cobra.Command{
 	},
 }
 
-var rmiCmd = &cobra.Command{
-	Use:   "rmi IMAGE_DIR",
-	Short: "Remove a digi image",
+var rmkCmd = &cobra.Command{
+	Use:   "rmk KIND",
+	Short: "Remove a digi kind locally",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")

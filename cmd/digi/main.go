@@ -21,7 +21,7 @@ func main() {
 	RootCmd.AddCommand(pullCmd)
 	RootCmd.AddCommand(pushCmd)
 	RootCmd.AddCommand(imageCmd)
-	RootCmd.AddCommand(rmiCmd)
+	RootCmd.AddCommand(rmkCmd)
 
 	RootCmd.AddCommand(runCmd)
 	runCmd.Flags().BoolP("local", "l", false, "Run driver in local console")
