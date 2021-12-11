@@ -46,7 +46,7 @@ func main() {
 	RootCmd.AddCommand(editCmd)
 	RootCmd.AddCommand(space.RootCmd)
 	RootCmd.AddCommand(lake.QueryCmd)
-	RootCmd.AddCommand(lake.ManageCmd)
+	RootCmd.AddCommand(lake.RootCmd)
 	// TBD digi kc ... forward command to kubectl
 
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Hide output")

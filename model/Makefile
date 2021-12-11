@@ -98,8 +98,9 @@ pull:
 .PHONY: run stop watch
 run: | prepare model
 	# stop any existing: delete model, driver, pool
-	(kubectl delete $(PLURAL) $(NAME) >/dev/null 2>&1 || \
-	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null 2>&1) || true
+	helm list -q | grep $(NAME) >/dev/null 2>&1 && \
+	((kubectl delete $(PLURAL) $(NAME) >/dev/null 2>&1 || \
+	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null 2>&1) || true) & \
 	helm uninstall $(NAME) >/dev/null 2>&1 || true
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zapi drop -f $(NAME) >/dev/null 2>&1 || true
@@ -107,14 +108,17 @@ run: | prepare model
 	# TBD make pool optional by checking values.yaml
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
 	helm install -f values.yaml --set name=$(NAME) $(NAME) . >/dev/null && \
-	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
-    -- zapi create $(NAME) >/dev/null
+	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
+    -- zapi create $(NAME)) >/dev/null 2>&1 || echo $(NAME)
 	rm -r $(build_dir) || true
 stop:
-	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null && \
-	helm uninstall $(NAME) >/dev/null && \
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-    -- zapi drop -f $(NAME) >/dev/null
+    -- zapi drop -f $(NAME) >/dev/null 2>&1 || true
+	helm list -q | grep $(NAME) >/dev/null 2>&1 && \
+	((kubectl delete $(PLURAL) $(NAME) >/dev/null 2>&1 || \
+	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null 2>&1) || true) & \
+	helm uninstall $(NAME) >/dev/null 2>&1 && echo $(NAME) || echo "$(NAME) isn't running"
+
 watch:
 	# the former runs faster
 	watch -n$(INTERVAL) -t "(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \

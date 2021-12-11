@@ -29,7 +29,7 @@ var (
 		},
 	}
 
-	ManageCmd = &cobra.Command{
+	RootCmd = &cobra.Command{
 		Use:   "lake [command]",
 		Short: "Manage the digi lake",
 		Args:  cobra.MinimumNArgs(1),
@@ -38,7 +38,16 @@ var (
 		},
 	}
 
-	ConnectCmd = &cobra.Command{
+	startCmd = &cobra.Command{
+		Use:   "start [command]",
+		Short: "Start the digi lake",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			// TBD
+		},
+	}
+
+	connectCmd = &cobra.Command{
 		// TBD allow passing lake name
 		Use:   "connect",
 		Short: "Port forward to the digi lake",
@@ -93,7 +102,8 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 }
 
 func init() {
-	ManageCmd.AddCommand(ConnectCmd)
+	RootCmd.AddCommand(connectCmd)
+	RootCmd.AddCommand(startCmd)
 
 	QueryCmd.Flags().StringP("format", "f", "", "Output data format.")
 	QueryCmd.Flags().BoolP("Z", "Z", false, "Pretty formatted output.")

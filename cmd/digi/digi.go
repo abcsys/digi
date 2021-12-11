@@ -46,7 +46,8 @@ var initCmd = &cobra.Command{
 			params["IMAGE_DIR"] = d
 		}
 
-		if err := helper.RunMake(params, "init", q); err == nil && !q {
+		_ = helper.RunMake(params, "init", q)
+		if !q {
 			fmt.Println(kind)
 		}
 	},
@@ -60,9 +61,9 @@ var genCmd = &cobra.Command{
 		q, _ := cmd.Flags().GetBool("quiet")
 
 		imageDir := args[0]
-		if err := helper.RunMake(map[string]string{
+		if _ = helper.RunMake(map[string]string{
 			"IMAGE_DIR": imageDir,
-		}, "gen", q); err == nil && !q {
+		}, "gen", q); !q {
 			fmt.Println(imageDir)
 		}
 	},
@@ -85,13 +86,13 @@ var buildCmd = &cobra.Command{
 			panic(err)
 		}
 
-		if err := helper.RunMake(map[string]string{
+		if _ = helper.RunMake(map[string]string{
 			"GROUP":     kind.Group,
 			"VERSION":   kind.Version,
 			"KIND":      kind.Name,
 			"IMAGE_DIR": imageDir,
 			"BUILDFLAG": buildFlag,
-		}, "build", q); err == nil && !q {
+		}, "build", q); !q {
 			fmt.Println(kind)
 		}
 	},
@@ -119,11 +120,9 @@ var pullCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
-		if err := helper.RunMake(map[string]string{
+		_ = helper.RunMake(map[string]string{
 			"IMAGE_NAME": args[0],
-		}, "pull", q); err != nil {
-			return
-		}
+		}, "pull", q)
 	},
 }
 
@@ -140,12 +139,12 @@ var pushCmd = &cobra.Command{
 			panic(err)
 		}
 
-		if err := helper.RunMake(map[string]string{
+		if _ = helper.RunMake(map[string]string{
 			"GROUP":     kind.Group,
 			"VERSION":   kind.Version,
 			"KIND":      kind.Name,
 			"IMAGE_DIR": imageDir,
-		}, "push", q); err == nil && !q {
+		}, "push", q); !q {
 			fmt.Println(kind)
 		}
 	},
@@ -198,8 +197,7 @@ var testCmd = &cobra.Command{
 			cmdStr = "clean-test"
 		}
 
-		if err := helper.RunMake(params, cmdStr, false); err != nil {
-		}
+		_ = helper.RunMake(params, cmdStr, false)
 	},
 }
 
@@ -212,10 +210,9 @@ var logCmd = &cobra.Command{
 		q, _ := cmd.Flags().GetBool("quiet")
 
 		name := args[0]
-		if err := helper.RunMake(map[string]string{
+		_ = helper.RunMake(map[string]string{
 			"NAME": name,
-		}, "log", q); err == nil && !q {
-		}
+		}, "log", q)
 	},
 }
 
@@ -270,6 +267,7 @@ var runCmd = &cobra.Command{
 		noAlias, _ := cmd.Flags().GetBool("no-alias")
 
 		quiet, _ := cmd.Flags().GetBool("quiet")
+		// XXX fix returned error from RunMake
 		if err := helper.RunMake(map[string]string{
 			"IMAGE_DIR": imageDir,
 			"GROUP":     kind.Group,
@@ -278,8 +276,10 @@ var runCmd = &cobra.Command{
 			"PLURAL":    kind.Plural(),
 			"NAME":      name,
 			"KOPFLOG":   kopfLog,
-		}, c, quiet); err == nil && !quiet {
-			fmt.Println(name)
+		}, c, quiet); err == nil {
+			if !quiet {
+				fmt.Println(name)
+			}
 
 			if !noAlias {
 				err := helper.CreateAlias(kind, name, "default")
@@ -307,15 +307,13 @@ var stopCmd = &cobra.Command{
 
 		kind := auri.Kind
 
-		if err := helper.RunMake(map[string]string{
+		_ = helper.RunMake(map[string]string{
 			"GROUP":   kind.Group,
 			"VERSION": kind.Version,
 			"KIND":    kind.Name,
 			"PLURAL":  kind.Plural(),
 			"NAME":    name,
-		}, "stop", q); err == nil && !q {
-			fmt.Println(name)
-		}
+		}, "stop", q)
 	},
 }
 
@@ -325,9 +323,9 @@ var rmkCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
-		if err := helper.RunMake(map[string]string{
+		if _ = helper.RunMake(map[string]string{
 			"IMAGE_DIR": args[0],
-		}, "delete", q); err == nil && !q {
+		}, "delete", q); !q {
 			fmt.Printf("%s removed\n", args[0])
 		}
 	},
