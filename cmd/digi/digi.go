@@ -320,6 +320,7 @@ var stopCmd = &cobra.Command{
 var rmkCmd = &cobra.Command{
 	Use:   "rmk KIND",
 	Short: "Remove a digi kind locally",
+	Aliases: []string{"rmi"},
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -432,5 +433,15 @@ var watchCmd = &cobra.Command{
 		}
 
 		_ = helper.RunMake(params, "watch", false)
+	},
+}
+
+var gcCmd = &cobra.Command{
+	Use:     "gc",
+	Short:   "Run garbage collection",
+	Aliases: []string{"clean"},
+	Args:    cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = helper.RunMake(map[string]string{}, "gc", false)
 	},
 }

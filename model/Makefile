@@ -140,3 +140,12 @@ port:
 log:
 	kubectl logs `kubectl get pod --field-selector status.phase=Running \
 	-l name=$(NAME) -oname --sort-by=.status.startTime | tail -n1 | sed "s/^.\{4\}//"`
+# GC
+.PHONY: gc
+gc:
+	crds=$$(kubectl get crds --no-headers -o custom-columns=":metadata.name"); \
+	for i in $$crds; do \
+	  	count=$$(kubectl get $$i -oname | wc -l); \
+		if [[ $$count -eq 0 ]]; \
+		 then kubectl delete crd $$i >/dev/null ; echo $$i; fi \
+	done
