@@ -8,13 +8,13 @@ from kopf.structs.diffs import diff
 import digi.util as util
 from digi.util import deep_set
 
-
+# XXX fix model and type view
 class View(ABC):
     @abstractmethod
     def __init__(self,
                  root: dict,
                  root_key: str = "root",
-                 gvr_str = None,
+                 gvr_str=None,
                  trim_gv: bool = True,
                  trim_mount: bool = True,
                  trim_name: bool = True,
@@ -92,7 +92,7 @@ class NameView(View):
             for n, m in ms.items():
                 if "spec" not in m:
                     continue
-                n = n.replace("default/", "")
+                n = util.trim_default_space(n)
                 _view.update({n: m["spec"]})
                 self._nsn_gvr[n] = typ
 
@@ -117,10 +117,10 @@ class NameView(View):
     def transform(self, root: dict, view: dict):
         _mount = root.get("mount", {})
         if self._trim_mount:
-            root.pop("mount", "")
+            trim_mount(root, trim_gv=self._trim_gv)
         for typ, models in _mount.items():
             for name, model in models.items():
-                name = name.replace("default/", "")
+                name = util.trim_default_space(name)
                 if "spec" not in model:
                     continue
 
@@ -161,7 +161,7 @@ class KindView(View):
             for n, m in ms.items():
                 if "spec" not in m:
                     continue
-                n = n.replace("default/", "")
+                n = util.trim_default_space(n)
                 _view[_typ].update({n: m["spec"]})
 
         self._old, self._new = _view, copy.deepcopy(_view)
@@ -184,27 +184,21 @@ class KindView(View):
     def transform(self, root: dict, view: dict):
         _mount = root.get("mount", {})
         if self._trim_mount:
-            root.pop("mount", "")
+            trim_mount(root, trim_gv=self._trim_gv)
         for typ, models in _mount.items():
             _typ = typ.replace(self._gv_str + "/", "") if self._trim_gv else typ
             if _typ not in view:
-                if self._trim_name:
-                    view[_typ] = list()
-                else:
-                    view[_typ] = dict()
+                view[_typ] = list() if self._trim_name else dict()
 
             for name, model in models.items():
-                name = name.replace("default/", "")
+                name = util.trim_default_space(name)
                 if "spec" not in model:
                     continue
 
                 spec: dict = model["spec"]
                 self.transform(spec, view)
 
-                if self._trim_name:
-                    view[_typ].append(spec)
-                else:
-                    view[_typ].update({name: spec})
+                view[_typ].append(spec if self._trim_name else {name: spec})
 
     def materialize(self):
         root = self._root
@@ -231,9 +225,8 @@ class CleanView(View):
         view.update(copy.deepcopy(root))
         if len(_mount) > 0:
             if self._trim_mount:
-                del view["mount"]
+                trim_mount(view, trim_gv=self._trim_gv)
                 return
-
             view["mount"] = dict()
 
         for typ, models in _mount.items():
@@ -241,7 +234,7 @@ class CleanView(View):
             view["mount"][_typ] = dict()
 
             for name, model in models.items():
-                new_name = name.replace("default/", "")
+                new_name = util.trim_default_space(name)
                 if "spec" not in model:
                     continue
 
@@ -318,3 +311,17 @@ class DotView(View):
 
 # aliases
 ModelView, TypeView = NameView, KindView
+
+
+def trim_mount(v: dict, *,
+               trim_all=False,
+               trim_gv=True):
+    # keep only the names of immediate children
+    if not trim_all:
+        for gvr, models in v.get("mount", {}).items():
+            key = util.trim_gv(gvr) if trim_gv else gvr
+            v[key] = list()
+            for name, _ in models.items():
+                name = util.trim_default_space(name)
+                v[key].append(name)
+    v.pop("mount", "")

@@ -86,12 +86,16 @@ def spaced_name(n, ns) -> str:
     return f"{ns}/{n}"
 
 
-def trim_default_space(s):
-    return s.lstrip("default/")
+def trim_default_space(n):
+    return n.replace("default/", "")
 
 
-def simple_name(s):
-    return trim_default_space(s)
+def simple_name(n):
+    return trim_default_space(n)
+
+
+def trim_gv(gvr):
+    return gvr.split("/")[-1]
 
 
 def gvr_from_body(b):
