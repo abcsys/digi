@@ -33,3 +33,5 @@ spec:
             value: {{ quote .Values.mounter }}
           - name: POOL_PROVIDER
             value: {{ .Values.pool_provider }}
+          - name: STRICT_MOUNT
+            value: {{ .Values.strict_mount}}

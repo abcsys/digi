@@ -55,7 +55,7 @@ image:
 list:
 	kubectl get deploy --no-headers -o custom-columns=":metadata.name"
 edit:
-	kubectl edit $(PLURAL) $(NAME) 2>/dev/null || kubectl edit $(GROUP).$(PLURAL) $(NAME)
+	kubectl edit $(PLURAL) $(NAME) >/dev/null 2>&1 || kubectl edit $(PLURAL).$(GROUP) $(NAME)
 
 .PHONY: clean-test test
 clean-test:
@@ -109,7 +109,7 @@ run: | prepare model
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
 	helm install -f values.yaml --set name=$(NAME) $(NAME) . >/dev/null && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
-    -- zapi create $(NAME)) >/dev/null 2>&1 || echo $(NAME)
+    -- zapi create $(NAME)) >/dev/null 2>&1
 	rm -r $(build_dir) || true
 stop:
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \

@@ -267,7 +267,7 @@ var runCmd = &cobra.Command{
 		noAlias, _ := cmd.Flags().GetBool("no-alias")
 
 		quiet, _ := cmd.Flags().GetBool("quiet")
-		// XXX fix returned error from RunMake
+		// XXX fix returned error and quiet from RunMake
 		if err := helper.RunMake(map[string]string{
 			"IMAGE_DIR": imageDir,
 			"GROUP":     kind.Group,

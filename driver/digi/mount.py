@@ -22,7 +22,7 @@ Event propagation:
   the child's intent;
 """
 
-if os.environ.get("STRICT_MOUNT", True):
+if os.environ.get("STRICT_MOUNT", "false") == "true":
     TRIM_FROM_PARENT = {"status", "output", "obs", "meta"}
     TRIM_FROM_CHILD  = {"intent", "input"}
 else:
