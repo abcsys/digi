@@ -204,7 +204,7 @@ var testCmd = &cobra.Command{
 var logCmd = &cobra.Command{
 	Use:     "log NAME",
 	Short:   "Print log of a digi driver",
-	Aliases: []string{"logs"},
+	Aliases: []string{"logs", "l"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")

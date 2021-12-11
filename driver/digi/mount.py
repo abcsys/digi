@@ -22,11 +22,11 @@ Event propagation:
   the child's intent;
 """
 
-if os.environ.get("STRICT_MOUNT", "false") == "true":
+if os.environ.get("STRICT_MOUNT", "true") == "true":
     TRIM_FROM_PARENT = {"status", "output", "obs", "meta"}
     TRIM_FROM_CHILD  = {"intent", "input"}
 else:
-    TRIM_FROM_PARENT = TRIM_FROM_CHILD = {}
+    TRIM_FROM_PARENT = TRIM_FROM_CHILD = set()
 
 class Watch:
     def __init__(self, g, v, r, n, ns="default", *,
