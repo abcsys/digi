@@ -30,6 +30,7 @@ class __Reconciler:
         self.r = digi.r
         self.n = digi.n
         self.ns = digi.ns
+        self.auri = digi.auri
 
         self._logger = digi.logger
 

@@ -31,6 +31,7 @@ func main() {
 	RootCmd.AddCommand(testCmd)
 	testCmd.Flags().BoolP("clean", "c", false, "Remove test digi")
 	testCmd.Flags().BoolP("mounter", "m", false, "Enable mounter in test")
+	testCmd.Flags().BoolP("strict-mounter", "s", false, "Use strict mounter in test")
 	testCmd.Flags().BoolP("no-alias", "n", false, "Do not create alias to the model")
 	RootCmd.AddCommand(logCmd)
 	RootCmd.AddCommand(listCmd)

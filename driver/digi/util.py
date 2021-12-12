@@ -273,8 +273,22 @@ def put(path, src, target, transform=lambda x: x):
 
 
 def deep_get(d: dict, path: Union[str, Iterable], default=None) -> Any:
-    return reduce(lambda _d, key: _d.get(key, default) if isinstance(_d, dict) else default,
-                  path.split(".") if isinstance(path, str) else path, d)
+    """accepts paths in form root.'digi.dev/test'.control.power"""
+    if "'" in path or '"' in path:
+        path = path.replace('"', "'")
+        parsed = list()
+        for i, seg in enumerate(path.split("'")):
+            if seg == "":
+                continue
+            if i % 2 != 0:
+                parsed.append(seg)
+            else:
+                parsed += seg.strip(".").split(".")
+        path = parsed
+    else:
+        path = path.split(".") if isinstance(path, str) else path
+    return reduce(lambda _d, key: _d.get(key, default)
+    if isinstance(_d, dict) else default, path, d)
 
 
 def deep_set(d: dict, path: Union[str, Iterable], val: Any, create=True):
@@ -453,3 +467,11 @@ class Loader(threading.Thread):
         if load_interval is not None:
             self.load_interval = load_interval
         self.stop()
+
+
+def name_from_auri(auri: tuple):
+    return auri[3]
+
+
+update = deep_set
+get = deep_get

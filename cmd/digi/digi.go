@@ -20,10 +20,11 @@ var (
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init KIND",
-	Short: "Initialize a new digi kind",
-	Long:  "Create a digi template with the directory name defaults to the kind",
-	Args:  cobra.ExactArgs(1),
+	Use:     "init KIND",
+	Short:   "Initialize a new digi kind",
+	Long:    "Create a digi template with the directory name defaults to the kind",
+	Aliases: []string{"i"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
@@ -54,9 +55,10 @@ var initCmd = &cobra.Command{
 }
 
 var genCmd = &cobra.Command{
-	Use:   "gen KIND",
-	Short: "Generate configs and scripts",
-	Args:  cobra.ExactArgs(1),
+	Use:     "gen KIND",
+	Short:   "Generate configs and scripts",
+	Aliases: []string{"g"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
@@ -70,9 +72,10 @@ var genCmd = &cobra.Command{
 }
 
 var buildCmd = &cobra.Command{
-	Use:   "build KIND",
-	Short: "Build a digi image",
-	Args:  cobra.ExactArgs(1),
+	Use:     "build KIND",
+	Short:   "Build a digi image",
+	Aliases: []string{"b"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 		var buildFlag string
@@ -99,10 +102,10 @@ var buildCmd = &cobra.Command{
 }
 
 var imageCmd = &cobra.Command{
-	Use:   "kind",
-	Aliases: []string{"kinds", "image", "images"},
-	Short: "List available kinds",
-	Args:  cobra.ExactArgs(0),
+	Use:     "kind",
+	Short:   "List available kinds",
+	Aliases: []string{"kinds", "image", "images", "k"},
+	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 		if !q {
@@ -151,9 +154,10 @@ var pushCmd = &cobra.Command{
 }
 
 var testCmd = &cobra.Command{
-	Use:   "test KIND",
-	Short: "Test run a digi driver",
-	Args:  cobra.ExactArgs(1),
+	Use:     "test KIND",
+	Short:   "Test run a digi driver",
+	Aliases: []string{"t"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var name, imageDir string
 
@@ -165,22 +169,29 @@ var testCmd = &cobra.Command{
 
 		name = kind.Name + "-test"
 
-		var useMounter string
+		var useMounter, useStrictMounter string
 		if um, _ := cmd.Flags().GetBool("mounter"); um {
 			useMounter = "true"
 		} else {
 			useMounter = "false"
 		}
 
+		if um, _ := cmd.Flags().GetBool("strict-mounter"); um {
+			useStrictMounter = "true"
+		} else {
+			useStrictMounter = "false"
+		}
+
 		params := map[string]string{
-			"IMAGE_DIR": imageDir,
-			"GROUP":     kind.Group,
-			"VERSION":   kind.Version,
-			"KIND":      kind.Name,
-			"PLURAL":    kind.Plural(),
-			"NAME":      name,
-			"NAMESPACE": "default",
-			"MOUNTER":   useMounter,
+			"IMAGE_DIR":    imageDir,
+			"GROUP":        kind.Group,
+			"VERSION":      kind.Version,
+			"KIND":         kind.Name,
+			"PLURAL":       kind.Plural(),
+			"NAME":         name,
+			"NAMESPACE":    "default",
+			"MOUNTER":      useMounter,
+			"STRICT_MOUNT": useStrictMounter,
 		}
 
 		if noAlias, _ := cmd.Flags().GetBool("no-alias"); !noAlias {
@@ -217,9 +228,10 @@ var logCmd = &cobra.Command{
 }
 
 var editCmd = &cobra.Command{
-	Use:   "edit NAME",
-	Short: "Edit a digi model",
-	Args:  cobra.ExactArgs(1),
+	Use:     "edit NAME",
+	Short:   "Edit a digi model",
+	Aliases: []string{"e"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// TBD allow namespace
 		var name string
@@ -241,8 +253,9 @@ var editCmd = &cobra.Command{
 }
 
 var runCmd = &cobra.Command{
-	Use:   "run KIND NAME",
-	Short: "Run a digi given kind and name",
+	Use:     "run KIND NAME",
+	Short:   "Run a digi given kind and name",
+	Aliases: []string{"r"},
 	// TBD enable passing namespace
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -292,9 +305,10 @@ var runCmd = &cobra.Command{
 }
 
 var stopCmd = &cobra.Command{
-	Use:   "stop NAME",
-	Short: "Stop a digi given the name",
-	Args:  cobra.ExactArgs(1),
+	Use:     "stop NAME",
+	Short:   "Stop a digi given the name",
+	Aliases: []string{"s"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
@@ -318,10 +332,10 @@ var stopCmd = &cobra.Command{
 }
 
 var rmkCmd = &cobra.Command{
-	Use:   "rmk KIND",
-	Short: "Remove a digi kind locally",
+	Use:     "rmk KIND",
+	Short:   "Remove a digi kind locally",
 	Aliases: []string{"rmi"},
-	Args:  cobra.ExactArgs(1),
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 		if _ = helper.RunMake(map[string]string{
@@ -396,7 +410,7 @@ var (
 var listCmd = &cobra.Command{
 	Use:     "list",
 	Short:   "Get a list of running digis",
-	Aliases: []string{"ps"},
+	Aliases: []string{"ps", "ls"},
 	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -406,10 +420,10 @@ var listCmd = &cobra.Command{
 		}
 		flags := ""
 		if !showAll {
-		   flags += " -l app!=lake"
+			flags += " -l app!=lake"
 		}
 		_ = helper.RunMake(map[string]string{
-	        "FLAG": flags,
+			"FLAG": flags,
 		}, "list", false)
 	},
 }
