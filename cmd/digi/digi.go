@@ -399,8 +399,18 @@ var listCmd = &cobra.Command{
 	Aliases: []string{"ps"},
 	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("NAME")
-		_ = helper.RunMake(nil, "list", false)
+		q, _ := cmd.Flags().GetBool("quiet")
+		showAll, _ := cmd.Flags().GetBool("all")
+		if !q {
+			fmt.Println("NAME")
+		}
+		flags := ""
+		if !showAll {
+		   flags += " -l app!=lake"
+		}
+		_ = helper.RunMake(map[string]string{
+	        "FLAG": flags,
+		}, "list", false)
 	},
 }
 

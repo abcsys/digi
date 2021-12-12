@@ -53,9 +53,9 @@ delete:
 image:
 	cd $(WORKDIR) && ls -d */* 2> /dev/null | grep "model.yaml" | xargs -I {} dirname {}
 list:
-	kubectl get deploy --no-headers -o custom-columns=":metadata.name"
+	kubectl get deploy --no-headers -o custom-columns=":metadata.name" $(FLAG)
 edit:
-	kubectl edit $(PLURAL) $(NAME) >/dev/null 2>&1 || kubectl edit $(PLURAL).$(GROUP) $(NAME)
+	kubectl edit $(PLURAL) $(NAME) 2>&1 || kubectl edit $(PLURAL).$(GROUP) $(NAME)
 
 .PHONY: clean-test test
 clean-test:

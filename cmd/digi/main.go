@@ -34,21 +34,20 @@ func main() {
 	testCmd.Flags().BoolP("no-alias", "n", false, "Do not create alias to the model")
 	RootCmd.AddCommand(logCmd)
 	RootCmd.AddCommand(listCmd)
+	listCmd.Flags().BoolP("all", "a", false, "Show all digis")
+	RootCmd.AddCommand(editCmd)
 	RootCmd.AddCommand(watchCmd)
 	watchCmd.Flags().Float64P("interval", "i", 1, "Refresh interval")
 	watchCmd.Flags().Int8P("verbosity", "v", 0, "Output verbosity, converted to neat level (4 - v)")
 	RootCmd.AddCommand(gcCmd)
 
-	// TBD tidy to remove unused resources, e.g., crds
 	RootCmd.AddCommand(aliasCmd)
 	aliasCmd.AddCommand(aliasClearCmd)
 	aliasCmd.AddCommand(aliasResolveCmd)
 
-	RootCmd.AddCommand(editCmd)
 	RootCmd.AddCommand(space.RootCmd)
 	RootCmd.AddCommand(lake.QueryCmd)
 	RootCmd.AddCommand(lake.RootCmd)
-	// TBD digi kc ... forward command to kubectl
 
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Hide output")
 	if err := RootCmd.Execute(); err != nil {
