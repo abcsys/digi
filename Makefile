@@ -14,7 +14,7 @@ dep:
 	go get github.com/silveryfu/kubectl-neat && \
 	cp $(which kubectl-neat) ~/.krew/bin/kubectl-neat
 digi:
-	cd cmd/; go install ./digi ./dq ./ds
+	cd cmd/; go install ./digi ./dq ./ds ./di
 install: | digi
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
 	sed 's/DRIVER_REPO_TEMP/$(DRIVER_REPO)/g; s/DOCKER_CMD_TEMP/$(DOCKER_CMD)/g' \

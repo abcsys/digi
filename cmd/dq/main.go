@@ -12,12 +12,12 @@ var RootCmd = &cobra.Command{
 	Use:   "dq [OPTIONS] [NAME] QUERY",
 	Short: lake.QueryCmd.Short,
 	Args:  lake.QueryCmd.Args,
-	Run: lake.QueryCmd.Run,
+	Run:   lake.QueryCmd.Run,
 }
 
 // TBD add lake management commands
 
-func main(){
+func main() {
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
 
 	if err := RootCmd.Execute(); err != nil {
@@ -25,4 +25,3 @@ func main(){
 		os.Exit(1)
 	}
 }
-
