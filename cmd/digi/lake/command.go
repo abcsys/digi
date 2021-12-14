@@ -11,9 +11,10 @@ import (
 
 var (
 	QueryCmd = &cobra.Command{
-		Use:   "query [OPTIONS] [NAME] QUERY",
-		Short: "Query a digi or the digi lake",
-		Args:  cobra.MinimumNArgs(1),
+		Use:     "query [OPTIONS] [NAME] QUERY",
+		Short:   "Query a digi or the digi lake",
+		Aliases: []string{"q"},
+		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var name, query string
 			if len(args) > 1 {
@@ -96,8 +97,8 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 	}
 
 	return helper.RunMake(map[string]string{
-		"QUERY":  query,
-		"FLAG": flagStr,
+		"QUERY": query,
+		"FLAG":  flagStr,
 	}, "query", false)
 }
 

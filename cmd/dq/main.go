@@ -5,20 +5,13 @@ import (
 	"os"
 
 	"digi.dev/digi/cmd/digi/lake"
-	"github.com/spf13/cobra"
 )
 
-var RootCmd = &cobra.Command{
-	Use:   "dq [OPTIONS] [NAME] QUERY",
-	Short: lake.QueryCmd.Short,
-	Args:  lake.QueryCmd.Args,
-	Run:   lake.QueryCmd.Run,
-}
-
-// TBD add lake management commands
+var RootCmd = lake.QueryCmd
 
 func main() {
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
+	RootCmd.Use = "dq [OPTIONS] [NAME] QUERY"
 
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)

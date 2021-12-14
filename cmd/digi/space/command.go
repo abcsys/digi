@@ -15,9 +15,10 @@ var RootCmd = &cobra.Command{
 }
 
 var mountCmd = &cobra.Command{
-	Use:   "mount SRC TARGET [ mode ]",
-	Short: "Mount a digivice to another digivice",
-	Args:  cobra.MinimumNArgs(2),
+	Use:     "mount SRC TARGET [ mode ]",
+	Short:   "Mount a digi to another",
+	Aliases: []string{"m"},
+	Args:    cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		var mode string
 		if len(args) < 3 {
@@ -56,9 +57,10 @@ var mountCmd = &cobra.Command{
 }
 
 var pipeCmd = &cobra.Command{
-	Use:   "pipe [SRC TARGET] [\"d1 | d2 | ..\"]",
-	Short: "Pipe a digidata's input.x to another's output.y",
-	Args:  cobra.MinimumNArgs(1),
+	Use:     "pipe [SRC TARGET] [\"d1 | d2 | ..\"]",
+	Short:   "Pipe a digi's input.x to another's output.y",
+	Aliases: []string{"p"},
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var pp *api.Piper
 		var err error
