@@ -79,6 +79,7 @@ def run():
         new_gen = resp["metadata"]["generation"]
         if gen + 1 == new_gen:
             rc.skip_gen = new_gen
+        rc.clear_pending()
         digi.logger.info(f"Done reconciliation")
 
     @kopf.on.delete(**_model, **_kwargs, optional=True)

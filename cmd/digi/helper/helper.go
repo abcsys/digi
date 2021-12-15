@@ -51,6 +51,12 @@ func RunMake(args map[string]string, cmd string, quiet bool) error {
 	}
 	cmd_.Dir = homeDir
 
+	if quiet {
+		// XXX better fix of quiet
+		_ = cmd_.Run()
+		return nil
+	}
+
 	ptmx, err := pty.Start(cmd_)
 	if err != nil {
 		panic(err)

@@ -6,8 +6,10 @@ RUN git clone https://github.com/silveryfu/zed.git && \
 RUN git clone https://github.com/silveryfu/kopf.git && \
     cd kopf; git checkout low-lat && pip install -e .
 
+COPY *.txt .
+RUN pip install -r thirdparty.txt > /dev/null 2>&1 || true
+
 COPY . .
-RUN (ls thirdparty.txt >> /dev/null 2>&1 && pip install -r thirdparty.txt) || true
 RUN cd driver; pip install -e .
 
 CMD python3 handler.py

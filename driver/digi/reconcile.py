@@ -42,10 +42,14 @@ class __Reconciler:
         # keyed by handler's name (fn.__name__)
         self._handler_info = OrderedDict()
         self._handler_info_updated = True
+        # if a handler's update didn't get applied to the model
+        # the handler is marked as pending and will be invoked
+        # in future reconciliation to be executed again. The
+        # handler object's id is used as the key.
+        self._pending_handler = set()
 
         # most recent view of the model, served as an in-memory
         # read-only copy to be used in external application
-        # TBD expose or get rid of it
         self._view = dict()
 
     def run(self, spec, old, diff, *args, **kwargs):
@@ -57,7 +61,8 @@ class __Reconciler:
         self._compile_handler()
 
         for fn, cond, path, _ in self.handlers:
-            if cond(proc_spec, diff, path, *args, **kwargs):
+            if cond(proc_spec, diff, path, *args, **kwargs) \
+                    or id(fn) in self._pending_handler:
                 # handler edits the spec object
                 try:
                     # TBD allow subview to be a forest
@@ -69,6 +74,7 @@ class __Reconciler:
                        back_prop=get_back_prop(diff),
                        diff=diff,
                        )
+                    self._pending_handler.add(id(fn))
                 except Exception as e:
                     self._logger.error(f"reconcile error: {e}")
                     self._logger.error(traceback.format_exc())
@@ -170,6 +176,9 @@ class __Reconciler:
 
     def view(self):
         return self._view
+
+    def clear_pending(self):
+        self._pending_handler.clear()
 
 
 def safe_lookup(d: dict, path: tuple):

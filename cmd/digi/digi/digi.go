@@ -96,7 +96,7 @@ var buildCmd = &cobra.Command{
 			"IMAGE_DIR": imageDir,
 			"BUILDFLAG": buildFlag,
 		}, "build", q); !q {
-			fmt.Println(kind)
+			fmt.Println(kind.Name)
 		}
 	},
 }

@@ -398,6 +398,9 @@ class Auri:
     def gvk(self) -> tuple:
         return self.group, self.version, self.kind
 
+    def auri(self):
+        return self.group, self.version, self.resource, self.name, self.namespace
+
     def __repr__(self):
         return self.__str__()
 

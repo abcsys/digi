@@ -66,6 +66,7 @@ test: | all clean-test
     PLURAL=$(PLURAL) NAME=$(NAME) NAMESPACE=$(NAMESPACE) \
     POOL_PROVIDER=none MOUNTER=$(MOUNTER) \
 	python $(IMAGE_DIR)/driver/handler.py
+	# TBD allow using pool
 
 # driver
 .PHONY: prepare
@@ -76,7 +77,6 @@ prepare:
 	rsync -r $(driver_dir)/deploy $(build_dir) || true
 	# app specific configs overwrite the generic ones
 	rsync -r $(digi_config) $(build_dir)/deploy || true
-	rsync -r $(driver_dir)/requirements.txt $(build_dir) || true
 
 .PHONY: build
 build: | prepare gen
@@ -98,12 +98,12 @@ pull:
 .PHONY: run stop watch
 run: | prepare model
 	# stop any existing: delete model, driver, pool
+	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
+    -- zapi drop -f $(NAME) >/dev/null 2>&1 || true
 	helm list -q | grep $(NAME) >/dev/null 2>&1 && \
 	((kubectl delete $(PLURAL) $(NAME) >/dev/null 2>&1 || \
 	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null 2>&1) || true) & \
 	helm uninstall $(NAME) >/dev/null 2>&1 || true
-	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-    -- zapi drop -f $(NAME) >/dev/null 2>&1 || true
 	# deploy anew: create model, driver, pool
 	# TBD make pool optional by checking values.yaml
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
