@@ -10,9 +10,14 @@ HOMEDIR=~/.digi
 
 .PHONY: dep digi install
 dep:
-	go get github.com/brimdata/zed
-	go get github.com/silveryfu/kubectl-neat && \
-	cp $(which kubectl-neat) ~/.krew/bin/kubectl-neat
+	# local kubectl-neat
+	cd /tmp; go get github.com/silveryfu/kubectl-neat@digi && \
+	mkdir ~/.krew >/dev/null 2>&1 || true && \
+	cp $(GOPATH)/bin/kubectl-neat ~/.krew/bin/kubectl-neat
+	# local zed
+	cd /tmp; git clone https://github.com/silveryfu/zed.git && \
+	cd zed; make install; cd ..; rm -rf zed
+	# TBD kubectl
 digi:
 	cd cmd/; go install ./digi ./dq ./ds ./di
 install: | digi
