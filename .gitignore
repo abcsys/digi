@@ -235,3 +235,7 @@ BenchmarkDotNet.Artifacts/
 .idea/
 *.pyc
 .DS_Store
+
+# binaries
+space/sync/cmd/manager/manager
+space/policy/cmd/manager/manager
