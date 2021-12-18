@@ -4,4 +4,5 @@ pyyaml
 inflection
 # pyjq
 python-box
-# digi
+zed
+

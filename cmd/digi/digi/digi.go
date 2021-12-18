@@ -21,7 +21,7 @@ var (
 
 var initCmd = &cobra.Command{
 	Use:     "init KIND",
-	Short:   "Initialize a new digi kind",
+	Short:   "Initialize a new kind",
 	Long:    "Create a digi template with the directory name defaults to the kind",
 	Aliases: []string{"i"},
 	Args:    cobra.ExactArgs(1),
@@ -73,7 +73,7 @@ var genCmd = &cobra.Command{
 
 var buildCmd = &cobra.Command{
 	Use:     "build KIND",
-	Short:   "Build a digi image",
+	Short:   "Build a kind",
 	Aliases: []string{"b"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -118,7 +118,7 @@ var imageCmd = &cobra.Command{
 // TBD pull and push to a remote repo
 var pullCmd = &cobra.Command{
 	Use:   "pull KIND",
-	Short: "Pull an image",
+	Short: "Pull a kind",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -131,7 +131,7 @@ var pullCmd = &cobra.Command{
 
 var pushCmd = &cobra.Command{
 	Use:   "push KIND",
-	Short: "Push an image",
+	Short: "Push a kind",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
@@ -333,7 +333,7 @@ var stopCmd = &cobra.Command{
 
 var rmkCmd = &cobra.Command{
 	Use:     "rmk KIND",
-	Short:   "Remove a digi kind locally",
+	Short:   "Remove a kind locally",
 	Aliases: []string{"rmi"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
