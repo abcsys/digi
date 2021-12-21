@@ -106,4 +106,3 @@ func main() {
 		log.Fatal(err, "Manager exited non-zero")
 	}
 }
-

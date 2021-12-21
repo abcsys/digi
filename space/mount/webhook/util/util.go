@@ -121,7 +121,6 @@ func (d dynamicObjectCreator) NewObject(rawJSON []byte) (runtime.Object, error) 
 	return runtimeObj, err
 }
 
-
 func GetK8sCRDClients(kubehome string) (kubewebhookcrd.Interface, error) {
 	// Try fallbacks.
 	if kubehome == "" {

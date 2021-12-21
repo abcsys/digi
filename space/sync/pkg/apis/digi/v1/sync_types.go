@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	SyncMode = "sync"
+	SyncMode  = "sync"
 	MatchMode = "match"
 )
 

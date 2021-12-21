@@ -37,8 +37,7 @@ func NewMounter(s, t, mode string) (*Mounter, error) {
 	}
 
 	return &Mounter{
-		Mount:
-		space.Mount{
+		Mount: space.Mount{
 			Source: si,
 			Target: ti,
 			Mode:   mode,
@@ -64,7 +63,6 @@ func (m *Mounter) Do() error {
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
-
 
 	var pathPrefix []string
 	pathPrefix = append(space.MountAttrPathSlice, []string{

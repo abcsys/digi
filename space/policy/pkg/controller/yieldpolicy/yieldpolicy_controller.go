@@ -61,7 +61,7 @@ type PolicyCache struct {
 func (pc *PolicyCache) Add(p *Policy) error {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
-	
+
 	pc.policies[p.name] = p
 
 	var srcKind, targetKind string
@@ -221,8 +221,7 @@ func (r *ReconcileYieldPolicy) doPolicy(request reconcile.Request) (reconcile.Re
 	if err := r.policyCache.Add(&Policy{
 		name:            name,
 		YieldPolicySpec: yp.Spec,
-	});
-		err != nil {
+	}); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -348,4 +347,3 @@ func (r *ReconcileYieldPolicy) doEnforce(request reconcile.Request) (reconcile.R
 
 	return reconcile.Result{}, nil
 }
-

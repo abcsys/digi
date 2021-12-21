@@ -56,9 +56,9 @@ type config struct {
 type mode string
 
 type compositionRefs struct {
-	mounts  map[string]mode
+	mounts map[string]mode
 	// XXX remove yields
-	yields  map[string]mode
+	yields map[string]mode
 }
 
 func NewApiClient(config *rest.Config) (*apiClient, error) {
@@ -222,7 +222,7 @@ func getFlattenRefs(prefix string, o *unstructured.Unstructured) map[string]mode
 func getCompositionRefs(o *unstructured.Unstructured) *compositionRefs {
 	f := getFlattenRefs
 	return &compositionRefs{
-		mounts:  f(space.MountAttrPath, o),
+		mounts: f(space.MountAttrPath, o),
 	}
 }
 

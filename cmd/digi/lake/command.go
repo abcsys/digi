@@ -53,8 +53,7 @@ var (
 		Use:   "connect",
 		Short: "Port forward to the digi lake",
 		Run: func(cmd *cobra.Command, args []string) {
-			_ = helper.RunMake(map[string]string{
-			}, "port", false)
+			_ = helper.RunMake(map[string]string{}, "port", false)
 		},
 	}
 )

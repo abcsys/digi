@@ -31,9 +31,13 @@ install: | digi
 	cp ./model/gen.py $(HOMEDIR) && \
 	cp ./model/patch.py $(HOMEDIR)
 
-.PHONY: fmt
+.PHONY: fmt tidy
 fmt:
-	go fmt ...
+	gofmt -s -w .
+	git diff --exit-code -- '*.go'
+tidy:
+	go mod tidy
+	git diff --exit-code -- go.mod go.sum
 
 .PHONY: k8s
 k8s:

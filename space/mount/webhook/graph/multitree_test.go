@@ -10,7 +10,7 @@ func TestMultiTree(t *testing.T) {
 	nodes := []string{
 		"A", "B", "U", "X", "V", "W", "Y", "Z",
 	}
-	edges := []Edge {
+	edges := []Edge{
 		{
 			Start: "A",
 			End:   "U",

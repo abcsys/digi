@@ -16,8 +16,8 @@ type node struct {
 }
 
 type child struct {
-	node *node
-	status  string
+	node   *node
+	status string
 }
 
 type tree struct {
