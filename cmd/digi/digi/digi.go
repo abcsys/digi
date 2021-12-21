@@ -3,9 +3,11 @@ package digi
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"digi.dev/digi/api"
 	"digi.dev/digi/cmd/digi/helper"
+	"digi.dev/digi/pkg/core"
 	"github.com/spf13/cobra"
 )
 
@@ -253,23 +255,25 @@ var editCmd = &cobra.Command{
 }
 
 var runCmd = &cobra.Command{
-	Use:     "run KIND NAME",
-	Short:   "Run a digi given kind and name",
+	Use:   "run KIND NAME [NAME ...]",
+	Short: "Run a digi given kind and name",
+	Long: "Run a digi given kind and name; more than one name can be given. " +
+		"The kind should be accessible in current path",
 	Aliases: []string{"r"},
 	// TBD enable passing namespace
-	Args: cobra.ExactArgs(2),
+	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		var imageDir, name = args[0], args[1]
+		var imageDir = args[0]
 		kind, err := helper.GetKindFromImageDir(imageDir)
 		if err != nil {
 			panic(err)
 		}
 
-		var c string
+		var cmdStr string
 		if l, _ := cmd.Flags().GetBool("local"); l {
-			c = "test"
+			cmdStr = "test"
 		} else {
-			c = "run"
+			cmdStr = "run"
 		}
 
 		kopfLog := "false"
@@ -278,56 +282,108 @@ var runCmd = &cobra.Command{
 		}
 
 		noAlias, _ := cmd.Flags().GetBool("no-alias")
-
 		quiet, _ := cmd.Flags().GetBool("quiet")
-		// XXX fix returned error and quiet from RunMake
-		if err := helper.RunMake(map[string]string{
-			"IMAGE_DIR": imageDir,
-			"GROUP":     kind.Group,
-			"VERSION":   kind.Version,
-			"KIND":      kind.Name,
-			"PLURAL":    kind.Plural(),
-			"NAME":      name,
-			"KOPFLOG":   kopfLog,
-		}, c, quiet); err == nil {
+
+		var names []string
+		names = args[1:]
+
+		var wg sync.WaitGroup
+		var toStdOut bool
+
+		for i, name := range names {
+			// XXX check ptx conflicts
+			wg.Add(1)
+			if i > 0 || quiet {
+				toStdOut = false
+			} else {
+				toStdOut = true
+			}
+			go func(name string, quiet bool) {
+				defer wg.Done()
+				if err := helper.RunMake(map[string]string{
+					"IMAGE_DIR": imageDir,
+					"GROUP":     kind.Group,
+					"VERSION":   kind.Version,
+					"KIND":      kind.Name,
+					"PLURAL":    kind.Plural(),
+					"NAME":      name,
+					"KOPFLOG":   kopfLog,
+				}, cmdStr, quiet); err == nil {
+					if !noAlias {
+						err := helper.CreateAlias(kind, name, "default")
+						if err != nil {
+							fmt.Println("unable to create alias")
+						}
+					}
+				}
+			}(name, !toStdOut)
+		}
+		wg.Wait()
+		for _, name := range names {
+			// XXX print in the goroutine
 			if !quiet {
 				fmt.Println(name)
-			}
-
-			if !noAlias {
-				err := helper.CreateAlias(kind, name, "default")
-				if err != nil {
-					fmt.Println("unable to create alias")
-				}
 			}
 		}
 	},
 }
 
 var stopCmd = &cobra.Command{
-	Use:     "stop NAME",
+	Use:     "stop NAME [NAME ...]",
 	Short:   "Stop a digi given the name",
+	Long:    "Stop a digi given the name",
 	Aliases: []string{"s"},
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
+		kindStr, _ := cmd.Flags().GetString("kind")
 
-		name := args[0]
-		auri, err := api.Resolve(name)
-		if err != nil {
-			fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
-			os.Exit(1)
+		// TBD handle namespace
+		var kind *core.Kind
+		if kindStr != "" {
+			var err error
+			if kind, err = core.KindFromString(kindStr); err != nil {
+				panic(err)
+			}
 		}
 
-		kind := auri.Kind
+		var wg sync.WaitGroup
+		var toStdOut bool
 
-		_ = helper.RunMake(map[string]string{
-			"GROUP":   kind.Group,
-			"VERSION": kind.Version,
-			"KIND":    kind.Name,
-			"PLURAL":  kind.Plural(),
-			"NAME":    name,
-		}, "stop", q)
+		for i, name := range args {
+			wg.Add(1)
+			if i > 0 || q {
+				toStdOut = false
+			} else {
+				toStdOut = true
+			}
+			if kindStr == "" {
+				auri, err := api.Resolve(name)
+				if err != nil {
+					fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
+					os.Exit(1)
+				}
+				kind = &auri.Kind
+			}
+
+			go func(name string, quiet bool) {
+				defer wg.Done()
+				_ = helper.RunMake(map[string]string{
+					"GROUP":   kind.Group,
+					"VERSION": kind.Version,
+					"KIND":    kind.Name,
+					"PLURAL":  kind.Plural(),
+					"NAME":    name,
+				}, "stop", quiet)
+			}(name, !toStdOut)
+		}
+		wg.Wait()
+		for _, name := range args[1:] {
+			// XXX print in the goroutine
+			if !q {
+				fmt.Println(name)
+			}
+		}
 	},
 }
 

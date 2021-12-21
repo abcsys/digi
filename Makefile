@@ -31,6 +31,10 @@ install: | digi
 	cp ./model/gen.py $(HOMEDIR) && \
 	cp ./model/patch.py $(HOMEDIR)
 
+.PHONY: fmt
+fmt:
+	go fmt ...
+
 .PHONY: k8s
 k8s:
 	minikube start

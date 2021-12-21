@@ -10,9 +10,9 @@ func init() {
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Hide output")
 
 	RootCmd.AddCommand(initCmd)
-	initCmd.Flags().StringP("group", "g", "", "Model group.")
-	initCmd.Flags().StringP("version", "v", "", "Model version.")
-	initCmd.Flags().StringP("directory", "d", "", "Image directory.")
+	initCmd.Flags().StringP("group", "g", "", "Model group")
+	initCmd.Flags().StringP("version", "v", "", "Model version")
+	initCmd.Flags().StringP("directory", "d", "", "Image directory")
 	RootCmd.AddCommand(genCmd)
 	RootCmd.AddCommand(buildCmd)
 
@@ -26,6 +26,7 @@ func init() {
 	runCmd.Flags().BoolP("no-alias", "n", false, "Do not create alias to the model")
 	runCmd.Flags().BoolP("show-kopf-log", "k", false, "Enable kopf logging")
 	RootCmd.AddCommand(stopCmd)
+	stopCmd.Flags().StringP("kind", "k", "", "Digi kind")
 	RootCmd.AddCommand(testCmd)
 	testCmd.Flags().BoolP("clean", "c", false, "Remove test digi")
 	testCmd.Flags().BoolP("mounter", "m", false, "Enable mounter in test")

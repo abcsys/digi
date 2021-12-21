@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -15,6 +16,10 @@ const (
 
 	UriSeparator      = types.Separator
 	AttrPathSeparator = '.'
+)
+
+var (
+	ErrInvalidKind = errors.New("cannot parse kind string")
 )
 
 // Kind identifies a model schema, e.g., digi.dev/v1/Lamp; it is a re-declaration of
@@ -62,6 +67,20 @@ func (k *Kind) GvrString() string {
 
 func (k *Kind) EscapedGvrString() string {
 	return regexp.QuoteMeta(k.GvrString())
+}
+
+func KindFromString(s string) (*Kind, error) {
+	s = strings.Trim(s, "/")
+	segs := strings.Split(s, "/")
+	if len(segs) != 3 {
+		return nil, ErrInvalidKind
+	} else {
+		return &Kind{
+			Group:   segs[0],
+			Version: segs[1],
+			Name:    segs[2],
+		}, nil
+	}
 }
 
 // Auri identifies a model or its attributes when a path is given
