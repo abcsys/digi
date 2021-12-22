@@ -10,7 +10,7 @@ def h(pools):
 
 if __name__ == '__main__':
     try:
-        subprocess.check_call("ZED_LAKE_ROOT=/mnt/lake zed lake serve >/dev/null 2>&1 &",
+        subprocess.check_call("zed serve -lake /mnt/lake >/dev/null 2>&1 &",
                               shell=True)
     except subprocess.CalledProcessError:
         digi.logger.fatal("unable to start zed lake")

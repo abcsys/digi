@@ -15,6 +15,7 @@ func init() {
 	initCmd.Flags().StringP("directory", "d", "", "Image directory")
 	RootCmd.AddCommand(genCmd)
 	RootCmd.AddCommand(buildCmd)
+	buildCmd.Flags().BoolP("no-cache", "n", false, "Do not use build cache")
 
 	RootCmd.AddCommand(pullCmd)
 	RootCmd.AddCommand(pushCmd)

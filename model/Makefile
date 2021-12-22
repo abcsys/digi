@@ -83,7 +83,7 @@ build: | prepare gen
 	rsync $(driver_handler) $(build_dir)/ || true
 	# use DOCKER_BUILDKIT=0 to enable more messages
 	cd $(build_dir) && $(DOCKER_CMD) build -t $(DRIVER_REPO)/$(IMAGE_NAME):latest $(BUILDFLAG) -f deploy/image/Dockerfile . || true
-	$(DOCKER_CMD) push $(DRIVER_REPO)/$(IMAGE_NAME):latest $(BUILDFLAG) || true
+	$(DOCKER_CMD) push $(DRIVER_REPO)/$(IMAGE_NAME):latest $(PUSHFLAG) || true
 	rm -r $(build_dir) || true
 
 # image
@@ -99,7 +99,7 @@ pull:
 run: | prepare model
 	# stop any existing: delete model, driver, pool
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-    -- zapi drop -f $(NAME) >/dev/null 2>&1 || true
+    -- zed drop -f $(NAME) >/dev/null 2>&1 || true
 	helm list -q | grep $(NAME) >/dev/null 2>&1 && \
 	((kubectl delete $(PLURAL) $(NAME) >/dev/null 2>&1 || \
 	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null 2>&1) || true) & \
@@ -109,11 +109,11 @@ run: | prepare model
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
 	helm install -f values.yaml --set name=$(NAME) $(NAME) . >/dev/null && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
-    -- zapi create $(NAME)) >/dev/null 2>&1
+    -- zed create $(NAME)) >/dev/null 2>&1
 	rm -r $(build_dir) || true
 stop:
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-    -- zapi drop -f $(NAME) >/dev/null 2>&1 || true
+    -- zed drop -f $(NAME) >/dev/null 2>&1 || true
 	helm list -q | grep $(NAME) >/dev/null 2>&1 && \
 	((kubectl delete $(PLURAL) $(NAME) >/dev/null 2>&1 || \
 	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null 2>&1) || true) & \
@@ -132,7 +132,7 @@ endif
 # TBD enforce single lake or use service to identify lake
 query:
 	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-        -- zapi query $(FLAG) "$(QUERY)"
+        -- zed query $(FLAG) "$(QUERY)"
 port:
 	kubectl port-forward service/$(LAKE) 9867:6534 || true
 # debug

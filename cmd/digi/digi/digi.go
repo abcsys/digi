@@ -80,9 +80,14 @@ var buildCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
-		var buildFlag string
+		noCache, _ := cmd.Flags().GetBool("no-cache")
+		var buildFlag, pushFlag string
 		if q {
-			buildFlag += "-q"
+			buildFlag += " -q"
+			pushFlag += " -q"
+		}
+		if noCache {
+			buildFlag += " --no-cache"
 		}
 
 		imageDir := args[0]
@@ -97,6 +102,7 @@ var buildCmd = &cobra.Command{
 			"KIND":      kind.Name,
 			"IMAGE_DIR": imageDir,
 			"BUILDFLAG": buildFlag,
+			"PUSHFLAG":  pushFlag,
 		}, "build", q); !q {
 			fmt.Println(kind.Name)
 		}

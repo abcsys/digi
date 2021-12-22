@@ -1,5 +1,5 @@
 group: digi.dev
-image: silveryfu/lake:latest
+image: silveryfu/lake.v1.digi.dev:latest
 imagepull: Always
 port: 6534
 mounter: false
