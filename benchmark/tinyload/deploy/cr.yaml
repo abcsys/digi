@@ -1,0 +1,10 @@
+apiVersion: benchmark.digi.dev/v1
+kind: Tinyload
+metadata:
+  name: {{ .Values.name }}
+spec:
+  control:
+    pause:
+      intent: false
+    interval:
+      intent: 0.1

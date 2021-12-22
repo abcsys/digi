@@ -1,0 +1,6 @@
+group: benchmark.digi.dev
+version: v1
+kind: Tinyload
+control:
+  pause: boolean
+  interval: number

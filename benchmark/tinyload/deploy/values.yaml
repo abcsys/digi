@@ -1,0 +1,8 @@
+group: benchmark.digi.dev
+image: silveryfu/tinyload.v1.benchmark.digi.dev:latest
+imagepull: Always
+mounter: false
+name: tinyload
+namespace: default
+plural: tinyloads
+version: v1
