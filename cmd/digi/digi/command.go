@@ -1,11 +1,16 @@
 package digi
 
 import (
+	"log"
+
 	"digi.dev/digi/cmd/digi/lake"
 	"digi.dev/digi/cmd/digi/space"
 )
 
 func init() {
+	// TBD read from cmdline flag
+	log.SetFlags(0)
+
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Hide output")
 

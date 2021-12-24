@@ -2,6 +2,7 @@ package digi
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
@@ -93,7 +94,7 @@ var buildCmd = &cobra.Command{
 		imageDir := args[0]
 		kind, err := helper.GetKindFromImageDir(imageDir)
 		if err != nil {
-			panic(err)
+			log.Fatalf("unable to find kind %s\n", imageDir)
 		}
 
 		if _ = helper.RunMake(map[string]string{
@@ -147,7 +148,7 @@ var pushCmd = &cobra.Command{
 		imageDir := args[0]
 		kind, err := helper.GetKindFromImageDir(imageDir)
 		if err != nil {
-			panic(err)
+			log.Fatalf("unable to find kind %s\n", imageDir)
 		}
 
 		if _ = helper.RunMake(map[string]string{
@@ -172,7 +173,7 @@ var testCmd = &cobra.Command{
 		imageDir = args[0]
 		kind, err := helper.GetKindFromImageDir(imageDir)
 		if err != nil {
-			panic(err)
+			log.Fatalf("unable to find kind %s\n", imageDir)
 		}
 
 		name = kind.Name + "-test"
@@ -205,7 +206,7 @@ var testCmd = &cobra.Command{
 		if noAlias, _ := cmd.Flags().GetBool("no-alias"); !noAlias {
 			// create alias beforehand because the test will hang
 			if err := helper.CreateAlias(kind, name, "default"); err != nil {
-				panic(err)
+				log.Fatalf("unable to create alias: %v\n", err)
 			}
 			// TBD defer remove alias
 		}
@@ -247,8 +248,7 @@ var editCmd = &cobra.Command{
 		name = args[0]
 		auri, err := api.Resolve(name)
 		if err != nil {
-			fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
-			os.Exit(1)
+			log.Fatalf("unable to resolve digi name %s: %v\n", name, err)
 		}
 
 		_ = helper.RunMake(map[string]string{
@@ -272,7 +272,7 @@ var runCmd = &cobra.Command{
 		var imageDir = args[0]
 		kind, err := helper.GetKindFromImageDir(imageDir)
 		if err != nil {
-			panic(err)
+			log.Fatalf("unable to find kind %s\n", imageDir)
 		}
 
 		var cmdStr string
@@ -349,7 +349,7 @@ var stopCmd = &cobra.Command{
 		if kindStr != "" {
 			var err error
 			if kind, err = core.KindFromString(kindStr); err != nil {
-				panic(err)
+				log.Fatalf("unable to parse kind %s: %v\n", kindStr, err)
 			}
 		}
 

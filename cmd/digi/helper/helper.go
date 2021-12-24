@@ -25,7 +25,7 @@ func init() {
 	var err error
 	homeDir, err = os.UserHomeDir()
 	if err != nil {
-		panic(err)
+		log.Fatalf("unable to find home dir: %v\n", err)
 	}
 	homeDir = filepath.Join(homeDir, ".digi")
 }
@@ -43,7 +43,7 @@ func RunMake(args map[string]string, cmd string, quiet bool) error {
 	if os.Getenv("WORKDIR") == "" {
 		curDir, err := os.Getwd()
 		if err != nil {
-			panic(err)
+			log.Fatalf("unable to find work dir: %v\n", err)
 		}
 		cmd_.Env = append(cmd_.Env,
 			fmt.Sprintf("WORKDIR=%s", curDir),
