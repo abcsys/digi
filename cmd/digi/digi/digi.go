@@ -275,20 +275,17 @@ var runCmd = &cobra.Command{
 			log.Fatalf("unable to find kind %s\n", imageDir)
 		}
 
-		var cmdStr string
-		if l, _ := cmd.Flags().GetBool("local"); l {
-			cmdStr = "test"
-		} else {
-			cmdStr = "run"
-		}
-
+		quiet, _ := cmd.Flags().GetBool("quiet")
 		kopfLog := "false"
 		if k, _ := cmd.Flags().GetBool("kopf-log"); k {
 			kopfLog = "true"
 		}
-
 		noAlias, _ := cmd.Flags().GetBool("no-alias")
-		quiet, _ := cmd.Flags().GetBool("quiet")
+		debug, _ := cmd.Flags().GetBool("debug")
+		var runFlag string
+		if debug {
+			runFlag += " --set trim_mount_on_load=false"
+		}
 
 		var names []string
 		names = args[1:]
@@ -314,7 +311,8 @@ var runCmd = &cobra.Command{
 					"PLURAL":    kind.Plural(),
 					"NAME":      name,
 					"KOPFLOG":   kopfLog,
-				}, cmdStr, quiet); err == nil {
+					"RUNFLAG": 	 runFlag,
+				}, "run", quiet); err == nil {
 					if !noAlias {
 						err := helper.CreateAlias(kind, name, "default")
 						if err != nil {

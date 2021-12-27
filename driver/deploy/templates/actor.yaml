@@ -32,6 +32,8 @@ spec:
           - name: MOUNTER
             value: {{ quote .Values.mounter }}
           - name: POOL_PROVIDER
-            value: {{ .Values.pool_provider }}
+            value: {{ quote .Values.pool_provider }}
           - name: STRICT_MOUNT
-            value: {{ .Values.strict_mount}}
+            value: {{ quote .Values.strict_mount }}
+          - name: TRIM_MOUNT_ON_LOAD
+            value: {{ quote .Values.trim_mount_on_load }}

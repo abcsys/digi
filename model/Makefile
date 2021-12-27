@@ -107,7 +107,7 @@ run: | prepare model
 	# deploy anew: create model, driver, pool
 	# TBD make pool optional by checking values.yaml
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
-	helm install -f values.yaml --set name=$(NAME) $(NAME) . >/dev/null && \
+	helm install -f values.yaml --set name=$(NAME) $(NAME) $(RUNFLAG) . >/dev/null && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
     -- zed create $(NAME)) >/dev/null 2>&1
 	rm -r $(build_dir) || true

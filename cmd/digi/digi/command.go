@@ -28,9 +28,9 @@ func init() {
 	RootCmd.AddCommand(rmkCmd)
 
 	RootCmd.AddCommand(runCmd)
-	runCmd.Flags().BoolP("local", "l", false, "Run driver in local console")
 	runCmd.Flags().BoolP("no-alias", "n", false, "Do not create alias to the model")
 	runCmd.Flags().BoolP("show-kopf-log", "k", false, "Enable kopf logging")
+	runCmd.Flags().BoolP("debug", "d", false, "Run driver in debug mode")
 	RootCmd.AddCommand(stopCmd)
 	stopCmd.Flags().StringP("kind", "k", "", "Digi kind")
 	RootCmd.AddCommand(testCmd)

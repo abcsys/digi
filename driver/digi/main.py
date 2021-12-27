@@ -38,7 +38,7 @@ def run():
     # reconciler operations
     from digi.reconcile import rc
     from digi.view import CleanView
-    _trim_mount = os.environ.get("PARENT_TRIM_MOUNT", True)
+    _trim_mount = os.environ.get("TRIM_MOUNT_ON_LOAD", "true") != "false"
 
     # TBD selectively add decorator
     @kopf.on.create(**_model, **_kwargs)
