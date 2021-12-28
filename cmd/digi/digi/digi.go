@@ -50,7 +50,7 @@ var initCmd = &cobra.Command{
 			params["IMAGE_DIR"] = d
 		}
 
-		_ = helper.RunMake(params, "init", q)
+		_ = helper.RunMake(params, "init", true, q)
 		if !q {
 			fmt.Println(kind)
 		}
@@ -68,7 +68,7 @@ var genCmd = &cobra.Command{
 		imageDir := args[0]
 		if _ = helper.RunMake(map[string]string{
 			"IMAGE_DIR": imageDir,
-		}, "gen", q); !q {
+		}, "gen", true, q); !q {
 			fmt.Println(imageDir)
 		}
 	},
@@ -104,7 +104,7 @@ var buildCmd = &cobra.Command{
 			"IMAGE_DIR": imageDir,
 			"BUILDFLAG": buildFlag,
 			"PUSHFLAG":  pushFlag,
-		}, "build", q); !q {
+		}, "build", true, q); !q {
 			fmt.Println(kind.Name)
 		}
 	},
@@ -120,7 +120,7 @@ var imageCmd = &cobra.Command{
 		if !q {
 			fmt.Println("KIND")
 		}
-		_ = helper.RunMake(nil, "image", q)
+		_ = helper.RunMake(nil, "image", true, q)
 	},
 }
 
@@ -134,7 +134,7 @@ var pullCmd = &cobra.Command{
 
 		_ = helper.RunMake(map[string]string{
 			"IMAGE_NAME": args[0],
-		}, "pull", q)
+		}, "pull", true, q)
 	},
 }
 
@@ -156,7 +156,7 @@ var pushCmd = &cobra.Command{
 			"VERSION":   kind.Version,
 			"KIND":      kind.Name,
 			"IMAGE_DIR": imageDir,
-		}, "push", q); !q {
+		}, "push", true, q); !q {
 			fmt.Println(kind)
 		}
 	},
@@ -217,7 +217,7 @@ var testCmd = &cobra.Command{
 			cmdStr = "clean-test"
 		}
 
-		_ = helper.RunMake(params, cmdStr, false)
+		_ = helper.RunMake(params, cmdStr, true, false)
 	},
 }
 
@@ -232,7 +232,7 @@ var logCmd = &cobra.Command{
 		name := args[0]
 		_ = helper.RunMake(map[string]string{
 			"NAME": name,
-		}, "log", q)
+		}, "log", true, q)
 	},
 }
 
@@ -256,7 +256,7 @@ var editCmd = &cobra.Command{
 			"KIND":   auri.Kind.Name,
 			"PLURAL": auri.Kind.Plural(),
 			"NAME":   name,
-		}, "edit", false)
+		}, "edit", true, false)
 	},
 }
 
@@ -291,16 +291,10 @@ var runCmd = &cobra.Command{
 		names = args[1:]
 
 		var wg sync.WaitGroup
-		var toStdOut bool
+		logger := log.New(os.Stdout, "", 0)
 
-		for i, name := range names {
-			// XXX check ptx conflicts
+		for _, name := range names {
 			wg.Add(1)
-			if i > 0 || quiet {
-				toStdOut = false
-			} else {
-				toStdOut = true
-			}
 			go func(name string, quiet bool) {
 				defer wg.Done()
 				if err := helper.RunMake(map[string]string{
@@ -311,24 +305,21 @@ var runCmd = &cobra.Command{
 					"PLURAL":    kind.Plural(),
 					"NAME":      name,
 					"KOPFLOG":   kopfLog,
-					"RUNFLAG": 	 runFlag,
-				}, "run", quiet); err == nil {
+					"RUNFLAG":   runFlag,
+				}, "run", debug, quiet); err == nil {
 					if !noAlias {
 						err := helper.CreateAlias(kind, name, "default")
 						if err != nil {
-							fmt.Println("unable to create alias")
+							logger.Println("unable to create alias")
 						}
 					}
+					if !quiet {
+						logger.Println(name)
+					}
 				}
-			}(name, !toStdOut)
+			}(name, quiet)
 		}
 		wg.Wait()
-		for _, name := range names {
-			// XXX print in the goroutine
-			if !quiet {
-				fmt.Println(name)
-			}
-		}
 	},
 }
 
@@ -339,7 +330,7 @@ var stopCmd = &cobra.Command{
 	Aliases: []string{"s"},
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		q, _ := cmd.Flags().GetBool("quiet")
+		quiet, _ := cmd.Flags().GetBool("quiet")
 		kindStr, _ := cmd.Flags().GetString("kind")
 
 		// TBD handle namespace
@@ -352,20 +343,13 @@ var stopCmd = &cobra.Command{
 		}
 
 		var wg sync.WaitGroup
-		var toStdOut bool
 
-		for i, name := range args {
+		for _, name := range args {
 			wg.Add(1)
-			if i > 0 || q {
-				toStdOut = false
-			} else {
-				toStdOut = true
-			}
 			if kindStr == "" {
 				auri, err := api.Resolve(name)
 				if err != nil {
-					fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
-					os.Exit(1)
+					log.Fatalf("unknown digi kind from alias given name %s\n", name)
 				}
 				kind = &auri.Kind
 			}
@@ -378,16 +362,10 @@ var stopCmd = &cobra.Command{
 					"KIND":    kind.Name,
 					"PLURAL":  kind.Plural(),
 					"NAME":    name,
-				}, "stop", quiet)
-			}(name, !toStdOut)
+				}, "stop", false, quiet)
+			}(name, quiet)
 		}
 		wg.Wait()
-		for _, name := range args[1:] {
-			// XXX print in the goroutine
-			if !q {
-				fmt.Println(name)
-			}
-		}
 	},
 }
 
@@ -400,7 +378,7 @@ var rmkCmd = &cobra.Command{
 		q, _ := cmd.Flags().GetBool("quiet")
 		if _ = helper.RunMake(map[string]string{
 			"IMAGE_DIR": args[0],
-		}, "delete", q); !q {
+		}, "delete", true, q); !q {
 			fmt.Printf("%s removed\n", args[0])
 		}
 	},
@@ -414,22 +392,19 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				if err := api.ShowAll(); err != nil {
-					fmt.Println(err)
-					os.Exit(1)
+					log.Fatalln(err)
 				}
-				os.Exit(0)
+				return
 			}
 
 			if len(args) == 1 {
-				fmt.Println("args should be either none or 2")
-				os.Exit(1)
+				log.Fatalln("args should be either none or 2")
 			}
 
 			// parse the auri
 			auri, err := api.ParseAuri(args[0])
 			if err != nil {
-				fmt.Printf("unable to parse auri %s: %v\n", args[0], err)
-				os.Exit(1)
+				log.Fatalf("unable to parse auri %s: %v\n", args[0], err)
 			}
 
 			a := &api.Alias{
@@ -438,8 +413,7 @@ var (
 			}
 
 			if err := a.Set(); err != nil {
-				fmt.Println("unable to set alias: ", err)
-				os.Exit(1)
+				log.Fatalln("unable to set alias: ", err)
 			}
 		},
 	}
@@ -449,8 +423,7 @@ var (
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := api.ClearAlias(); err != nil {
-				fmt.Println("unable to clear alias: ", err)
-				os.Exit(1)
+				log.Fatalln("unable to clear alias: ", err)
 			}
 		},
 	}
@@ -460,8 +433,7 @@ var (
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := api.ResolveFromLocal(args[0]); err != nil {
-				fmt.Printf("unable to resolve alias %s: %v\n", args[0], err)
-				os.Exit(1)
+				log.Fatalf("unable to resolve alias %s: %v\n", args[0], err)
 			}
 		},
 	}
@@ -484,7 +456,7 @@ var listCmd = &cobra.Command{
 		}
 		_ = helper.RunMake(map[string]string{
 			"FLAG": flags,
-		}, "list", false)
+		}, "list", true, false)
 	},
 }
 
@@ -500,8 +472,7 @@ var watchCmd = &cobra.Command{
 		name := args[0]
 		auri, err := api.Resolve(name)
 		if err != nil {
-			fmt.Printf("unknown digi kind from alias given name %s: %v\n", name, err)
-			os.Exit(1)
+			log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
 		}
 		kind := auri.Kind
 
@@ -516,7 +487,7 @@ var watchCmd = &cobra.Command{
 			"NEATLEVEL": fmt.Sprintf("-l %d", 4-v),
 		}
 
-		_ = helper.RunMake(params, "watch", false)
+		_ = helper.RunMake(params, "watch", true, false)
 	},
 }
 
@@ -526,6 +497,6 @@ var gcCmd = &cobra.Command{
 	Aliases: []string{"clean"},
 	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		_ = helper.RunMake(map[string]string{}, "gc", false)
+		_ = helper.RunMake(map[string]string{}, "gc", true, false)
 	},
 }

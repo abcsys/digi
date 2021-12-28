@@ -1,12 +1,10 @@
 package space
 
 import (
-	"fmt"
-	"os"
-
 	"digi.dev/digi/api"
 	"digi.dev/digi/space"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 var RootCmd = &cobra.Command{
@@ -29,8 +27,7 @@ var mountCmd = &cobra.Command{
 
 		mt, err := api.NewMounter(args[0], args[1], mode)
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			log.Fatalln(err)
 		}
 
 		//fmt.Printf("mount %s -> %s\n", mt.Source.Name, mt.Target.Name)
@@ -50,8 +47,7 @@ var mountCmd = &cobra.Command{
 		}
 
 		if err = mt.Do(); err != nil {
-			fmt.Printf("failed: %v\n", err)
-			os.Exit(1)
+			log.Fatalf("failed: %v\n", err)
 		}
 	},
 }
@@ -72,8 +68,7 @@ var pipeCmd = &cobra.Command{
 		}
 
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			log.Fatalln(err)
 		}
 
 		//fmt.Printf("pipe %s -> %s\n", pp.Source.Name, pp.Target.Name)
@@ -83,8 +78,7 @@ var pipeCmd = &cobra.Command{
 			f = pp.Unpipe
 		}
 		if err = f(); err != nil {
-			fmt.Printf("pipe failed: %v\n", err)
-			os.Exit(1)
+			log.Fatalf("pipe failed: %v\n", err)
 		}
 	},
 }

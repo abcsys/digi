@@ -30,7 +30,7 @@ func init() {
 	homeDir = filepath.Join(homeDir, ".digi")
 }
 
-func RunMake(args map[string]string, cmd string, quiet bool) error {
+func RunMake(args map[string]string, cmd string, usePtx, quiet bool) error {
 	cmd_ := exec.Command("make", "-s", "--ignore-errors", cmd)
 	cmd_.Env = os.Environ()
 
@@ -51,9 +51,13 @@ func RunMake(args map[string]string, cmd string, quiet bool) error {
 	}
 	cmd_.Dir = homeDir
 
-	if quiet {
-		// XXX better fix of quiet
-		_ = cmd_.Run()
+	if !usePtx || quiet {
+		if !quiet {
+			output, _ := cmd_.Output()
+			fmt.Print(string(output))
+		} else {
+			_ = cmd_.Run()
+		}
 		return nil
 	}
 

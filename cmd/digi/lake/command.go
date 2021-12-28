@@ -53,7 +53,7 @@ var (
 		Use:   "connect",
 		Short: "Port forward to the digi lake",
 		Run: func(cmd *cobra.Command, args []string) {
-			_ = helper.RunMake(map[string]string{}, "port", false)
+			_ = helper.RunMake(map[string]string{}, "port", true, false)
 		},
 	}
 )
@@ -98,7 +98,7 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 	return helper.RunMake(map[string]string{
 		"QUERY": query,
 		"FLAG":  flagStr,
-	}, "query", false)
+	}, "query", true, false)
 }
 
 func init() {
