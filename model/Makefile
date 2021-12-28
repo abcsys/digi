@@ -97,27 +97,26 @@ pull:
 # deploy
 .PHONY: run stop watch
 run: | prepare model
-	# stop any existing: delete model, driver, pool
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zed drop -f $(NAME) >/dev/null 2>&1 || true
-	helm list -q | grep $(NAME) >/dev/null 2>&1 && \
-	((kubectl delete $(PLURAL) $(NAME) >/dev/null 2>&1 || \
-	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null 2>&1) || true) & \
-	helm uninstall $(NAME) >/dev/null 2>&1 || true
-	# deploy anew: create model, driver, pool
 	# TBD make pool optional by checking values.yaml
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
-	helm install -f values.yaml --set name=$(NAME) $(NAME) $(RUNFLAG) . >/dev/null && \
+	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
+	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
+	kubectl apply -f run.yaml >/dev/null && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
-    -- zed create $(NAME)) >/dev/null 2>&1
+    -- zed create $(NAME)) >/dev/null && echo $(NAME)
 	rm -r $(build_dir) || true
 stop:
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-    -- zed drop -f $(NAME) >/dev/null 2>&1 || true
-	helm list -q | grep $(NAME) >/dev/null 2>&1 && \
-	((kubectl delete $(PLURAL) $(NAME) >/dev/null 2>&1 || \
-	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null 2>&1) || true) & \
-	helm uninstall $(NAME) >/dev/null 2>&1 && echo $(NAME) || echo "$(NAME) isn't running"
+    -- zed drop -f $(NAME) >/dev/null || true
+	kubectl delete serviceaccount $(NAME) >/dev/null || true & \
+	kubectl delete clusterrole $(NAME) >/dev/null || true & \
+	kubectl delete clusterrolebinding $(NAME) >/dev/null || true & \
+	((kubectl delete $(PLURAL) $(NAME) >/dev/null || \
+	kubectl delete $(PLURAL).$(GROUP) $(NAME)) >/dev/null || true) & \
+	kubectl delete deployment $(NAME) >/dev/null && \
+	echo $(NAME) || echo "$(NAME) isn't running"
 
 watch:
 	# the former runs faster

@@ -313,9 +313,6 @@ var runCmd = &cobra.Command{
 							logger.Println("unable to create alias")
 						}
 					}
-					if !quiet {
-						logger.Println(name)
-					}
 				}
 			}(name, quiet)
 		}
