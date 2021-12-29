@@ -3,7 +3,6 @@ import sys
 import logging
 from collections import defaultdict
 import kopf
-from kopf.engines import loggers
 
 import digi.util as util
 from digi.util import parse_gvr, spaced_name, parse_spaced_name
@@ -86,13 +85,14 @@ class Mounter:
 
         """ children event handlers """
 
-        def on_child_create(body, *args, **kwargs):
+        def on_child_create(body, meta, *args, **kwargs):
             _, _ = args, kwargs
             _g, _v, _r = util.gvr_from_body(body)
-            _sync_from_parent(_g, _v, _r,
+            self._logger.info(f"on create of child gen {meta['generation']}")
+            _sync_from_parent(_g, _v, _r, meta=meta,
                               attrs_to_trim=TRIM_FROM_PARENT,
                               *args, **kwargs)
-            _sync_to_parent(_g, _v, _r,
+            _sync_to_parent(_g, _v, _r, meta=meta,
                             attrs_to_trim=TRIM_FROM_CHILD,
                             *args, **kwargs)
 
@@ -103,7 +103,9 @@ class Mounter:
             _g, _v, _r = util.gvr_from_body(body)
             _id = util.model_id(_g, _v, _r, name, namespace)
 
+            self._logger.info(f"on child gen {meta['generation']}")
             if meta["generation"] == self._children_skip_gen.get(_id, -1):
+                self._logger.info(f"skipped child gen {meta['generation']}")
                 return
 
             return _sync_to_parent(_g, _v, _r, name, namespace, meta,
@@ -233,12 +235,14 @@ class Mounter:
                 # continue to try until succeed
                 resp, e = util.patch_spec(g, v, r, n, ns, parent_patch, rv=prv)
                 if e is not None:
-                    self._logger.warning(f"Failed to sync to parent due to {e}")
-                    if e.status != 409:
+                    if e.status == 409:
+                        self._logger.warning(f"Failed to sync to parent due to conflict")
+                    else:
+                        self._logger.error(f"Failed to sync to parent due to {e}")
                         return
-                    # time.sleep(1)
                 else:
                     new_gen = resp["metadata"]["generation"]
+                    self._logger.info(f"update child generation to {meta['generation']}")
                     if pgn + 1 == new_gen:
                         self._parent_skip_gen = new_gen
                     break
@@ -273,6 +277,10 @@ class Mounter:
             _sync_to_children(spec, diff)
             _prune_mounts(mounts, meta)
 
+        def on_parent_delete(*args, **kwargs):
+            _, _ = args, kwargs
+            self.stop()
+
         def _prune_mounts(mounts, meta):
             rv = meta["resourceVersion"]
             while True:
@@ -299,10 +307,6 @@ class Mounter:
                 spec, rv, _ = util.get_spec(g, v, r, n, ns)
                 mounts = spec.get("mount", {})
 
-        def on_parent_delete(*args, **kwargs):
-            _, _ = args, kwargs
-            self.stop()
-
         def _update_children_watches(mounts: dict):
             # iterate over mounts and add/trim child event watches
             # add watches
@@ -319,6 +323,7 @@ class Mounter:
                         continue
 
                     # TBD: add child event handlers
+                    self._logger.info(f"new watch for child {nsn_str}")
                     self._children_watches[gvr_str][nsn_str] \
                         = Watch(*gvr, *nsn,
                                 create_fn=on_child_create,
@@ -429,10 +434,6 @@ class Mounter:
         # mounter logging
         self._logger = logging.getLogger(__name__)
         self._logger.setLevel(log_level)
-
-        _handler = logging.StreamHandler()
-        _handler.setFormatter(loggers.make_formatter())
-        self._logger.addHandler(_handler)
 
     def start(self):
         self._parent_watch.start()

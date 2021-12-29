@@ -3,7 +3,7 @@ import os
 import copy
 from box import Box
 from abc import ABC, abstractmethod
-from kopf.structs.diffs import diff
+from kopf._cogs.structs.diffs import diff
 
 import digi.util as util
 from digi.util import deep_set

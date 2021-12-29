@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"digi.dev/digi/api"
@@ -294,6 +295,8 @@ var runCmd = &cobra.Command{
 		logger := log.New(os.Stdout, "", 0)
 
 		for _, name := range names {
+			name = strings.TrimSpace(name)
+
 			wg.Add(1)
 			go func(name string, quiet bool) {
 				defer wg.Done()
@@ -342,7 +345,7 @@ var stopCmd = &cobra.Command{
 		var wg sync.WaitGroup
 
 		for _, name := range args {
-			wg.Add(1)
+			name = strings.TrimSpace(name)
 			if kindStr == "" {
 				auri, err := api.Resolve(name)
 				if err != nil {
@@ -351,6 +354,7 @@ var stopCmd = &cobra.Command{
 				kind = &auri.Kind
 			}
 
+			wg.Add(1)
 			go func(name string, quiet bool) {
 				defer wg.Done()
 				_ = helper.RunMake(map[string]string{

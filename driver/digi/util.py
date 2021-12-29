@@ -17,7 +17,7 @@ from kubernetes import config
 from kubernetes.client.rest import ApiException
 
 import kopf
-from kopf.reactor.registries import SmartOperatorRegistry as KopfRegistry
+from kopf._core.intents.registries import SmartOperatorRegistry as KopfRegistry
 
 from digi import logger
 
