@@ -1,10 +1,11 @@
 package space
 
 import (
+	"log"
+
 	"digi.dev/digi/api"
 	"digi.dev/digi/space"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var RootCmd = &cobra.Command{
@@ -13,37 +14,29 @@ var RootCmd = &cobra.Command{
 }
 
 var mountCmd = &cobra.Command{
-	Use:     "mount SRC TARGET [ mode ]",
+	Use:     "mount SRC [SRC..] TARGET",
 	Short:   "Mount a digi to another",
 	Aliases: []string{"m"},
 	Args:    cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		var mode string
-		if len(args) < 3 {
-			mode = space.DefaultMountMode
-		} else {
-			mode = args[2]
+		mode, _ := cmd.Flags().GetString("mode")
+		sources := args[:len(args)-1]
+		target := args[len(args)-1]
+
+		op := api.MOUNT
+		if d, _ := cmd.Flags().GetBool("yield"); d {
+			op = api.YIELD
+		}
+		if d, _ := cmd.Flags().GetBool("activate"); d {
+			op = api.ACTIVATE
+		}
+		if d, _ := cmd.Flags().GetBool("delete"); d {
+			op = api.UNMOUNT
 		}
 
-		mt, err := api.NewMounter(args[0], args[1], mode)
+		mt, err := api.NewMounter(sources, target, op, mode)
 		if err != nil {
 			log.Fatalln(err)
-		}
-
-		//fmt.Printf("mount %s -> %s\n", mt.Source.Name, mt.Target.Name)
-
-		mt.Op = api.MOUNT
-
-		if d, _ := cmd.Flags().GetBool("yield"); d {
-			mt.Op = api.YIELD
-		}
-
-		if d, _ := cmd.Flags().GetBool("activate"); d {
-			mt.Op = api.ACTIVATE
-		}
-
-		if d, _ := cmd.Flags().GetBool("delete"); d {
-			mt.Op = api.UNMOUNT
 		}
 
 		if err = mt.Do(); err != nil {
@@ -71,8 +64,6 @@ var pipeCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		//fmt.Printf("pipe %s -> %s\n", pp.Source.Name, pp.Target.Name)
-
 		f := pp.Pipe
 		if d, _ := cmd.Flags().GetBool("delete"); d {
 			f = pp.Unpipe
@@ -84,10 +75,14 @@ var pipeCmd = &cobra.Command{
 }
 
 func init() {
+	// TBD read from cmdline flag
+	log.SetFlags(0)
+
 	RootCmd.AddCommand(mountCmd)
 	mountCmd.Flags().BoolP("delete", "d", false, "Unmount source from target")
 	mountCmd.Flags().BoolP("yield", "y", false, "Yield a mount")
 	mountCmd.Flags().BoolP("activate", "a", false, "Activate a mount")
+	mountCmd.Flags().StringP("mode", "m", space.DefaultMountMode, "Set mount mode")
 
 	RootCmd.AddCommand(pipeCmd)
 	pipeCmd.Flags().BoolP("delete", "d", false, "Unpipe source from target")

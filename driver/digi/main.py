@@ -68,7 +68,7 @@ def run():
                 # retry s.t. the diff object contains the past changes
                 # TBD(@kopf) non-zero delay fix
                 # raise kopf.TemporaryError(e, delay=0)
-                digi.logger.warning(f"gen {gen} outdated")
+                digi.logger.warning(f"gen {gen} outdated; pending {rc._pending_handler}")
                 return
             else:
                 raise kopf.PermanentError(e.status)

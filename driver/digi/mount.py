@@ -236,9 +236,9 @@ class Mounter:
                 resp, e = util.patch_spec(g, v, r, n, ns, parent_patch, rv=prv)
                 if e is not None:
                     if e.status == 409:
-                        self._logger.warning(f"Failed to sync to parent due to conflict")
+                        self._logger.warning(f"Cannot sync to parent due to conflict; retry")
                     else:
-                        self._logger.error(f"Failed to sync to parent due to {e}")
+                        self._logger.error(f"Failed to sync to parent due to {e}; abort")
                         return
                 else:
                     new_gen = resp["metadata"]["generation"]
@@ -269,6 +269,7 @@ class Mounter:
             _, _ = args, kwargs
 
             if meta["generation"] == self._parent_skip_gen:
+                self._logger.info(f"skipped parent gen {self._parent_skip_gen}")
                 return
 
             mounts = spec.get("mount", {})

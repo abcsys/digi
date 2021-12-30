@@ -2,6 +2,7 @@ package lake
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"digi.dev/digi/cmd/digi/helper"
@@ -102,6 +103,9 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 }
 
 func init() {
+	// TBD read from cmdline flag
+	log.SetFlags(0)
+
 	RootCmd.AddCommand(connectCmd)
 	RootCmd.AddCommand(startCmd)
 
