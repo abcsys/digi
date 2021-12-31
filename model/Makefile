@@ -29,7 +29,7 @@ digi_config := $(WORKDIR)/$(IMAGE_DIR)/deploy/*
 build_dir := /tmp/digi-build-$(IMAGE_NAME)-$(NAME)
 
 # model
-.PHONY: init gen model all delete image list edit
+.PHONY: init gen model all delete image list
 # init configs
 define model
 group: $(GROUP)
@@ -54,7 +54,13 @@ image:
 	cd $(WORKDIR) && ls -d */* 2> /dev/null | grep "model.yaml" | xargs -I {} dirname {}
 list:
 	kubectl get deploy --no-headers -o custom-columns=":metadata.name" $(FLAG)
+
+.PHONY: edit edit-all
 edit:
+	(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
+    || kubectl get $(PLURAL).$(GROUP) $(NAME) -oyaml) | kubectl neat -l 0 \
+    > $(FILE) && vi $(FILE) && kubectl apply -f $(FILE); rm $(FILE)
+edit-all:
 	kubectl edit $(PLURAL) $(NAME) 2>&1 || kubectl edit $(PLURAL).$(GROUP) $(NAME)
 
 .PHONY: clean-test test

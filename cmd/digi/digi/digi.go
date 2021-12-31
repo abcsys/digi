@@ -111,7 +111,7 @@ var buildCmd = &cobra.Command{
 	},
 }
 
-var imageCmd = &cobra.Command{
+var kindCmd = &cobra.Command{
 	Use:     "kind",
 	Short:   "List available kinds",
 	Aliases: []string{"kinds", "image", "images", "k"},
@@ -243,21 +243,38 @@ var editCmd = &cobra.Command{
 	Aliases: []string{"e"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		editAll, _ := cmd.Flags().GetBool("all")
+
 		// TBD allow namespace
 		var name string
 
 		name = args[0]
-		auri, err := api.Resolve(name)
+		duri, err := api.Resolve(name)
 		if err != nil {
 			log.Fatalf("unable to resolve digi name %s: %v\n", name, err)
 		}
 
+		var cmdStr string
+		if cmdStr = "edit"; editAll {
+			cmdStr = "edit-all"
+		}
+
+		f, err := os.CreateTemp("", "digi-edit-"+name)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		if err = f.Close(); err != nil {
+			log.Fatalln(err)
+		}
+		path := f.Name()
 		_ = helper.RunMake(map[string]string{
-			"GROUP":  auri.Kind.Group,
-			"KIND":   auri.Kind.Name,
-			"PLURAL": auri.Kind.Plural(),
+			"GROUP":  duri.Kind.Group,
+			"KIND":   duri.Kind.Name,
+			"PLURAL": duri.Kind.Plural(),
 			"NAME":   name,
-		}, "edit", true, false)
+			"FILE":   path,
+		}, cmdStr, true, false)
+		_ = os.Remove(path)
 	},
 }
 
@@ -347,11 +364,11 @@ var stopCmd = &cobra.Command{
 		for _, name := range args {
 			name = strings.TrimSpace(name)
 			if kindStr == "" {
-				auri, err := api.Resolve(name)
+				duri, err := api.Resolve(name)
 				if err != nil {
 					log.Fatalf("unknown digi kind from alias given name %s\n", name)
 				}
-				kind = &auri.Kind
+				kind = &duri.Kind
 			}
 
 			wg.Add(1)
@@ -402,14 +419,14 @@ var (
 				log.Fatalln("args should be either none or 2")
 			}
 
-			// parse the auri
-			auri, err := api.ParseAuri(args[0])
+			// parse the duri
+			duri, err := api.ParseAuri(args[0])
 			if err != nil {
-				log.Fatalf("unable to parse auri %s: %v\n", args[0], err)
+				log.Fatalf("unable to parse duri %s: %v\n", args[0], err)
 			}
 
 			a := &api.Alias{
-				Auri: &auri,
+				Auri: &duri,
 				Name: args[1],
 			}
 
@@ -471,11 +488,11 @@ var watchCmd = &cobra.Command{
 		v, _ := cmd.Flags().GetInt8("verbosity")
 
 		name := args[0]
-		auri, err := api.Resolve(name)
+		duri, err := api.Resolve(name)
 		if err != nil {
 			log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
 		}
-		kind := auri.Kind
+		kind := duri.Kind
 
 		params := map[string]string{
 			"GROUP":    kind.Group,

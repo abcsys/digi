@@ -61,6 +61,7 @@ func RunMake(args map[string]string, cmd string, usePtx, quiet bool) error {
 		return nil
 	}
 
+	// TBD use k8s.io/kubectl/pkg/util/term
 	ptmx, err := pty.Start(cmd_)
 	if err != nil {
 		panic(err)
