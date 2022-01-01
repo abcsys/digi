@@ -40,13 +40,15 @@ func init() {
 	testCmd.Flags().BoolP("strict-mounter", "s", false, "Use strict mounter in test")
 	testCmd.Flags().BoolP("no-alias", "n", false, "Do not create alias to the model")
 
-	RootCmd.AddCommand(logCmd)
 	RootCmd.AddCommand(listCmd)
+	RootCmd.AddCommand(checkCmd)
 	RootCmd.AddCommand(watchCmd)
 	RootCmd.AddCommand(editCmd)
+	RootCmd.AddCommand(logCmd)
 	listCmd.Flags().BoolP("all", "a", false, "Show all digis")
+	checkCmd.Flags().Int8P("verbosity", "v", 0, "Output verbosity, converted to neat level (4 - v)")
 	watchCmd.Flags().Float64P("interval", "i", 1, "Refresh interval")
-	watchCmd.Flags().Int8P("verbosity", "v", 0, "Output verbosity, converted to neat level (4 - v)")
+	watchCmd.Flags().Int8P("verbosity", "v", 1, "Output verbosity, converted to neat level (4 - v)")
 	editCmd.Flags().BoolP("all", "a", false, "Edit all attributes")
 
 	RootCmd.AddCommand(aliasCmd)

@@ -60,7 +60,7 @@ var initCmd = &cobra.Command{
 
 var genCmd = &cobra.Command{
 	Use:     "gen KIND",
-	Short:   "Generate configs and scripts",
+	Short:   "Generate configs for a kind",
 	Aliases: []string{"g"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -165,7 +165,7 @@ var pushCmd = &cobra.Command{
 
 var testCmd = &cobra.Command{
 	Use:     "test KIND",
-	Short:   "Test run a digi driver",
+	Short:   "Test run a digi's driver",
 	Aliases: []string{"t"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -224,7 +224,7 @@ var testCmd = &cobra.Command{
 
 var logCmd = &cobra.Command{
 	Use:     "log NAME",
-	Short:   "Print log of a digi driver",
+	Short:   "Print log of a digi's driver",
 	Aliases: []string{"logs", "l"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -239,7 +239,7 @@ var logCmd = &cobra.Command{
 
 var editCmd = &cobra.Command{
 	Use:     "edit NAME",
-	Short:   "Edit a digi model",
+	Short:   "Edit a digi's model",
 	Aliases: []string{"e"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -475,6 +475,35 @@ var listCmd = &cobra.Command{
 		_ = helper.RunMake(map[string]string{
 			"FLAG": flags,
 		}, "list", true, false)
+	},
+}
+
+var checkCmd = &cobra.Command{
+	Use:     "check NAME",
+	Short:   "Print a digi's model",
+	Aliases: []string{"c"},
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		v, _ := cmd.Flags().GetInt8("verbosity")
+
+		name := args[0]
+		duri, err := api.Resolve(name)
+		if err != nil {
+			log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
+		}
+		kind := duri.Kind
+
+		params := map[string]string{
+			"GROUP":    kind.Group,
+			"VERSION":  kind.Version,
+			"KIND":     kind.Name,
+			"PLURAL":   kind.Plural(),
+			"NAME":     name,
+			// TBD get max neat level from kubectl-neat
+			"NEATLEVEL": fmt.Sprintf("-l %d", 4-v),
+		}
+
+		_ = helper.RunMake(params, "check", true, false)
 	},
 }
 

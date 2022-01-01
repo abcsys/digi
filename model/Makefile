@@ -101,7 +101,7 @@ pull:
 	cd $(WORKDIR) && rsync $(DIGI_REPO)/$(IMAGE_NAME).gz . && tar xzf $(IMAGE_NAME).gz && rm $(IMAGE_NAME).gz > /dev/null
 
 # deploy
-.PHONY: run stop watch
+.PHONY: run stop
 run: | prepare model
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zed drop -f $(NAME) >/dev/null 2>&1 || true
@@ -124,8 +124,11 @@ stop:
 	kubectl delete deployment $(NAME) >/dev/null && \
 	echo $(NAME) || echo "$(NAME) isn't running"
 
+.PHONY: check watch
+check:
+	(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
+ 	|| kubectl get $(PLURAL).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)
 watch:
-	# the former runs faster
 	watch -n$(INTERVAL) -t "(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
  	|| kubectl get $(PLURAL).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)"
 
