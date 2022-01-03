@@ -1,4 +1,3 @@
-import os
 import kopf
 
 import digi.util as util
@@ -9,7 +8,7 @@ def run():
     import digi
 
     # run mounter
-    if os.environ.get("MOUNTER", "false") == "true":
+    if digi.use_mounter:
         Mounter(digi.g, digi.v, digi.r, digi.n, digi.ns,
                 log_level=digi.log_level).start()
 
@@ -38,26 +37,27 @@ def run():
     # reconciler operations
     from digi.reconcile import rc
     from digi.view import CleanView
-    _trim_mount = os.environ.get("TRIM_MOUNT_ON_LOAD", "true") != "false"
 
     @kopf.on.create(**_model, **_kwargs)
     @kopf.on.resume(**_model, **_kwargs)
     @kopf.on.update(**_model, **_kwargs)
     def reconcile(spec, meta, *args, **kwargs):
+        gen = meta["generation"]
+        digi.logger.info(f"processing gen {gen} skip_gen {rc.skip_gen}")
+
         if digi.pool is not None:
             try:
-                digi.pool.load([
-                    CleanView(dict(spec), trim_mount=_trim_mount).m(),
-                ])
-                digi.logger.info(f"Done loading model snapshot to pool.")
+                model = CleanView(dict(spec),
+                              trim_mount=digi.trim_mount).m()
+                digi.pool.load([model])
+                digi.logger.info(f"done loading model snapshot to pool")
             except Exception as e:
                 digi.logger.warning(f"unable to load to pool: {e}")
 
-        gen = meta["generation"]
         # skip the last self-write
         # TBD for parallel reconciliation may need to lock rc.gen before patch
         if gen == rc.skip_gen:
-            digi.logger.info(f"Skipping gen {gen}")
+            digi.logger.info(f"skipped gen {gen}")
             return
 
         spec = rc.run(spec, *args, **kwargs)
@@ -68,7 +68,8 @@ def run():
                 # retry s.t. the diff object contains the past changes
                 # TBD(@kopf) non-zero delay fix
                 # raise kopf.TemporaryError(e, delay=0)
-                digi.logger.warning(f"gen {gen} outdated; pending {rc._pending_handler}")
+                digi.logger.warning(f"gen {gen} outdated; pending {len(rc._pending_handler)} handlers;")
+                # fetch the latest and retry?
                 return
             else:
                 raise kopf.PermanentError(e.status)
@@ -76,10 +77,11 @@ def run():
         # if the model isn't updated do not
         # increment the skip marker
         new_gen = resp["metadata"]["generation"]
+        digi.logger.info(f"new gen {new_gen} old gen {gen}")
         if gen + 1 == new_gen:
             rc.skip_gen = new_gen
         rc.clear_pending()
-        digi.logger.info(f"Done reconciliation")
+        digi.logger.info(f"done reconciliation")
 
     @kopf.on.delete(**_model, **_kwargs, optional=True)
     def on_delete(*args, **kwargs):

@@ -246,6 +246,7 @@ var editCmd = &cobra.Command{
 		editAll, _ := cmd.Flags().GetBool("all")
 
 		// TBD allow namespace
+		// TBD do not filter resource version, gen, and assign to neat level 2
 		var name string
 
 		name = args[0]
@@ -328,6 +329,7 @@ var runCmd = &cobra.Command{
 					"RUNFLAG":   runFlag,
 				}, "run", debug, quiet); err == nil {
 					if !noAlias {
+						// TBD handle potential race
 						err := helper.CreateAlias(kind, name, "default")
 						if err != nil {
 							logger.Println("unable to create alias")

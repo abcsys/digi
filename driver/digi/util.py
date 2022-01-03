@@ -5,6 +5,7 @@ import asyncio
 import contextlib
 import threading
 
+import digi
 import inflection
 import logging
 from typing import (
@@ -19,7 +20,8 @@ from kubernetes.client.rest import ApiException
 import kopf
 from kopf._core.intents.registries import SmartOperatorRegistry as KopfRegistry
 
-from digi import logger
+logger = logging.getLogger(__name__)
+logger.setLevel(digi.log_level)
 
 try:
     # use service config
@@ -199,7 +201,7 @@ def get_spec(g, v, r, n, ns) -> (dict, str, int):
                                               plural=r,
                                               )
     except ApiException as e:
-        logger.warning(f"Unable to update model {model_id(g, v, r, n, ns)}:", e)
+        logger.warning(f"unable to get model {n}:", e)
         return None
     return o.get("spec", {}), \
            o["metadata"]["resourceVersion"], \
@@ -234,16 +236,16 @@ def check_gen_and_patch_spec(g, v, r, n, ns, spec, gen):
         if gen < cur_gen:
             e = ApiException()
             e.status = DriverError.GEN_OUTDATED
-            e.reason = f"Generation outdated {gen} < {cur_gen}"
+            e.reason = f"generation outdated {gen} < {cur_gen}"
             return cur_gen, None, e
 
         resp, e = patch_spec(g, v, r, n, ns, spec, rv=rv)
         if e is None:
             return cur_gen, resp, None
         if e.status == 409:
-            logger.info(f"Unable to patch model due to conflict; retry")
+            logger.info(f"unable to patch {n} due to conflict; retry")
         else:
-            logger.warning(f"Patch error {e}")
+            logger.warning(f"patch error {e}")
             return cur_gen, resp, e
 
 

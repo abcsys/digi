@@ -17,6 +17,9 @@ ns = namespace = os.environ.get("NAMESPACE", "default")
 duri = auri = (g, v, r, n, ns)
 pool_provider = os.environ.get("POOL_PROVIDER", "zed")
 
+use_mounter = os.environ.get("MOUNTER", "false") == "true"
+trim_mount = os.environ.get("TRIM_MOUNT_ON_LOAD", "true") != "false"
+
 # digi modules; force init
 from digi import (
     on,

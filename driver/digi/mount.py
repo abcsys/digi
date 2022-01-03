@@ -85,27 +85,24 @@ class Mounter:
 
         """ children event handlers """
 
-        def on_child_create(body, meta, *args, **kwargs):
-            _, _ = args, kwargs
+        def on_child_create(body, meta, name, *args, **kwargs):
             _g, _v, _r = util.gvr_from_body(body)
-            self._logger.info(f"on create of child gen {meta['generation']}")
-            _sync_from_parent(_g, _v, _r, meta=meta,
+            self._logger.info(f"on create child {name} gen {meta['generation']}")
+            _sync_from_parent(_g, _v, _r, meta=meta, name=name,
                               attrs_to_trim=TRIM_FROM_PARENT,
                               *args, **kwargs)
-            _sync_to_parent(_g, _v, _r, meta=meta,
+            _sync_to_parent(_g, _v, _r, meta=meta, name=name,
                             attrs_to_trim=TRIM_FROM_CHILD,
                             *args, **kwargs)
 
         def on_child_update(body, meta, name, namespace,
                             *args, **kwargs):
-            _, _ = args, kwargs
-
             _g, _v, _r = util.gvr_from_body(body)
             _id = util.model_id(_g, _v, _r, name, namespace)
 
-            self._logger.info(f"on child gen {meta['generation']}")
+            self._logger.info(f"on child {name} gen {meta['generation']}")
             if meta["generation"] == self._children_skip_gen.get(_id, -1):
-                self._logger.info(f"skipped child gen {meta['generation']}")
+                self._logger.info(f"skipped child {name} gen {meta['generation']}")
                 return
 
             return _sync_to_parent(_g, _v, _r, name, namespace, meta,
@@ -144,7 +141,7 @@ class Mounter:
             if (gvr_str not in mounts or
                     (nsn_str not in mounts[gvr_str] and
                      name not in mounts[gvr_str])):
-                self._logger.warning(f"Unable to find the {nsn_str} or {name} in the {parent}")
+                self._logger.warning(f"unable to find the {nsn_str} or {name} in the {parent}")
                 return
 
             models = mounts[gvr_str]
@@ -161,7 +158,7 @@ class Mounter:
             )
 
             if e is not None:
-                self._logger.warning(f"Unable to sync from parent due to {e}")
+                self._logger.warning(f"unable to sync from parent to {name} due to {e}")
             else:
                 model_id = util.model_id(group, version, plural,
                                          name, namespace)
@@ -236,13 +233,13 @@ class Mounter:
                 resp, e = util.patch_spec(g, v, r, n, ns, parent_patch, rv=prv)
                 if e is not None:
                     if e.status == 409:
-                        self._logger.warning(f"Cannot sync to parent due to conflict; retry")
+                        self._logger.warning(f"unable to sync to parent from {name} due to conflict; retry")
                     else:
-                        self._logger.error(f"Failed to sync to parent due to {e}; abort")
+                        self._logger.error(f"failed to sync {name} to parent due to {e}; abort")
                         return
                 else:
                     new_gen = resp["metadata"]["generation"]
-                    self._logger.info(f"update child generation to {meta['generation']}")
+                    self._logger.info(f"update child {name} generation to {meta['generation']}")
                     if pgn + 1 == new_gen:
                         self._parent_skip_gen = new_gen
                     break
@@ -298,13 +295,13 @@ class Mounter:
                 }
                 _, e = util.patch_spec(g, v, r, n, ns, patch, rv=rv)
                 if e is None:
-                    self._logger.info(f"Prune mount: {patch}")
+                    self._logger.info(f"prune mount: {patch}")
                     return
                 elif e.status != 409:
-                    self._logger.warning(f"Prune mount failed due to {e}")
+                    self._logger.warning(f"prune mount failed due to {e}")
                     return
 
-                self._logger.info(f"Prune mount will retry due to: {e}")
+                self._logger.info(f"prune mount will retry due to: {e}")
                 spec, rv, _ = util.get_spec(g, v, r, n, ns)
                 mounts = spec.get("mount", {})
 
@@ -404,7 +401,7 @@ class Mounter:
                     spec=cs,
                     gen=max(gen, self._children_gen.get(model_id, -1)))
                 if e is not None:
-                    self._logger.warning(f"Unable to sync to children due to {e}")
+                    self._logger.warning(f"unable to sync to child {model_id} due to {e}")
                 else:
                     new_gen = resp["metadata"]["generation"]
                     self._children_gen[model_id] = new_gen
@@ -438,7 +435,7 @@ class Mounter:
 
     def start(self):
         self._parent_watch.start()
-        self._logger.info("Started the mounter")
+        self._logger.info("started the mounter")
 
     def stop(self):
         self._parent_watch.stop()
