@@ -36,9 +36,9 @@ var initCmd = &cobra.Command{
 		params := map[string]string{
 			"KIND": kind,
 			// default configs
-			"GROUP":     "digi.dev",
-			"VERSION":   "v1",
-			"IMAGE_DIR": kind,
+			"GROUP":   "digi.dev",
+			"VERSION": "v1",
+			"PROFILE": kind,
 		}
 
 		if g, _ := cmd.Flags().GetString("group"); g != "" {
@@ -48,7 +48,7 @@ var initCmd = &cobra.Command{
 			params["VERSION"] = v
 		}
 		if d, _ := cmd.Flags().GetString("directory"); d != "" {
-			params["IMAGE_DIR"] = d
+			params["PROFILE"] = d
 		}
 
 		_ = helper.RunMake(params, "init", true, q)
@@ -66,11 +66,11 @@ var genCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
-		imageDir := args[0]
+		profile := args[0]
 		if _ = helper.RunMake(map[string]string{
-			"IMAGE_DIR": imageDir,
+			"PROFILE": profile,
 		}, "gen", true, q); !q {
-			fmt.Println(imageDir)
+			fmt.Println(profile)
 		}
 	},
 }
@@ -92,17 +92,17 @@ var buildCmd = &cobra.Command{
 			buildFlag += " --no-cache"
 		}
 
-		imageDir := args[0]
-		kind, err := helper.GetKindFromImageDir(imageDir)
+		profile := args[0]
+		kind, err := helper.GetKindFromProfile(profile)
 		if err != nil {
-			log.Fatalf("unable to find kind %s\n", imageDir)
+			log.Fatalf("unable to find kind %s\n", profile)
 		}
 
 		if _ = helper.RunMake(map[string]string{
 			"GROUP":     kind.Group,
 			"VERSION":   kind.Version,
 			"KIND":      kind.Name,
-			"IMAGE_DIR": imageDir,
+			"PROFILE":   profile,
 			"BUILDFLAG": buildFlag,
 			"PUSHFLAG":  pushFlag,
 		}, "build", true, q); !q {
@@ -114,14 +114,19 @@ var buildCmd = &cobra.Command{
 var kindCmd = &cobra.Command{
 	Use:     "kind",
 	Short:   "List available kinds",
-	Aliases: []string{"kinds", "image", "images", "k"},
+	Aliases: []string{"kinds", "profile", "profiles", "k", "p"},
 	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
+		l, _ := cmd.Flags().GetBool("local")
 		if !q {
 			fmt.Println("KIND")
 		}
-		_ = helper.RunMake(nil, "image", true, q)
+		cmdStr := "profile"
+		if l {
+			cmdStr = "profile-local"
+		}
+		_ = helper.RunMake(nil, cmdStr, true, q)
 	},
 }
 
@@ -134,7 +139,7 @@ var pullCmd = &cobra.Command{
 		q, _ := cmd.Flags().GetBool("quiet")
 
 		_ = helper.RunMake(map[string]string{
-			"IMAGE_NAME": args[0],
+			"PROFILE_NAME": args[0],
 		}, "pull", true, q)
 	},
 }
@@ -146,17 +151,17 @@ var pushCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
-		imageDir := args[0]
-		kind, err := helper.GetKindFromImageDir(imageDir)
+		profile := args[0]
+		kind, err := helper.GetKindFromProfile(profile)
 		if err != nil {
-			log.Fatalf("unable to find kind %s\n", imageDir)
+			log.Fatalf("unable to find kind %s\n", profile)
 		}
 
 		if _ = helper.RunMake(map[string]string{
-			"GROUP":     kind.Group,
-			"VERSION":   kind.Version,
-			"KIND":      kind.Name,
-			"IMAGE_DIR": imageDir,
+			"GROUP":   kind.Group,
+			"VERSION": kind.Version,
+			"KIND":    kind.Name,
+			"PROFILE": profile,
 		}, "push", true, q); !q {
 			fmt.Println(kind)
 		}
@@ -169,12 +174,12 @@ var testCmd = &cobra.Command{
 	Aliases: []string{"t"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var name, imageDir string
+		var name, profile string
 
-		imageDir = args[0]
-		kind, err := helper.GetKindFromImageDir(imageDir)
+		profile = args[0]
+		kind, err := helper.GetKindFromProfile(profile)
 		if err != nil {
-			log.Fatalf("unable to find kind %s\n", imageDir)
+			log.Fatalf("unable to find kind %s\n", profile)
 		}
 
 		name = kind.Name + "-test"
@@ -193,7 +198,7 @@ var testCmd = &cobra.Command{
 		}
 
 		params := map[string]string{
-			"IMAGE_DIR":    imageDir,
+			"PROFILE":      profile,
 			"GROUP":        kind.Group,
 			"VERSION":      kind.Version,
 			"KIND":         kind.Name,
@@ -288,10 +293,10 @@ var runCmd = &cobra.Command{
 	// TBD enable passing namespace
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		var imageDir = args[0]
-		kind, err := helper.GetKindFromImageDir(imageDir)
+		var profile = args[0]
+		kind, err := helper.GetKindFromProfile(profile)
 		if err != nil {
-			log.Fatalf("unable to find kind %s\n", imageDir)
+			log.Fatalf("unable to find kind %s\n", profile)
 		}
 
 		quiet, _ := cmd.Flags().GetBool("quiet")
@@ -319,14 +324,14 @@ var runCmd = &cobra.Command{
 			go func(name string, quiet bool) {
 				defer wg.Done()
 				if err := helper.RunMake(map[string]string{
-					"IMAGE_DIR": imageDir,
-					"GROUP":     kind.Group,
-					"VERSION":   kind.Version,
-					"KIND":      kind.Name,
-					"PLURAL":    kind.Plural(),
-					"NAME":      name,
-					"KOPFLOG":   kopfLog,
-					"RUNFLAG":   runFlag,
+					"PROFILE": profile,
+					"GROUP":   kind.Group,
+					"VERSION": kind.Version,
+					"KIND":    kind.Name,
+					"PLURAL":  kind.Plural(),
+					"NAME":    name,
+					"KOPFLOG": kopfLog,
+					"RUNFLAG": runFlag,
 				}, "run", debug, quiet); err == nil {
 					if !noAlias {
 						// TBD handle potential race
@@ -397,7 +402,7 @@ var rmkCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 		if _ = helper.RunMake(map[string]string{
-			"IMAGE_DIR": args[0],
+			"PROFILE": args[0],
 		}, "delete", true, q); !q {
 			fmt.Printf("%s removed\n", args[0])
 		}
@@ -496,11 +501,11 @@ var checkCmd = &cobra.Command{
 			kind := duri.Kind
 
 			params := map[string]string{
-				"GROUP":    kind.Group,
-				"VERSION":  kind.Version,
-				"KIND":     kind.Name,
-				"PLURAL":   kind.Plural(),
-				"NAME":     name,
+				"GROUP":   kind.Group,
+				"VERSION": kind.Version,
+				"KIND":    kind.Name,
+				"PLURAL":  kind.Plural(),
+				"NAME":    name,
 				// TBD get max neat level from kubectl-neat
 				"NEATLEVEL": fmt.Sprintf("-l %d", 4-v),
 			}

@@ -98,7 +98,7 @@ func RunMake(args map[string]string, cmd string, usePtx, quiet bool) error {
 	return nil
 }
 
-func GetKindFromImageDir(dirName string) (*core.Kind, error) {
+func GetKindFromProfile(dirName string) (*core.Kind, error) {
 	var workDir string
 	if workDir = os.Getenv("WORKDIR"); workDir == "" {
 		workDir = "."
@@ -113,7 +113,7 @@ func GetKindFromImageDir(dirName string) (*core.Kind, error) {
 
 	modelFile, err := ioutil.ReadFile(filepath.Join(workDir, dirName, "model.yaml"))
 	if err != nil {
-		// TBD report image missing
+		// TBD report profile missing
 		return nil, fmt.Errorf("cannot open model file: %v", err)
 	}
 

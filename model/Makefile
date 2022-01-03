@@ -7,11 +7,11 @@ override WORKDIR = .
 endif
 
 ifndef DIGI_REPO
-override DIGI_REPO = /tmp/digirepo
+override DIGI_REPO = ~/.digi/profiles
 endif
 
-ifndef IMAGE_NAME
-override IMAGE_NAME = $(KIND).$(VERSION).$(GROUP)
+ifndef PROFILE_NAME
+override PROFILE_NAME = $(KIND).$(VERSION).$(GROUP)
 endif
 
 ifndef DRIVER_REPO
@@ -24,12 +24,12 @@ endif
 
 digi_src := $(GOPATH)/src/digi.dev/digi
 driver_dir := $(digi_src)/driver
-driver_handler := $(WORKDIR)/$(IMAGE_DIR)/driver/*
-digi_config := $(WORKDIR)/$(IMAGE_DIR)/deploy/*
-build_dir := /tmp/digi-build-$(IMAGE_NAME)-$(NAME)
+driver_handler := $(WORKDIR)/$(PROFILE)/driver/*
+digi_config := $(WORKDIR)/$(PROFILE)/deploy/*
+build_dir := /tmp/digi-build-$(PROFILE_NAME)-$(NAME)
 
 # model
-.PHONY: init gen model all delete image list
+.PHONY: init gen model all delete profile proflie-local list
 # init configs
 define model
 group: $(GROUP)
@@ -39,19 +39,21 @@ endef
 export model
 
 init:
-	cd $(WORKDIR) && mkdir $(IMAGE_DIR) >/dev/null 2>&1 || true && \
-	echo "$$model" > $(IMAGE_DIR)/model.yaml
+	cd $(WORKDIR) && mkdir $(PROFILE) >/dev/null 2>&1 || true && \
+	echo "$$model" > $(PROFILE)/model.yaml
 gen:
-	cd $(WORKDIR) && REPO=$(DRIVER_REPO) python $(DIGIHOME)/gen.py $(IMAGE_DIR) \
-	&& python $(DIGIHOME)/patch.py $(IMAGE_DIR)
+	cd $(WORKDIR) && REPO=$(DRIVER_REPO) python $(DIGIHOME)/gen.py $(PROFILE) \
+	&& python $(DIGIHOME)/patch.py $(PROFILE)
 model:
-	cd $(WORKDIR)/$(IMAGE_DIR) && kubectl apply -f crd.yaml >/dev/null
+	cd $(WORKDIR)/$(PROFILE) && kubectl apply -f crd.yaml >/dev/null
 all: | gen model
 delete:
-	cd $(WORKDIR)/$(IMAGE_DIR) >/dev/null 2>&1; kubectl delete -f crd.yaml 2>/dev/null || true
-	rm -r $(WORKDIR)/$(IMAGE_DIR) >/dev/null 2>&1 || true
-image:
+	cd $(WORKDIR)/$(PROFILE) >/dev/null 2>&1; kubectl delete -f crd.yaml 2>/dev/null || true
+	rm -r $(WORKDIR)/$(PROFILE) >/dev/null 2>&1 || true
+profile:
 	cd $(WORKDIR) && ls -d */* 2> /dev/null | grep "model.yaml" | xargs -I {} dirname {}
+profile-local:
+	cd $(DIGI_REPO) && ls 2> /dev/null
 list:
 	kubectl get deploy --no-headers -o custom-columns=":metadata.name" $(FLAG)
 
@@ -71,7 +73,7 @@ test: | all clean-test
 	cd $(WORKDIR) && GROUP=$(GROUP) VERSION=$(VERSION) KIND=$(KIND) \
     PLURAL=$(PLURAL) NAME=$(NAME) NAMESPACE=$(NAMESPACE) \
     POOL_PROVIDER=none MOUNTER=$(MOUNTER) \
-	python $(IMAGE_DIR)/driver/handler.py
+	python $(PROFILE)/driver/handler.py
 	# TBD allow using pool
 
 # driver
@@ -88,17 +90,17 @@ prepare:
 build: | prepare gen
 	rsync $(driver_handler) $(build_dir)/ || true
 	# use DOCKER_BUILDKIT=0 to enable more messages
-	cd $(build_dir) && $(DOCKER_CMD) build -t $(DRIVER_REPO)/$(IMAGE_NAME):latest $(BUILDFLAG) -f deploy/image/Dockerfile . || true
-	$(DOCKER_CMD) push $(DRIVER_REPO)/$(IMAGE_NAME):latest $(PUSHFLAG) || true
+	cd $(build_dir) && $(DOCKER_CMD) build -t $(DRIVER_REPO)/$(PROFILE_NAME):latest $(BUILDFLAG) -f deploy/image/Dockerfile . || true
+	$(DOCKER_CMD) push $(DRIVER_REPO)/$(PROFILE_NAME):latest $(PUSHFLAG) || true
 	rm -r $(build_dir) || true
 
-# image
+# digi profiles
 .PHONY: push pull
 push:
 	mkdir $(DIGI_REPO) >/dev/null 2>&1 || true
-	cd $(WORKDIR) && tar czf $(IMAGE_NAME).gz $(IMAGE_DIR) && mv $(IMAGE_NAME).gz $(DIGI_REPO)/ >/dev/null || true
+	cd $(WORKDIR) && tar czf $(PROFILE_NAME).gz $(PROFILE) && mv $(PROFILE_NAME).gz $(DIGI_REPO)/ >/dev/null || true
 pull:
-	cd $(WORKDIR) && rsync $(DIGI_REPO)/$(IMAGE_NAME).gz . && tar xzf $(IMAGE_NAME).gz && rm $(IMAGE_NAME).gz > /dev/null
+	cd $(WORKDIR) && rsync $(DIGI_REPO)/$(PROFILE_NAME).gz . && tar xzf $(PROFILE_NAME).gz && rm $(PROFILE_NAME).gz > /dev/null
 
 # deploy
 .PHONY: run stop
