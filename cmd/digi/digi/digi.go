@@ -481,31 +481,34 @@ var listCmd = &cobra.Command{
 }
 
 var checkCmd = &cobra.Command{
-	Use:     "check NAME",
+	Use:     "check NAME [NAME ...]",
 	Short:   "Print a digi's model",
 	Aliases: []string{"c"},
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		v, _ := cmd.Flags().GetInt8("verbosity")
 
-		name := args[0]
-		duri, err := api.Resolve(name)
-		if err != nil {
-			log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
-		}
-		kind := duri.Kind
+		for _, name := range args {
+			duri, err := api.Resolve(name)
+			if err != nil {
+				log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
+			}
+			kind := duri.Kind
 
-		params := map[string]string{
-			"GROUP":    kind.Group,
-			"VERSION":  kind.Version,
-			"KIND":     kind.Name,
-			"PLURAL":   kind.Plural(),
-			"NAME":     name,
-			// TBD get max neat level from kubectl-neat
-			"NEATLEVEL": fmt.Sprintf("-l %d", 4-v),
+			params := map[string]string{
+				"GROUP":    kind.Group,
+				"VERSION":  kind.Version,
+				"KIND":     kind.Name,
+				"PLURAL":   kind.Plural(),
+				"NAME":     name,
+				// TBD get max neat level from kubectl-neat
+				"NEATLEVEL": fmt.Sprintf("-l %d", 4-v),
+			}
+			if len(args) > 1 {
+				fmt.Printf("%s:\n", name)
+			}
+			_ = helper.RunMake(params, "check", true, false)
 		}
-
-		_ = helper.RunMake(params, "check", true, false)
 	},
 }
 
