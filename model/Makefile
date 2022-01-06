@@ -100,7 +100,7 @@ push:
 	mkdir $(DIGI_REPO) >/dev/null 2>&1 || true
 	cd $(WORKDIR) && tar czf $(PROFILE_NAME).gz $(PROFILE) && mv $(PROFILE_NAME).gz $(DIGI_REPO)/ >/dev/null || true
 pull:
-	cd $(WORKDIR) && rsync $(DIGI_REPO)/$(PROFILE_NAME).gz . && tar xzf $(PROFILE_NAME).gz && rm $(PROFILE_NAME).gz > /dev/null
+	cd $(WORKDIR) && rsync $(DIGI_REPO)/$(PROFILE_NAME)*.gz . && tar xzf $(PROFILE_NAME)*.gz && rm $(PROFILE_NAME)*.gz > /dev/null
 
 # deploy
 .PHONY: run stop
@@ -121,6 +121,7 @@ stop:
 	kubectl delete serviceaccount $(NAME) >/dev/null || true & \
 	kubectl delete clusterrole $(NAME) >/dev/null || true & \
 	kubectl delete clusterrolebinding $(NAME) >/dev/null || true & \
+	kubectl delete service $(NAME) >/dev/null || true & \
 	((kubectl delete $(PLURAL) $(NAME) >/dev/null || \
 	kubectl delete $(PLURAL).$(GROUP) $(NAME)) >/dev/null || true) & \
 	kubectl delete deployment $(NAME) >/dev/null && \
@@ -135,16 +136,17 @@ watch:
  	|| kubectl get $(PLURAL).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)"
 
 # lake
-ifndef LAKE
-override LAKE = lake
+ifndef LAKENAME
+override LAKENAME = lake
 endif
-.PHONY: query port
+.PHONY: query connect-lake
 # TBD enforce single lake or use service to identify lake
 query:
 	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
         -- zed query $(FLAG) "$(QUERY)"
-port:
-	kubectl port-forward service/$(LAKE) 9867:6534 || true
+connect-lake:
+	kubectl port-forward service/$(LAKENAME) 9867:6534 || true
+
 # debug
 .PHONY: log
 log:
@@ -159,3 +161,14 @@ gc:
 		if [[ $$count -eq 0 ]]; \
 		 then kubectl delete crd $$i >/dev/null ; echo $$i; fi \
 	done
+
+# Visualization
+ifndef LOCALPORT
+override LOCALPORT = 7534
+endif
+.PHONY: viz viz-space
+viz:
+	echo 127.0.0.1:$(LOCALPORT)
+	kubectl port-forward service/$(NAME) $(LOCALPORT):7534 >/dev/null || true
+viz-space:
+	echo TBD digiboard

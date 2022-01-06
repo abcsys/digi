@@ -8,7 +8,7 @@ def run():
     import digi
 
     # run mounter
-    if digi.use_mounter:
+    if digi.enable_mounter:
         Mounter(digi.g, digi.v, digi.r, digi.n, digi.ns,
                 log_level=digi.log_level).start()
 
@@ -48,7 +48,7 @@ def run():
         if digi.pool is not None:
             try:
                 model = CleanView(dict(spec),
-                              trim_mount=digi.trim_mount).m()
+                              trim_mount=digi.load_trim_mount).m()
                 digi.pool.load([model])
                 digi.logger.info(f"done loading model snapshot to pool")
             except Exception as e:
@@ -89,3 +89,13 @@ def run():
         # _stop.set()
 
     _ready, _stop = util.run_operator(_registry, log_level=digi.log_level)
+
+    if digi.enable_viz:
+        import sys, subprocess
+        try:
+            subprocess.check_call("python ./driver/digi/visual.py >/dev/null 2>&1 &",
+                                  shell=True)
+        except subprocess.CalledProcessError:
+            digi.logger.fatal("unable to start visualizer")
+            sys.exit(1)
+        digi.logger.info("started visualizer")

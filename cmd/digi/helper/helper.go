@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -144,4 +145,18 @@ func CreateAlias(kind *core.Kind, name, namespace string) error {
 		return fmt.Errorf("unable to create alias: %v", err)
 	}
 	return nil
+}
+
+func GetPort() int {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		log.Fatalf("unable to get port: %v\n", err)
+	}
+
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		log.Fatalf("unable to get port: %v\n", err)
+	}
+	_ = l.Close()
+	return l.Addr().(*net.TCPAddr).Port
 }

@@ -37,3 +37,24 @@ spec:
             value: {{ quote .Values.strict_mount }}
           - name: TRIM_MOUNT_ON_LOAD
             value: {{ quote .Values.trim_mount_on_load }}
+          - name: VISUALIZE
+            value: {{ quote .Values.visualize }}
+          ports:
+          - containerPort: 7534
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    name: {{ .Values.name }}
+    app: digi
+spec:
+  ports:
+  - port: 7534
+    targetPort: 7534
+    protocol: TCP
+  selector:
+    name: {{ .Values.name }}

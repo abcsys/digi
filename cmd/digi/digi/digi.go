@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -305,10 +306,20 @@ var runCmd = &cobra.Command{
 			kopfLog = "true"
 		}
 		noAlias, _ := cmd.Flags().GetBool("no-alias")
-		debug, _ := cmd.Flags().GetBool("debug")
+		logLevel, _ := cmd.Flags().GetInt("log-level")
+		visual, _ := cmd.Flags().GetBool("enable-visual")
+
 		var runFlag string
-		if debug {
+		switch {
+		case logLevel < 0:  // unset
+		case logLevel < 20: // debug
 			runFlag += " --set trim_mount_on_load=false"
+			fallthrough
+		default:
+			runFlag += " --set log_level=" + strconv.Itoa(logLevel)
+		}
+		if visual {
+			runFlag += " --set visual=true"
 		}
 
 		var names []string
@@ -332,7 +343,7 @@ var runCmd = &cobra.Command{
 					"NAME":    name,
 					"KOPFLOG": kopfLog,
 					"RUNFLAG": runFlag,
-				}, "run", debug, quiet); err == nil {
+				}, "run", false, quiet); err == nil {
 					if !noAlias {
 						// TBD handle potential race
 						err := helper.CreateAlias(kind, name, "default")
@@ -555,5 +566,26 @@ var gcCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = helper.RunMake(map[string]string{}, "gc", true, false)
+	},
+}
+
+var vizCmd = &cobra.Command{
+	Use:     "visualize [NAME]",
+	Short:   "Visualize a digi",
+	Aliases: []string{"viz", "vz", "v"},
+	Run: func(cmd *cobra.Command, args []string) {
+		var cmdStr string
+		var params map[string]string
+		if len(args) > 0 {
+			port := helper.GetPort()
+			params = map[string]string{
+				"NAME":      args[0],
+				"LOCALPORT": strconv.Itoa(port),
+			}
+			cmdStr = "viz"
+		} else {
+			cmdStr = "viz-space"
+		}
+		_ = helper.RunMake(params, cmdStr, true, false)
 	},
 }

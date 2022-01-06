@@ -70,7 +70,7 @@ def run_operator(registry: KopfRegistry,
 
     thread = threading.Thread(target=kopf_thread)
     thread.start()
-    logger.info(f"Started an operator")
+    logger.info(f"started an operator")
     return ready_flag, stop_flag
 
 

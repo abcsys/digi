@@ -19,8 +19,10 @@ setup(
         "kubernetes",
         'kopf',
         "pyyaml",
-        # "pyjq",
         "inflection",
         "python-box",
+        # "pyjq",
+        "dash",
+        "visdcc"
     ],
 )

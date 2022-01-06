@@ -74,22 +74,22 @@ providers = {
 }
 
 
-def new():
+def _new() -> Pool or None:
     global providers
-    pool_provider = digi.pool_provider
 
-    if pool_provider == "":
-        pool_provider = "zed"
+    if digi.pool_provider == "":
+        digi.pool_provider = "zed"
 
-    if pool_provider in {"none", "false"}:
+    if digi.pool_provider in {"none", "false"} or digi.pool_provider is None:
         return None
 
-    elif pool_provider not in providers:
-        logger.fatal(f"unknown pool provider {pool_provider}")
+    elif digi.pool_provider not in providers:
+        logger.fatal(f"unknown pool provider {digi.pool_provider}")
         sys.exit(1)
     else:
-        return providers[pool_provider](
+        return providers[digi.pool_provider](
             pool_name(*digi.auri)
         )
 
-pool = new()
+
+pool = _new()

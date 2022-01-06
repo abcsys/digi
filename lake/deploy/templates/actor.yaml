@@ -39,6 +39,7 @@ spec:
             value: {{ .Values.pool_provider }}
           ports:
           - containerPort: 9867
+          - containerPort: 7534
 
 ---
 
@@ -51,10 +52,11 @@ metadata:
     app: lake
 spec:
   ports:
-  - port: {{ .Values.port }}
+  - port: 6534 # lake
     targetPort: 9867
+    protocol: TCP
+  - port: 7534 # viz
+    targetPort: 7534
     protocol: TCP
   selector:
     name: {{ .Values.name }}
-
-

@@ -30,9 +30,10 @@ func init() {
 
 	RootCmd.AddCommand(runCmd)
 	RootCmd.AddCommand(stopCmd)
-	runCmd.Flags().BoolP("no-alias", "n", false, "Do not create alias to the model")
-	runCmd.Flags().BoolP("show-kopf-log", "k", false, "Enable kopf logging")
-	runCmd.Flags().BoolP("debug", "d", false, "Run driver in debug mode")
+	runCmd.Flags().Bool("no-alias", false, "Do not create alias to the model")
+	runCmd.Flags().Bool("show-kopf-log", false, "Enable kopf logging")
+	runCmd.Flags().BoolP("enable-visual", "v", false, "Enable default visualization")
+	runCmd.Flags().IntP("log-level", "l", -1, "Logging level")
 	stopCmd.Flags().StringP("kind", "k", "", "Digi kind")
 
 	RootCmd.AddCommand(testCmd)
@@ -57,6 +58,7 @@ func init() {
 	aliasCmd.AddCommand(aliasResolveCmd)
 
 	RootCmd.AddCommand(gcCmd)
+	RootCmd.AddCommand(vizCmd)
 
 	RootCmd.AddCommand(space.RootCmd)
 	RootCmd.AddCommand(lake.RootCmd)
