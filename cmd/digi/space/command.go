@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"digi.dev/digi/api"
+	"digi.dev/digi/cmd/digi/helper"
 	"digi.dev/digi/space"
 	"github.com/spf13/cobra"
 )
@@ -74,6 +75,23 @@ var pipeCmd = &cobra.Command{
 	},
 }
 
+var connectCmd = &cobra.Command{
+	Use:     "connect NAME",
+	Short:   "Start a tty on the digi driver",
+	Aliases: []string{"conn", "c"},
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		useBash, _ := cmd.Flags().GetBool("bash")
+		params := map[string]string{
+			"NAME": args[0],
+		}
+		if useBash {
+			params["SHELL_BIN"] = "bash"
+		}
+		_ = helper.RunMake(params, "connect", true, false)
+	},
+}
+
 func init() {
 	// TBD read from cmdline flag
 	log.SetFlags(0)
@@ -86,4 +104,8 @@ func init() {
 
 	RootCmd.AddCommand(pipeCmd)
 	pipeCmd.Flags().BoolP("delete", "d", false, "Unpipe source from target")
+
+	// TBD promote connect to digi root
+	RootCmd.AddCommand(connectCmd)
+	connectCmd.Flags().BoolP("bash", "b", false, "Use bash in remote session")
 }

@@ -136,6 +136,13 @@ watch:
 	watch -n$(INTERVAL) -t "(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
  	|| kubectl get $(PLURAL).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)"
 
+ifndef SHELL_BIN
+override SHELL_BIN = sh
+endif
+.PHONY: connect
+connect:
+	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l name=$(NAME) -oname` -- /bin/$(SHELL_BIN)
+
 # lake
 ifndef LAKENAME
 override LAKENAME = lake
@@ -170,6 +177,7 @@ endif
 .PHONY: viz viz-space
 viz:
 	echo 127.0.0.1:$(LOCALPORT)
-	kubectl port-forward service/$(NAME) $(LOCALPORT):7534 >/dev/null || true
+	open http://127.0.0.1:$(LOCALPORT) >/dev/null 2>&1 || true
+	kubectl port-forward service/$(NAME) $(LOCALPORT):7534 >/dev/null
 viz-space:
 	echo TBD digiboard

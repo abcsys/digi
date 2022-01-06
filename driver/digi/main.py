@@ -77,7 +77,8 @@ def run():
                                                    spec, gen=gen)
         if e is not None:
             if e.status == util.DriverError.GEN_OUTDATED:
-                digi.logger.warning(f"gen {gen} outdated; pending {len(rc._pending_handler)} handlers")
+                digi.logger.warning(f"gen {gen} outdated; "
+                                    f"pending {len(rc._pending_handler)} handlers")
                 return
             else:
                 raise kopf.PermanentError(e.status)
@@ -99,11 +100,12 @@ def run():
     if digi.enable_viz:
         import os, sys, subprocess
         try:
-            subprocess.check_call("python visual.py >/dev/null 2>&1 &",
+            subprocess.check_call(f"python visual.py >/dev/null &",
                                   env={**os.environ.copy(), **{
                                       "MOUNTER": "false",
                                       "VISUAL": "false",
                                       "POOL_PROVIDER": "none",
+                                      "LOGGER_NAME": "digi.visual",
                                   }},
                                   shell=True)
             digi.logger.info("started visualizer")

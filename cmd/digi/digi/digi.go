@@ -301,13 +301,13 @@ var runCmd = &cobra.Command{
 		}
 
 		quiet, _ := cmd.Flags().GetBool("quiet")
+		noAlias, _ := cmd.Flags().GetBool("no-alias")
+		logLevel, _ := cmd.Flags().GetInt("log-level")
+		visual, _ := cmd.Flags().GetBool("enable-visual")
 		kopfLog := "false"
 		if k, _ := cmd.Flags().GetBool("kopf-log"); k {
 			kopfLog = "true"
 		}
-		noAlias, _ := cmd.Flags().GetBool("no-alias")
-		logLevel, _ := cmd.Flags().GetInt("log-level")
-		visual, _ := cmd.Flags().GetBool("enable-visual")
 
 		var runFlag string
 		switch {
@@ -572,7 +572,7 @@ var gcCmd = &cobra.Command{
 var vizCmd = &cobra.Command{
 	Use:     "visualize [NAME]",
 	Short:   "Visualize a digi",
-	Aliases: []string{"viz", "vz", "v"},
+	Aliases: []string{"viz", "vis", "vz", "v"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var cmdStr string
 		var params map[string]string
