@@ -1,5 +1,5 @@
 """
-Driver entry point.
+Test entry point only.
 """
 import digi.main as main
 

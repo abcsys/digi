@@ -311,7 +311,7 @@ var runCmd = &cobra.Command{
 
 		var runFlag string
 		switch {
-		case logLevel < 0:  // unset
+		case logLevel < 0: // unset
 		case logLevel < 20: // debug
 			runFlag += " --set trim_mount_on_load=false"
 			fallthrough

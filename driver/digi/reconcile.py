@@ -35,6 +35,8 @@ class __Reconciler:
         self._logger = digi.logger
 
         self.skip_gen = -1
+        self.count = 0
+        self.last_seen_gen = -1
 
         # handler info (e.g., priority) are used to
         # generate the self.handlers upon handler updates;

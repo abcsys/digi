@@ -82,6 +82,7 @@ prepare:
 	rm -r $(build_dir) >/dev/null 2>&1 || true
 	mkdir -p $(build_dir)/deploy/
 	rsync -r $(driver_dir) $(build_dir)
+	rsync $(driver_dir)/digi/visual.py $(build_dir)/
 	rsync -r $(driver_dir)/deploy $(build_dir) || true
 	# app specific configs overwrite the generic ones
 	rsync -r $(digi_config) $(build_dir)/deploy || true

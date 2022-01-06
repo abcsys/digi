@@ -31,14 +31,16 @@ spec:
             value: {{ .Values.namespace }}
           - name: MOUNTER
             value: {{ quote .Values.mounter }}
+          - name: LOGLEVEL
+            value: {{ .Values.log_level | default "20" | quote }}
           - name: POOL_PROVIDER
             value: {{ quote .Values.pool_provider }}
           - name: STRICT_MOUNT
             value: {{ quote .Values.strict_mount }}
           - name: TRIM_MOUNT_ON_LOAD
             value: {{ quote .Values.trim_mount_on_load }}
-          - name: VISUALIZE
-            value: {{ quote .Values.visualize }}
+          - name: VISUAL
+            value: {{ quote .Values.visual }}
           ports:
           - containerPort: 7534
 

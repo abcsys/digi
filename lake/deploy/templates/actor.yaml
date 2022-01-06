@@ -35,11 +35,12 @@ spec:
             value: {{ .Values.namespace }}
           - name: MOUNTER
             value: {{ quote .Values.mounter }}
+          - name: LOGLEVEL
+            value: {{ .Values.log_level | default "20" | quote }}
           - name: POOL_PROVIDER
             value: {{ .Values.pool_provider }}
           ports:
           - containerPort: 9867
-          - containerPort: 7534
 
 ---
 
@@ -54,9 +55,6 @@ spec:
   ports:
   - port: 6534 # lake
     targetPort: 9867
-    protocol: TCP
-  - port: 7534 # viz
-    targetPort: 7534
     protocol: TCP
   selector:
     name: {{ .Values.name }}

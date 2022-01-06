@@ -19,10 +19,6 @@ class Pool(ABC):
         self.lock = threading.Lock()
 
     @abstractmethod
-    def create(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
     def load(self, objects: List[dict]):
         raise NotImplementedError
 
@@ -35,9 +31,6 @@ class ZedPool(Pool):
     def __init__(self, name):
         super().__init__(name)
         self.client = zed.Client(base_url=lake_url)
-
-    def create(self):
-        self.client.create_pool(self.name)
 
     def load(self, objects: List[dict]):
         ts = get_ts()
@@ -74,7 +67,7 @@ providers = {
 }
 
 
-def _new() -> Pool or None:
+def create_pool() -> Pool or None:
     global providers
 
     if digi.pool_provider == "":
@@ -92,4 +85,4 @@ def _new() -> Pool or None:
         )
 
 
-pool = _new()
+pool = None
