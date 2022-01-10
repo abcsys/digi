@@ -133,15 +133,29 @@ var kindCmd = &cobra.Command{
 
 // TBD pull and push to a remote repo
 var pullCmd = &cobra.Command{
-	Use:   "pull KIND",
+	Use:   "pull KIND [KIND ...]",
 	Short: "Pull a kind",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 
-		_ = helper.RunMake(map[string]string{
-			"PROFILE_NAME": args[0],
-		}, "pull", true, q)
+		var wg sync.WaitGroup
+		for _, name := range args {
+			wg.Add(1)
+			go func(name string) {
+				defer wg.Done()
+				err := helper.RunMake(map[string]string{
+					"PROFILE_NAME": name,
+				}, "pull", false, q)
+				if err != nil {
+					log.Fatalf("unable to pull %s: %v\n", name, err)
+				} else if !q {
+					log.Println(name)
+				}
+
+			}(name)
+		}
+		wg.Wait()
 	},
 }
 
@@ -406,17 +420,29 @@ var stopCmd = &cobra.Command{
 }
 
 var rmkCmd = &cobra.Command{
-	Use:     "rmk KIND",
+	Use:     "rmk KIND [KIND ...]",
 	Short:   "Remove a kind locally",
 	Aliases: []string{"rmi"},
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
-		if _ = helper.RunMake(map[string]string{
-			"PROFILE": args[0],
-		}, "delete", true, q); !q {
-			fmt.Printf("%s removed\n", args[0])
+		a, _ := cmd.Flags().GetBool("all")
+		var cmdStr string
+		if cmdStr = "delete"; a {
+			cmdStr = "delete-all"
 		}
+
+		var wg sync.WaitGroup
+		for _, name := range args {
+			wg.Add(1)
+			go func(name string) {
+				defer wg.Done()
+				_ = helper.RunMake(map[string]string{
+					"PROFILE": name,
+				}, cmdStr, false, q)
+			}(name)
+		}
+		wg.Wait()
 	},
 }
 

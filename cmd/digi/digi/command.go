@@ -27,6 +27,7 @@ func init() {
 	RootCmd.AddCommand(kindCmd)
 	RootCmd.AddCommand(rmkCmd)
 	kindCmd.Flags().BoolP("local", "l", false, "Show local profiles")
+	rmkCmd.Flags().BoolP("all", "a", false, "Remove kind crd")
 
 	RootCmd.AddCommand(runCmd)
 	RootCmd.AddCommand(stopCmd)

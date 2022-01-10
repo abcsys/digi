@@ -29,7 +29,7 @@ digi_config := $(WORKDIR)/$(PROFILE)/deploy/*
 build_dir := /tmp/digi-build-$(PROFILE_NAME)-$(NAME)
 
 # model
-.PHONY: init gen model all delete profile proflie-local list
+.PHONY: init gen model all delete delete-all profile proflie-local list
 # init configs
 define model
 group: $(GROUP)
@@ -48,8 +48,9 @@ model:
 	cd $(WORKDIR)/$(PROFILE) && kubectl apply -f crd.yaml >/dev/null
 all: | gen model
 delete:
+	rm -r $(WORKDIR)/$(PROFILE) >/dev/null && echo $(PROFILE) || echo "unable to delete $(PROFILE)"; exit
+delete-all: | delete
 	cd $(WORKDIR)/$(PROFILE) >/dev/null 2>&1; kubectl delete -f crd.yaml 2>/dev/null || true
-	rm -r $(WORKDIR)/$(PROFILE) >/dev/null 2>&1 || true
 profile:
 	cd $(WORKDIR) && ls -d */* 2> /dev/null | grep "model.yaml" | xargs -I {} dirname {}
 profile-local:
@@ -82,6 +83,7 @@ prepare:
 	rm -r $(build_dir) >/dev/null 2>&1 || true
 	mkdir -p $(build_dir)/deploy/
 	rsync -r $(driver_dir) $(build_dir)
+	rsync $(driver_dir)/digi/handler.py $(build_dir)/
 	rsync $(driver_dir)/digi/visual.py $(build_dir)/
 	rsync -r $(driver_dir)/deploy $(build_dir) || true
 	# app specific configs overwrite the generic ones
