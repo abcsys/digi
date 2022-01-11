@@ -42,7 +42,7 @@ init:
 	cd $(WORKDIR) && mkdir $(PROFILE) >/dev/null 2>&1 || true && \
 	echo "$$model" > $(PROFILE)/model.yaml
 gen:
-	cd $(WORKDIR) && REPO=$(DRIVER_REPO) python $(DIGIHOME)/gen.py $(PROFILE) \
+	cd $(WORKDIR) && REPO=$(DRIVER_REPO) $(GENFLAG) python $(DIGIHOME)/gen.py $(PROFILE) \
 	&& python $(DIGIHOME)/patch.py $(PROFILE)
 model:
 	cd $(WORKDIR)/$(PROFILE) && kubectl apply -f crd.yaml >/dev/null

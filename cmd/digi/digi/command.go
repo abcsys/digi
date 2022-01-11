@@ -21,6 +21,7 @@ func init() {
 	initCmd.Flags().StringP("version", "v", "", "Model version")
 	initCmd.Flags().StringP("directory", "d", "", "Image directory")
 	buildCmd.Flags().BoolP("no-cache", "n", false, "Do not use build cache")
+	genCmd.Flags().BoolP("visual", "v", false, "Generate template for visualization")
 
 	RootCmd.AddCommand(pullCmd)
 	RootCmd.AddCommand(pushCmd)

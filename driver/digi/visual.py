@@ -30,6 +30,7 @@ def update_digis(n):
         digis.append(html.Button(name))
     return digis
 
+
 def main():
     digi.run()
     app.run_server(debug=True, port=7534)

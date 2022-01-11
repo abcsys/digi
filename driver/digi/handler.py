@@ -1,1 +1,4 @@
-# This file is intentionally left blank.
+import digi
+
+if __name__ == '__main__':
+    digi.run()

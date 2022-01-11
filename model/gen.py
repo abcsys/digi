@@ -170,6 +170,15 @@ if __name__ == '__main__':
 
 """
 
+_visual = """import digi
+
+# This file overwrites visual.py in digi module.
+
+if __name__ == '__main__':
+    digi.run()
+
+"""
+
 
 def pluralize(s):
     return inflection.pluralize(s)
@@ -320,16 +329,17 @@ def gen(name):
         # generate a helm values.yaml if missing
         values_file = os.path.join(_dir_path, "deploy", "values.yaml")
         if not os.path.exists(values_file):
-            values = _helm_values.format(group=model["group"],
-                                         version=model["version"],
-                                         plural=inflection.pluralize(model["kind"]).lower(),
-                                         name=model["kind"].lower(),
-                                         namespace=model.get("namespace", "default"),
-                                         mounter="true" if "mount" in model else "false",
-                                         image=f"{model['kind']}.{model['version']}.{model['group']}".lower(),
-                                         repo=os.environ.get("REPO", "local"),
-                                         imagepull=os.environ.get("IMAGEPULL", "Always"),
-                                         )
+            values = _helm_values.format(
+                group=model["group"],
+                version=model["version"],
+                plural=inflection.pluralize(model["kind"]).lower(),
+                name=model["kind"].lower(),
+                namespace=model.get("namespace", "default"),
+                mounter="true" if "mount" in model else "false",
+                image=f"{model['kind']}.{model['version']}.{model['group']}".lower(),
+                repo=os.environ.get("REPO", "local"),
+                imagepull=os.environ.get("IMAGEPULL", "Always"),
+            )
             values = yaml.load(values, Loader=yaml.FullLoader)
 
             with open(values_file, "w") as f_:
@@ -345,6 +355,18 @@ def gen(name):
 
             with open(handler_file, "w") as f_:
                 f_.write(handler)
+
+        # generate visual.py
+        if os.environ.get("VISUAL", "true") == "true":
+            visual_file = os.path.join(_dir_path, "driver", "visual.py")
+            if not os.path.exists(os.path.join(_dir_path, "driver")):
+                os.makedirs(os.path.join(_dir_path, "driver"))
+
+            if not os.path.exists(visual_file):
+                handler = _visual.format()
+
+                with open(visual_file, "w") as f_:
+                    f_.write(handler)
 
     with open(os.path.join(_dir_path, "crd.yaml"), "w") as f_:
         yaml.dump_all(crds, f_)

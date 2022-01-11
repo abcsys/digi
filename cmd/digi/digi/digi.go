@@ -68,9 +68,15 @@ var genCmd = &cobra.Command{
 		q, _ := cmd.Flags().GetBool("quiet")
 
 		profile := args[0]
-		if _ = helper.RunMake(map[string]string{
+		params := map[string]string{
 			"PROFILE": profile,
-		}, "gen", true, q); !q {
+		}
+
+		if v, _ := cmd.Flags().GetBool("visual"); v {
+			params["GENFLAG"] = "VISUAL=true"
+		}
+
+		if _ = helper.RunMake(params, "gen", true, q); !q {
 			fmt.Println(profile)
 		}
 	},
