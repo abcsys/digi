@@ -35,7 +35,8 @@ func NewPiper(s, t string) (*Piper, error) {
 	if err != nil {
 		return nil, err
 	}
-	//fmt.Println(si, ti)
+
+	si.Path, ti.Path = normalizePath(si.Path), normalizePath(ti.Path)
 	return &Piper{
 		Source: si,
 		Target: ti,
@@ -117,4 +118,15 @@ func newClientForSyncBinding() (client.Client, error) {
 		return nil, err
 	}
 	return c, nil
+}
+
+func normalizePath(p string) string {
+	if !strings.HasPrefix(p, "spec.data.") {
+		if strings.HasPrefix(p, "data.") {
+			p = "spec." + p
+		} else {
+			p = "spec.data." + p
+		}
+	}
+	return p
 }
