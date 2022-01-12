@@ -75,6 +75,26 @@ var pipeCmd = &cobra.Command{
 	},
 }
 
+var startCmd = &cobra.Command{
+	Use:     "start",
+	Short:   "Start digi space controllers",
+	Aliases: []string{"i"},
+	Args:    cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = helper.RunMake(nil, "start-space", true, false)
+	},
+}
+
+var stopCmd = &cobra.Command{
+	Use:     "stop",
+	Short:   "Stop digi space controllers",
+	Aliases: []string{"s"},
+	Args:    cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = helper.RunMake(nil, "stop-space", true, false)
+	},
+}
+
 var connectCmd = &cobra.Command{
 	Use:     "connect NAME",
 	Short:   "Start a tty on the digi driver",
@@ -95,6 +115,9 @@ var connectCmd = &cobra.Command{
 func init() {
 	// TBD read from cmdline flag
 	log.SetFlags(0)
+	RootCmd.AddCommand(startCmd)
+	RootCmd.AddCommand(stopCmd)
+	// TBD delete digi space removes all running digis and meta-controllers
 
 	RootCmd.AddCommand(mountCmd)
 	mountCmd.Flags().BoolP("delete", "d", false, "Unmount source from target")

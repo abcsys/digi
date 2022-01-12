@@ -2,15 +2,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: syncer
+  labels:
+    app: syncer
 spec:
   replicas: 1
   selector:
     matchLabels:
       name: syncer
+      app: syncer
   template:
     metadata:
       labels:
         name: syncer
+        app: syncer
     spec:
       serviceAccountName: syncer
       containers:

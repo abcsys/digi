@@ -32,7 +32,8 @@ func init() {
 
 	RootCmd.AddCommand(runCmd)
 	RootCmd.AddCommand(stopCmd)
-	runCmd.Flags().Bool("no-alias", false, "Do not create alias to the model")
+	runCmd.Flags().Bool("no-alias", false, "Do not create alias")
+	runCmd.Flags().Bool("no-pool", false, "Do not create pool")
 	runCmd.Flags().Bool("show-kopf-log", false, "Enable kopf logging")
 	runCmd.Flags().BoolP("enable-visual", "v", false, "Enable default visualization")
 	runCmd.Flags().IntP("log-level", "l", -1, "Logging level")

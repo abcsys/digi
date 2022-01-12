@@ -8,6 +8,8 @@ DOCKER_CMD = docker
 # default location for scripts and configs
 HOMEDIR=~/.digi
 
+SOURCE=$(GOPATH)/src/digi.dev/digi
+
 .PHONY: dep digi install
 dep:
 	# k8s tooling
@@ -26,10 +28,13 @@ digi:
 	cd cmd/; go install ./digi ./dq ./ds ./di
 install: | digi
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
+	rm $(HOMEDIR)/lake $(HOMEDIR)/sync $(HOMEDIR)/mount >/dev/null 2>&1 || true
+	ln -s $(SOURCE)/lake/ $(HOMEDIR)/lake
+	ln -s $(SOURCE)/space/sync/ $(HOMEDIR)/sync
+	ln -s $(SOURCE)/space/mount/ $(HOMEDIR)/mount
 	sed 's/DRIVER_REPO_TEMP/$(DRIVER_REPO)/g; s/DOCKER_CMD_TEMP/$(DOCKER_CMD)/g' \
 	./model/Makefile > $(HOMEDIR)/Makefile && \
-	cp ./model/gen.py $(HOMEDIR) && \
-	cp ./model/patch.py $(HOMEDIR)
+	cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR)
 
 .PHONY: fmt tidy
 fmt:

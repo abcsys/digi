@@ -106,17 +106,17 @@ pull:
 	cd $(WORKDIR) && rsync $(DIGI_REPO)/$(PROFILE_NAME)*.gz . && tar xzf $(PROFILE_NAME)*.gz && rm $(PROFILE_NAME)*.gz > /dev/null
 
 # deploy
-.PHONY: run stop
+.PHONY: run stop run-no-pool
 run: | prepare model
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zed drop -f $(NAME) >/dev/null 2>&1 || true
-	# TBD make pool optional by checking values.yaml
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
 	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
 	kubectl apply -f run.yaml >/dev/null && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
-    -- zed create $(NAME)) >/dev/null && echo $(NAME)
+    -- zed create $(NAME)) >/dev/null && echo $(NAME) || \
+    echo "unable to run $(NAME)"
 	rm -r $(build_dir) || true
 stop:
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
@@ -129,6 +129,13 @@ stop:
 	kubectl delete $(PLURAL).$(GROUP) $(NAME)) >/dev/null || true) & \
 	kubectl delete deployment $(NAME) >/dev/null && \
 	echo $(NAME) || echo "$(NAME) isn't running"
+run-no-pool: | prepare model
+	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
+	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
+	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
+	kubectl apply -f run.yaml >/dev/null && echo $(NAME) || \
+    echo "unable to run $(NAME)"
+	rm -r $(build_dir) || true
 
 .PHONY: check watch
 check:
@@ -149,13 +156,35 @@ connect:
 ifndef LAKENAME
 override LAKENAME = lake
 endif
-.PHONY: query connect-lake
+.PHONY: query connect-lake start-lake stop-lake
 # TBD enforce single lake or use service to identify lake
 query:
 	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
         -- zed query $(FLAG) "$(QUERY)"
 connect-lake:
 	kubectl port-forward service/$(LAKENAME) 9867:6534 || true
+start-lake:
+	WORKDIR=$(DIGIHOME) digi run lake lake --no-pool
+stop-lake:
+	digi stop lake
+
+# syncer
+.PHONY: start-syncer stop-syncer
+start-syncer:
+	cd $(DIGIHOME)/sync && \
+ 	kubectl delete -f deploy/crds/ >/dev/null 2>&1 || true && \
+	kubectl delete -f deploy/ >/dev/null 2>&1 || true && \
+	kubectl apply -f deploy/crds/ >/dev/null && \
+	kubectl apply -f deploy/ >/dev/null && echo syncer
+stop-syncer:
+	cd $(DIGIHOME)/sync && \
+ 	kubectl delete -f deploy/crds/ >/dev/null && \
+	kubectl delete -f deploy/ >/dev/null && echo syncer
+	# TBD delete all syncs
+
+.PHONY: start-space
+start-space: | start-lake start-syncer # ...
+stop-space: | stop-lake stop-syncer
 
 # debug
 .PHONY: log

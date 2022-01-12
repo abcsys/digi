@@ -317,7 +317,7 @@ var runCmd = &cobra.Command{
 		var profile = args[0]
 		kind, err := helper.GetKindFromProfile(profile)
 		if err != nil {
-			log.Fatalf("unable to find kind %s\n", profile)
+			log.Fatalf("unable to find kind %s\n: %v", profile, err)
 		}
 
 		quiet, _ := cmd.Flags().GetBool("quiet")
@@ -327,6 +327,10 @@ var runCmd = &cobra.Command{
 		kopfLog := "false"
 		if k, _ := cmd.Flags().GetBool("kopf-log"); k {
 			kopfLog = "true"
+		}
+		cmdStr := "run"
+		if np, _ := cmd.Flags().GetBool("no-pool"); np {
+			cmdStr = "run-no-pool"
 		}
 
 		var runFlag string
@@ -363,9 +367,9 @@ var runCmd = &cobra.Command{
 					"NAME":    name,
 					"KOPFLOG": kopfLog,
 					"RUNFLAG": runFlag,
-				}, "run", false, quiet); err == nil {
+				}, cmdStr, false, quiet); err == nil {
 					if !noAlias {
-						// TBD handle potential race
+						// TBD check potential race
 						err := helper.CreateAlias(kind, name, "default")
 						if err != nil {
 							logger.Println("unable to create alias")
@@ -520,7 +524,7 @@ var listCmd = &cobra.Command{
 		}
 		flags := ""
 		if !showAll {
-			flags += " -l app!=lake"
+			flags += " -l app!=lake,app!=syncer"
 		}
 		_ = helper.RunMake(map[string]string{
 			"FLAG": flags,
