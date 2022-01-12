@@ -35,7 +35,7 @@ func NewPiper(s, t string) (*Piper, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(si)
+	//fmt.Println(si, ti)
 	return &Piper{
 		Source: si,
 		Target: ti,
