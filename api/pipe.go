@@ -66,6 +66,7 @@ func (p *Piper) createSyncBinding() error {
 		return fmt.Errorf("unable to create sync binding: %v", err)
 	}
 
+	_ = c.Delete(context.TODO(), p.newSyncBinding())
 	return c.Create(context.TODO(), p.newSyncBinding())
 }
 
