@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"digi.dev/digi/api"
@@ -123,9 +124,9 @@ func GetKindFromProfile(dirName string) (*core.Kind, error) {
 	}
 
 	return &core.Kind{
-		Group:   raw.Group,
-		Version: raw.Version,
-		Name:    raw.Kind,
+		Group:   strings.ToLower(raw.Group),
+		Version: strings.ToLower(raw.Version),
+		Name:    strings.ToLower(raw.Kind),
 	}, nil
 }
 

@@ -37,6 +37,8 @@ func NewPiper(s, t string) (*Piper, error) {
 	}
 
 	si.Path, ti.Path = normalizePath(si.Path), normalizePath(ti.Path)
+	// XXX syncer should handle lower-case kind name
+	si.Kind.Name, ti.Kind.Name = strings.Title(si.Kind.Name), strings.Title(ti.Kind.Name)
 	return &Piper{
 		Source: si,
 		Target: ti,
