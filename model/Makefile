@@ -171,8 +171,8 @@ stop-lake:
 # syncer
 .PHONY: start-syncer stop-syncer
 start-syncer:
+ 	# force restart syncer
 	cd $(DIGIHOME)/sync && \
- 	kubectl delete -f deploy/crds/ >/dev/null 2>&1 || true && \
 	kubectl delete -f deploy/ >/dev/null 2>&1 || true && \
 	kubectl apply -f deploy/crds/ >/dev/null && \
 	kubectl apply -f deploy/ >/dev/null && echo syncer

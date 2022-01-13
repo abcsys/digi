@@ -9,6 +9,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	controllers = map[string]bool{
+		"lake":    true,
+		"syncer":  true,
+		"mounter": true,
+		// ...
+	}
+)
+
 var RootCmd = &cobra.Command{
 	Use:   "space [command]",
 	Short: "Manage digis in a dSpace",
@@ -76,22 +85,36 @@ var pipeCmd = &cobra.Command{
 }
 
 var startCmd = &cobra.Command{
-	Use:     "start",
-	Short:   "Start digi space controllers",
-	Aliases: []string{"i"},
-	Args:    cobra.ExactArgs(0),
+	Use:   "start [NAME ...]",
+	Short: "Start digi space controllers",
 	Run: func(cmd *cobra.Command, args []string) {
-		_ = helper.RunMake(nil, "start-space", true, false)
+		if len(args) == 0 {
+			_ = helper.RunMake(nil, "start-space", true, false)
+		} else {
+			for _, name := range args {
+				if ok, _ := controllers[name]; !ok {
+					log.Fatalf("unknown controller: %s\n", name)
+				}
+				_ = helper.RunMake(nil, "start-"+name, true, false)
+			}
+		}
 	},
 }
 
 var stopCmd = &cobra.Command{
-	Use:     "stop",
-	Short:   "Stop digi space controllers",
-	Aliases: []string{"s"},
-	Args:    cobra.ExactArgs(0),
+	Use:   "stop [NAME ...]",
+	Short: "Stop digi space controllers",
 	Run: func(cmd *cobra.Command, args []string) {
-		_ = helper.RunMake(nil, "stop-space", true, false)
+		if len(args) == 0 {
+			_ = helper.RunMake(nil, "stop-space", true, false)
+		} else {
+			for _, name := range args {
+				if ok, _ := controllers[name]; !ok {
+					log.Fatalf("unknown controller: %s\n", name)
+				}
+				_ = helper.RunMake(nil, "stop-"+name, true, false)
+			}
+		}
 	},
 }
 
@@ -113,11 +136,10 @@ var connectCmd = &cobra.Command{
 }
 
 func init() {
-	// TBD read from cmdline flag
 	log.SetFlags(0)
+	// TBD delete digi space removes all running digis and meta-controllers
 	RootCmd.AddCommand(startCmd)
 	RootCmd.AddCommand(stopCmd)
-	// TBD delete digi space removes all running digis and meta-controllers
 
 	RootCmd.AddCommand(mountCmd)
 	mountCmd.Flags().BoolP("delete", "d", false, "Unmount source from target")
