@@ -357,7 +357,7 @@ def gen(name):
                 f_.write(handler)
 
         # generate visual.py
-        if os.environ.get("VISUAL", "true") == "true":
+        if os.environ.get("VISUAL", "false") == "true":
             visual_file = os.path.join(_dir_path, "driver", "visual.py")
             if not os.path.exists(os.path.join(_dir_path, "driver")):
                 os.makedirs(os.path.join(_dir_path, "driver"))
