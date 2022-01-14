@@ -61,6 +61,7 @@ def run():
             try:
                 model = CleanView(dict(spec),
                                   trim_mount=digi.load_trim_mount).m()
+                model["_type"] = "model"
                 digi.pool.load([model])
                 digi.logger.info(f"done loading model snapshot to pool")
             except Exception as e:
