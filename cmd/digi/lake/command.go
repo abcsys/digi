@@ -43,6 +43,7 @@ var (
 	startCmd = &cobra.Command{
 		Use:   "start [command]",
 		Short: "Start the digi lake",
+		Aliases: []string{"init"},
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			// TBD
