@@ -19,6 +19,7 @@ spec:
           image: {{ .Values.image }}
           imagePullPolicy: {{ .Values.imagepull }}
           env:
+          # digi info
           - name: GROUP
             value: {{ .Values.group }}
           - name: VERSION
@@ -29,18 +30,26 @@ spec:
             value: {{ .Values.name }}
           - name: NAMESPACE
             value: {{ .Values.namespace }}
+          # configurations
           - name: MOUNTER
             value: {{ quote .Values.mounter }}
           - name: LOGLEVEL
-            value: {{ .Values.log_level | default "20" | quote }}
+            value: {{ .Values.log_level | default 20 | quote }}
+          # pool
           - name: POOL_PROVIDER
             value: {{ quote .Values.pool_provider }}
+          # composition
           - name: STRICT_MOUNT
             value: {{ quote .Values.strict_mount }}
           - name: TRIM_MOUNT_ON_LOAD
             value: {{ quote .Values.trim_mount_on_load }}
+          # visualization
           - name: VISUAL
             value: {{ quote .Values.visual }}
+          - name: VISUAL_TYPE
+            value: {{ quote .Values.visual_type }}
+          - name: VISUAL_REFRESH_INTERVAL
+            value: {{ .Values.visual_refresh_interval | default 1000 | quote }}
           ports:
           - containerPort: 7534
 

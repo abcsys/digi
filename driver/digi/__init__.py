@@ -15,9 +15,11 @@ ns = namespace = os.environ.get("NAMESPACE", "default")
 duri = auri = (g, v, r, n, ns)
 
 pool_provider = os.environ.get("POOL_PROVIDER", "zed")
-load_trim_mount = os.environ.get("TRIM_MOUNT_ON_LOAD", "true") != "false"
-enable_mounter = os.environ.get("MOUNTER", "false") == "true"
-enable_viz = os.environ.get("VISUAL", "false") == "true"
+load_trim_mount = os.environ.get("TRIM_MOUNT_ON_LOAD", "") != "false"
+enable_mounter = os.environ.get("MOUNTER", "") == "true"
+enable_visual = os.environ.get("VISUAL", "") == "true"
+visual_type = os.environ.get("VISUAL_TYPE", "")
+visual_refresh_interval = float(os.environ.get("VISUAL_REFRESH_INTERVAL", 1000))
 
 # digi modules; force init
 from digi import (

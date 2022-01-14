@@ -46,7 +46,7 @@ class ZedPool(Pool):
             self.lock.release()
 
     def query(self, query):
-        self.client.query(query)
+        return self.client.query(query)
 
 
 def pool_name(g, v, r, n, ns):

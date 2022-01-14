@@ -6,3 +6,4 @@ kubernetes
 kopf
 zed
 dash
+pandas

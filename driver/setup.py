@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 
 URLS = {
-    # TBD
 }
 
 setup(
@@ -24,5 +23,6 @@ setup(
         'kopf',
         "zed",
         "dash",
+        "pandas",
     ],
 )

@@ -98,14 +98,13 @@ def run():
         _, _ = args, kwargs
         _stop.set()
 
-    if digi.enable_viz:
+    if digi.enable_visual:
         import os, sys, subprocess
         try:
-            subprocess.check_call(f"python visual.py >/dev/null &",
+            subprocess.check_call(f"python visual.py &",
                                   env={**os.environ.copy(), **{
                                       "MOUNTER": "false",
                                       "VISUAL": "false",
-                                      "POOL_PROVIDER": "none",
                                       "LOGGER_NAME": "digi.visual",
                                   }},
                                   shell=True)
