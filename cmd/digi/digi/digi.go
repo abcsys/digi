@@ -83,10 +83,10 @@ var genCmd = &cobra.Command{
 }
 
 var buildCmd = &cobra.Command{
-	Use:     "build KIND",
+	Use:     "build KIND [KIND ...]",
 	Short:   "Build a kind",
 	Aliases: []string{"b"},
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 		noCache, _ := cmd.Flags().GetBool("no-cache")
@@ -99,21 +99,22 @@ var buildCmd = &cobra.Command{
 			buildFlag += " --no-cache"
 		}
 
-		profile := args[0]
-		kind, err := helper.GetKindFromProfile(profile)
-		if err != nil {
-			log.Fatalf("unable to find kind %s\n", profile)
-		}
+		for _, profile := range args {
+			kind, err := helper.GetKindFromProfile(profile)
+			if err != nil {
+				log.Fatalf("unable to find kind %s\n", profile)
+			}
 
-		if _ = helper.RunMake(map[string]string{
-			"GROUP":     kind.Group,
-			"VERSION":   kind.Version,
-			"KIND":      kind.Name,
-			"PROFILE":   profile,
-			"BUILDFLAG": buildFlag,
-			"PUSHFLAG":  pushFlag,
-		}, "build", true, q); !q {
-			fmt.Println(kind.Name)
+			if _ = helper.RunMake(map[string]string{
+				"GROUP":     kind.Group,
+				"VERSION":   kind.Version,
+				"KIND":      kind.Name,
+				"PROFILE":   profile,
+				"BUILDFLAG": buildFlag,
+				"PUSHFLAG":  pushFlag,
+			}, "build", true, q); !q {
+				fmt.Println(kind.Name)
+			}
 		}
 	},
 }

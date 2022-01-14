@@ -60,6 +60,7 @@ list:
 
 .PHONY: edit edit-all
 edit:
+	# TBD add revision number in the temporary file
 	(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
     || kubectl get $(PLURAL).$(GROUP) $(NAME) -oyaml) | kubectl neat -l 0 \
     > $(FILE) && vi $(FILE) && kubectl apply -f $(FILE); rm $(FILE)
