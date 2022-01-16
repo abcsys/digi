@@ -91,22 +91,14 @@ var buildCmd = &cobra.Command{
 		q, _ := cmd.Flags().GetBool("quiet")
 		noCache, _ := cmd.Flags().GetBool("no-cache")
 		platform, _ := cmd.Flags().GetString("platform")
+		all, _ := cmd.Flags().GetBool("all-platforms")
 		tag, _ := cmd.Flags().GetString("tag")
-		var buildFlag, pushFlag string
-		if q {
-			buildFlag += " -q"
-			pushFlag += " -q"
-		}
-		if noCache {
-			buildFlag += " --no-cache"
-		}
-		// multi-platform build
-		var arch string
-		if platform != "" {
-			buildFlag += fmt.Sprintf(" --platform %s", platform)
-			// linux/amd64 -> amd64; linux/arm/v7 -> arm-v7
-			arch = platform[strings.Index(platform, "/")+1:]
-			arch = strings.ReplaceAll(arch, "/", "-")
+
+		platforms := make(map[string]bool)
+		if all {
+			platforms = api.Platforms
+		} else {
+			platforms[platform] = true
 		}
 
 		for _, profile := range args {
@@ -116,21 +108,46 @@ var buildCmd = &cobra.Command{
 			}
 
 			params := map[string]string{
-				"GROUP":     kind.Group,
-				"VERSION":   kind.Version,
-				"KIND":      kind.Name,
-				"PROFILE":   profile,
-				"BUILDFLAG": buildFlag,
-				"PUSHFLAG":  pushFlag,
-				"TAG":       tag,
+				"GROUP":   kind.Group,
+				"VERSION": kind.Version,
+				"KIND":    kind.Name,
+				"PROFILE": profile,
+				"TAG":     tag,
 			}
-			if arch != "" {
-				params["ARCH"] = arch
-			}
+			// clear manifest cache
+			_ = helper.RunMake(params, "clear-manifest", true, q)
 
-			if _ = helper.RunMake(params, "build", true, q); !q {
+			for platform := range platforms {
+				var buildFlag, pushFlag string
+				if q {
+					buildFlag += " -q"
+					pushFlag += " -q"
+				}
+				if noCache {
+					buildFlag += " --no-cache"
+				}
+
+				// multi-platform build
+				var arch string
+				if platform != "" {
+					buildFlag += fmt.Sprintf(" --platform %s", platform)
+					// e.g., linux/amd64 -> amd64; linux/arm/v7 -> arm-v7
+					arch = platform[strings.Index(platform, "/")+1:]
+					arch = strings.ReplaceAll(arch, "/", "-")
+				}
+
+				params["BUILDFLAG"] = buildFlag
+				params["PUSHFLAG"] = pushFlag
+				if arch != "" {
+					params["ARCH"] = arch
+				}
+
+				if err := helper.RunMake(params, "build", true, q); err == nil {
+					fmt.Println(kind.Name)
+				} else {
+					log.Fatalf("error building %s: %v", kind.Name, err)
+				}
 			}
-			fmt.Println(kind.Name)
 		}
 	},
 }
@@ -334,7 +351,7 @@ var runCmd = &cobra.Command{
 		var profile = args[0]
 		kind, err := helper.GetKindFromProfile(profile)
 		if err != nil {
-			log.Fatalf("unable to find kind %s\n: %v", profile, err)
+			log.Fatalf("unable to find kind %s: %v\n", profile, err)
 		}
 
 		quiet, _ := cmd.Flags().GetBool("quiet")

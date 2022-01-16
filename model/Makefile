@@ -90,7 +90,7 @@ prepare:
 	# app specific configs overwrite the generic ones
 	rsync -r $(digi_config) $(build_dir)/deploy || true
 
-.PHONY: build
+.PHONY: build clear-manifest
 ifndef ARCH
 override ARCH = ARCH_TEMP
 endif
@@ -107,6 +107,8 @@ build: | prepare gen
 	$(DOCKER_CMD) manifest create $(DRIVER_REPO)/$(PROFILE_NAME):$(TAG) \
 	--amend $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH)
 	$(DOCKER_CMD) manifest push $(DRIVER_REPO)/$(PROFILE_NAME):$(TAG)
+clear-manifest:
+	$(DOCKER_CMD) manifest rm $(DRIVER_REPO)/$(PROFILE_NAME):$(TAG) >/dev/null 2>&1 || true
 
 # digi profiles
 .PHONY: push pull
@@ -192,11 +194,14 @@ stop-syncer:
 	cd $(DIGIHOME)/sync && \
  	kubectl delete -f deploy/crds/ >/dev/null && \
 	kubectl delete -f deploy/ >/dev/null && echo syncer
-	# TBD delete all syncs
 
-.PHONY: start-space
+.PHONY: start-space stop-space list-space switch-space
 start-space: | start-lake start-syncer # ...
 stop-space: | stop-lake stop-syncer
+list-space:
+	kubectl ctx
+switch-space:
+	kubectl ctx $(NAME)
 
 # debug
 .PHONY: log
