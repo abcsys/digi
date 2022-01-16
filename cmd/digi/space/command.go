@@ -119,6 +119,28 @@ var stopCmd = &cobra.Command{
 	},
 }
 
+var listCmd = &cobra.Command{
+	Use:     "list",
+	Short:   "List available digi spaces",
+	Aliases: []string{"ls", "l"},
+	Args:    cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = helper.RunMake(nil, "list-space", true, false)
+	},
+}
+
+var switchCmd = &cobra.Command{
+	Use:     "switch NAME",
+	Short:   "Switch to a digi space",
+	Aliases: []string{"sw", "s"},
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = helper.RunMake(map[string]string{
+			"NAME": args[0],
+		}, "switch-space", true, false)
+	},
+}
+
 var connectCmd = &cobra.Command{
 	Use:     "connect NAME",
 	Short:   "Start a tty on the digi driver",
@@ -151,6 +173,8 @@ func init() {
 	RootCmd.AddCommand(pipeCmd)
 	pipeCmd.Flags().BoolP("delete", "d", false, "Unpipe source from target")
 
+	RootCmd.AddCommand(listCmd)
+	RootCmd.AddCommand(switchCmd)
 	// TBD promote connect to digi root
 	RootCmd.AddCommand(connectCmd)
 	connectCmd.Flags().BoolP("bash", "b", false, "Use bash in remote session")
