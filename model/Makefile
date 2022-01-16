@@ -15,11 +15,11 @@ override PROFILE_NAME = $(KIND).$(VERSION).$(GROUP)
 endif
 
 ifndef DRIVER_REPO
-override DRIVER_REPO = DRIVER_REPO_TEMP
+override DRIVER_REPO = REPO_TEMP
 endif
 
 ifndef DOCKER_CMD
-override DOCKER_CMD = DOCKER_CMD_TEMP
+override DOCKER_CMD = CMD_TEMP
 endif
 
 digi_src := $(GOPATH)/src/digi.dev/digi
@@ -91,12 +91,22 @@ prepare:
 	rsync -r $(digi_config) $(build_dir)/deploy || true
 
 .PHONY: build
+ifndef ARCH
+override ARCH = ARCH_TEMP
+endif
+ifndef TAG
+override TAG = latest
+endif
 build: | prepare gen
-	rsync $(driver_handler) $(build_dir)/ || true
 	# use DOCKER_BUILDKIT=0 to enable more messages
-	cd $(build_dir) && $(DOCKER_CMD) build -t $(DRIVER_REPO)/$(PROFILE_NAME):latest $(BUILDFLAG) -f deploy/image/Dockerfile . || true
-	$(DOCKER_CMD) push $(DRIVER_REPO)/$(PROFILE_NAME):latest $(PUSHFLAG) || true
+	rsync $(driver_handler) $(build_dir)/ || true
+	cd $(build_dir) && $(DOCKER_CMD) buildx build -t $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH) $(BUILDFLAG) -f deploy/image/Dockerfile . || true
+	$(DOCKER_CMD) push $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH) $(PUSHFLAG) || true
 	rm -r $(build_dir) || true
+
+	$(DOCKER_CMD) manifest create $(DRIVER_REPO)/$(PROFILE_NAME):$(TAG) \
+	--amend $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH)
+	$(DOCKER_CMD) manifest push $(DRIVER_REPO)/$(PROFILE_NAME):$(TAG)
 
 # digi profiles
 .PHONY: push pull
@@ -111,14 +121,15 @@ pull:
 run: | prepare model
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zed drop -f $(NAME) >/dev/null 2>&1 || true
+
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
 	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
-	kubectl apply -f run.yaml >/dev/null && \
-	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname`\
-    -- zed create $(NAME)) >/dev/null && echo $(NAME) || \
-    echo "unable to run $(NAME)"
+	kubectl apply -f run.yaml >/dev/null || echo "unable to run $(NAME)"
 	rm -r $(build_dir) || true
+
+	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
+    -- zed create $(NAME)) >/dev/null && echo $(NAME) || echo "unable to create pool $(NAME)"
 stop:
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zed drop -f $(NAME) >/dev/null || true

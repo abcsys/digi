@@ -87,6 +87,7 @@ var pipeCmd = &cobra.Command{
 var startCmd = &cobra.Command{
 	Use:   "start [NAME ...]",
 	Short: "Start digi space controllers",
+	Aliases: []string{"init"},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			_ = helper.RunMake(nil, "start-space", true, false)

@@ -233,9 +233,11 @@ BenchmarkDotNet.Artifacts/
 
 # ide and misc
 .idea/
+.chglog/
 *.pyc
 .DS_Store
 
 # binaries
 space/sync/cmd/manager/manager
 space/policy/cmd/manager/manager
+
