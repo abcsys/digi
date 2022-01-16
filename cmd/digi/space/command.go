@@ -1,6 +1,7 @@
 package space
 
 import (
+	"fmt"
 	"log"
 
 	"digi.dev/digi/api"
@@ -57,7 +58,7 @@ var mountCmd = &cobra.Command{
 
 var pipeCmd = &cobra.Command{
 	Use:     "pipe [SRC TARGET] [\"d1 | d2 | ..\"]",
-	Short:   "Pipe a digi's input.x to another's output.y",
+	Short:   "Pipe a digi's input to another's output",
 	Aliases: []string{"p"},
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -85,8 +86,8 @@ var pipeCmd = &cobra.Command{
 }
 
 var startCmd = &cobra.Command{
-	Use:   "start [NAME ...]",
-	Short: "Start digi space controllers",
+	Use:     "start [NAME ...]",
+	Short:   "Start space controllers",
 	Aliases: []string{"init"},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
@@ -104,7 +105,7 @@ var startCmd = &cobra.Command{
 
 var stopCmd = &cobra.Command{
 	Use:   "stop [NAME ...]",
-	Short: "Stop digi space controllers",
+	Short: "Stop space controllers",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			_ = helper.RunMake(nil, "stop-space", true, false)
@@ -125,14 +126,32 @@ var listCmd = &cobra.Command{
 	Aliases: []string{"ls", "l"},
 	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
+		q, _ := cmd.Flags().GetBool("quiet")
+		if !q {
+			fmt.Println("NAME")
+		}
 		_ = helper.RunMake(nil, "list-space", true, false)
 	},
 }
 
+var checkCmd = &cobra.Command{
+	Use:     "check",
+	Short:   "Print space info",
+	Aliases: []string{"show", "ch"},
+	Args:    cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		params := make(map[string]string)
+		if len(args) == 1 {
+			params["SPACE"] = args[0]
+		}
+		_ = helper.RunMake(params, "show-space", true, false)
+	},
+}
+
 var switchCmd = &cobra.Command{
-	Use:     "switch NAME",
+	Use:     "checkout NAME",
 	Short:   "Switch to a digi space",
-	Aliases: []string{"sw", "s"},
+	Aliases: []string{"checkout", "switch", "sw", "s"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = helper.RunMake(map[string]string{
@@ -141,9 +160,22 @@ var switchCmd = &cobra.Command{
 	},
 }
 
+var aliasCmd = &cobra.Command{
+	Use:     "alias OLD_NAME NAME",
+	Short:   "Update the local alias to a space",
+	Aliases: []string{"rename"},
+	Args:    cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = helper.RunMake(map[string]string{
+			"OLD_NAME": args[0],
+			"NAME":     args[1],
+		}, "rename-space", true, false)
+	},
+}
+
 var connectCmd = &cobra.Command{
 	Use:     "connect NAME",
-	Short:   "Start a tty on the digi driver",
+	Short:   "Start a tty on the digi's driver",
 	Aliases: []string{"conn", "c"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -160,7 +192,7 @@ var connectCmd = &cobra.Command{
 
 func init() {
 	log.SetFlags(0)
-	// TBD delete digi space removes all running digis and meta-controllers
+	// TBD delete digi space removes all running digis and controllers
 	RootCmd.AddCommand(startCmd)
 	RootCmd.AddCommand(stopCmd)
 
@@ -174,7 +206,9 @@ func init() {
 	pipeCmd.Flags().BoolP("delete", "d", false, "Unpipe source from target")
 
 	RootCmd.AddCommand(listCmd)
+	RootCmd.AddCommand(checkCmd)
 	RootCmd.AddCommand(switchCmd)
+	RootCmd.AddCommand(aliasCmd)
 	// TBD promote connect to digi root
 	RootCmd.AddCommand(connectCmd)
 	connectCmd.Flags().BoolP("bash", "b", false, "Use bash in remote session")

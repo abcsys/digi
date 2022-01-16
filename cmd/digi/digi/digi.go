@@ -569,7 +569,7 @@ var listCmd = &cobra.Command{
 var checkCmd = &cobra.Command{
 	Use:     "check NAME [NAME ...]",
 	Short:   "Print a digi's model",
-	Aliases: []string{"c"},
+	Aliases: []string{"c", "show"},
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		v, _ := cmd.Flags().GetInt8("verbosity")

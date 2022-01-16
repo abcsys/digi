@@ -195,13 +195,28 @@ stop-syncer:
  	kubectl delete -f deploy/crds/ >/dev/null && \
 	kubectl delete -f deploy/ >/dev/null && echo syncer
 
-.PHONY: start-space stop-space list-space switch-space
+.PHONY: start-space stop-space
 start-space: | start-lake start-syncer # ...
 stop-space: | stop-lake stop-syncer
+.PHONY: list-space switch-space rename-space show-space
 list-space:
 	kubectl ctx
 switch-space:
-	kubectl ctx $(NAME)
+	kubectl ctx $(NAME) > /dev/null && echo "Switched to space $(NAME)"
+rename-space:
+	kubectl config rename-context $(OLD_NAME) $(NAME) >/dev/null \
+	&& echo "Space $(OLD_NAME) renamed to $(NAME)"
+ifndef SPACE
+override SPACE = `kubectl ctx -c`
+endif
+show-space:
+	kubectl ctx $(SPACE) > /dev/null
+	# XXX fix auto-switch space after show
+	printf "Apiserver:\n"
+	kubectl cluster-info | grep Kubernetes | cut -d " " -f 7
+	# TBD layered information
+	echo "---"
+	digi list -aq
 
 # debug
 .PHONY: log
