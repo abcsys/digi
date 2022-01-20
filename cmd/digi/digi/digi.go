@@ -35,7 +35,7 @@ var initCmd = &cobra.Command{
 
 		kind := args[0]
 		params := map[string]string{
-			"KIND": kind,
+			"KIND": strings.Title(kind),
 			// default configs
 			"GROUP":   "digi.dev",
 			"VERSION": "v1",
@@ -60,24 +60,25 @@ var initCmd = &cobra.Command{
 }
 
 var genCmd = &cobra.Command{
-	Use:     "gen KIND",
+	Use:     "gen KIND [KIND ...]",
 	Short:   "Generate configs for a kind",
 	Aliases: []string{"g"},
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
-
-		profile := args[0]
-		params := map[string]string{
-			"PROFILE": profile,
-		}
-
+		params := make(map[string]string)
 		if v, _ := cmd.Flags().GetBool("visual"); v {
 			params["GENFLAG"] = "VISUAL=true"
 		}
 
-		if _ = helper.RunMake(params, "gen", true, q); !q {
-			fmt.Println(profile)
+		for _, profile := range args {
+			profile = strings.TrimSpace(profile)
+			params := map[string]string{
+				"PROFILE": profile,
+			}
+			if _ = helper.RunMake(params, "gen", true, q); !q {
+				fmt.Println(profile)
+			}
 		}
 	},
 }
@@ -102,6 +103,7 @@ var buildCmd = &cobra.Command{
 		}
 
 		for _, profile := range args {
+			profile = strings.TrimSpace(profile)
 			kind, err := helper.GetKindFromProfile(profile)
 			if err != nil {
 				log.Fatalf("unable to find kind %s\n", profile)
@@ -167,7 +169,7 @@ var kindCmd = &cobra.Command{
 		if l {
 			cmdStr = "profile-local"
 		}
-		_ = helper.RunMake(nil, cmdStr, true, q)
+		_ = helper.RunMake(nil, cmdStr, true, false)
 	},
 }
 

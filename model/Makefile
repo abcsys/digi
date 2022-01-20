@@ -127,7 +127,7 @@ run: | prepare model
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
 	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
-	kubectl apply -f run.yaml >/dev/null || echo "unable to run $(NAME)"
+	kubectl apply -f run.yaml >/dev/null || echo "unable to run $(NAME)"; exit 1
 	rm -r $(build_dir) || true
 
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
@@ -200,7 +200,7 @@ start-space: | start-lake start-syncer # ...
 stop-space: | stop-lake stop-syncer
 .PHONY: list-space switch-space rename-space show-space
 list-space:
-	kubectl ctx
+	kubectl ctx $(FLAG)
 switch-space:
 	kubectl ctx $(NAME) > /dev/null && echo "Switched to space $(NAME)"
 rename-space:

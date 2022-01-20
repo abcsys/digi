@@ -9,24 +9,22 @@ DOCKER_CMD = docker
 HOMEDIR = ~/.digi
 SOURCE = $(GOPATH)/src/digi.dev/digi
 
+VERSION = $(shell git describe --tags --dirty --always)
+
 .PHONY: dep digi install
 dep:
 	# prerequisites:
-	# kubectl: https://kubernetes.io/docs/tasks/tools/#kubectl
-	# krew: https://krew.sigs.k8s.io/docs/user-guide/setup/install/
-
+	kubectl >/dev/null || "kubectl missing: check https://kubernetes.io/docs/tasks/tools/#kubectl"; exit 1
+	kubectl krew >/dev/null || "krew missing: check https://krew.sigs.k8s.io/docs/user-guide/setup/install/"; exit 1
 	# kubectl-neat
 	cd /tmp; go get github.com/silveryfu/kubectl-neat@digi && \
 	mkdir ~/.krew >/dev/null 2>&1 || true && \
 	cp $(GOPATH)/bin/kubectl-neat ~/.krew/bin/kubectl-neat
-
 	# kubectx
 	kubectl krew install ctx
-
 	# optional: local zed cli
 	cd /tmp; git clone https://github.com/silveryfu/zed.git && \
 	cd zed; make install; cd ..; rm -rf zed
-
 	# optional: local zed python lib
 	pip3 install "git+https://github.com/silveryfu/zed#subdirectory=python/zed"
 digi:
@@ -39,8 +37,12 @@ install: | digi
 	ln -s $(SOURCE)/space/mount/ $(HOMEDIR)/mount
 	sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
 	cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR)
+python:
+	cd driver; pip install -e .
 
-ARCH = $(shell uname -m)
+ifndef ARCH
+override ARCH = $(shell uname -m)
+endif
 SED_EXPR = 's/REPO_TEMP/$(DRIVER_REPO)/g; s/CMD_TEMP/$(DOCKER_CMD)/g; s/ARCH_TEMP/$(ARCH)/g'
 
 .PHONY: fmt tidy
@@ -55,3 +57,17 @@ tidy:
 k8s:
 	minikube start
 	# use minikube registry: eval $(minikube docker-env)
+
+create-release-assets:
+	# cp LICENSE.txt acknowledgments.txt dist/$${zeddir} ;
+	# windows
+	for os in darwin linux; do \
+		digidir=digi-$(VERSION).$${os}-$(ARCH); \
+		rm -rf dist/$${digidir} ; \
+		mkdir -p dist/$${digidir} ; \
+		GOOS=$${os} GOARCH=$(ARCH) go build -o dist/$${digidir} ./cmd/digi ; \
+	done
+	rm -rf dist/release && mkdir -p dist/release
+	cd dist && for d in digi-$(VERSION)* ; do \
+		zip -r release/$${d}.zip $${d} ; \
+	done

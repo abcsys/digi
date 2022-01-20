@@ -126,11 +126,19 @@ var listCmd = &cobra.Command{
 	Aliases: []string{"ls", "l"},
 	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
+		var flags string
 		q, _ := cmd.Flags().GetBool("quiet")
+		c, _ := cmd.Flags().GetBool("current")
+		if c {
+			flags += " -c"
+		}
 		if !q {
 			fmt.Println("NAME")
 		}
-		_ = helper.RunMake(nil, "list-space", true, false)
+		_ = helper.RunMake(map[string]string{
+			"FLAG": flags,
+		}, "list-space", true, false)
+
 	},
 }
 
@@ -151,9 +159,12 @@ var checkCmd = &cobra.Command{
 var switchCmd = &cobra.Command{
 	Use:     "checkout NAME",
 	Short:   "Switch to a digi space",
-	Aliases: []string{"checkout", "switch", "sw", "s"},
+	Aliases: []string{"checkout", "c"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		// TBD switch should take care of local alias cache, e.g., per
+		// space configuration file; v0.2 should probably support exporting
+		// aliases from a space to allow access digis created else where
 		_ = helper.RunMake(map[string]string{
 			"NAME": args[0],
 		}, "switch-space", true, false)
@@ -211,5 +222,6 @@ func init() {
 	RootCmd.AddCommand(aliasCmd)
 	// TBD promote connect to digi root
 	RootCmd.AddCommand(connectCmd)
+	listCmd.Flags().BoolP("current", "c", false, "List current space")
 	connectCmd.Flags().BoolP("bash", "b", false, "Use bash in remote session")
 }

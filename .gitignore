@@ -241,3 +241,4 @@ BenchmarkDotNet.Artifacts/
 space/sync/cmd/manager/manager
 space/policy/cmd/manager/manager
 
+dist/
