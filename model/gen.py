@@ -297,7 +297,7 @@ def gen(name):
                     for a, t in attrs.items():
                         # XXX nested attributes may lead to unuseful intents
                         if _name == "control":
-                            v = -1
+                            v = ""
                             if isinstance(t, str):
                                 v = {
                                     "string": "",
@@ -307,7 +307,13 @@ def gen(name):
                                 "intent": v,
                             }})
                         else:
-                            cr["spec"][_name].update({a: -1})
+                            v = ""
+                            if isinstance(t, str):
+                                v = {
+                                    "string": "",
+                                    "number": 0,
+                                }.get(t, v)
+                            cr["spec"][_name].update({a: v})
 
                 with open(cr_file, "w") as f_:
                     # TBD add plain-write

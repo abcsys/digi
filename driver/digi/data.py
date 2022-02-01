@@ -1,13 +1,12 @@
 import sys
 import json
-import datetime
 import threading
 from abc import ABC, abstractmethod
 from typing import List
 
 import zed
 import digi
-from digi import logger
+from digi import logger, util
 
 lake_url = "http://lake:6534"
 
@@ -33,7 +32,7 @@ class ZedPool(Pool):
         self.client = zed.Client(base_url=lake_url)
 
     def load(self, objects: List[dict]):
-        ts = get_ts()
+        ts = util.get_ts()
         for o in objects:
             # TBD if ts already exist, rename it to event_ts
             o["ts"] = ts
@@ -55,10 +54,6 @@ def pool_name(g, v, r, n, ns):
         return f"{n}"
     else:
         return f"{ns}-{n}"
-
-
-def get_ts():
-    return datetime.datetime.now().isoformat() + "Z"
 
 
 providers = {

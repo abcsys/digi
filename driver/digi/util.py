@@ -4,6 +4,7 @@ import time
 import asyncio
 import contextlib
 import threading
+import datetime
 
 import digi
 import inflection
@@ -480,3 +481,6 @@ def name_from_auri(auri: tuple):
 
 update = deep_set
 get = deep_get
+
+def get_ts():
+    return datetime.datetime.now().isoformat() + "Z"

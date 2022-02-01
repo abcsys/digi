@@ -53,10 +53,16 @@ tidy:
 	go mod tidy
 	git diff --exit-code -- go.mod go.sum
 
-.PHONY: k8s
+.PHONY: k8s docker-login
 k8s:
 	minikube start
 	# use minikube registry: eval $(minikube docker-env)
+docker-login:
+	docker login
+	kubectl delete secret generic regcred >/dev/null 2>&1 || true
+	kubectl create secret generic regcred \
+		--from-file=.dockerconfigjson=/Users/silv/.docker/config.json \
+		--type=kubernetes.io/dockerconfigjson
 
 create-release-assets:
 	# cp LICENSE.txt acknowledgments.txt dist/$${zeddir} ;

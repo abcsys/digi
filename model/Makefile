@@ -123,15 +123,13 @@ pull:
 run: | prepare model
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zed drop -f $(NAME) >/dev/null 2>&1 || true
-
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
 	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
-	kubectl apply -f run.yaml >/dev/null || echo "unable to run $(NAME)"; exit 1
-	rm -r $(build_dir) || true
-
+	kubectl apply -f run.yaml >/dev/null || (echo "unable to run $(NAME)"; exit 1) && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zed create $(NAME)) >/dev/null && echo $(NAME) || echo "unable to create pool $(NAME)"
+	rm -rf $(build_dir)
 stop:
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- zed drop -f $(NAME) >/dev/null || true
