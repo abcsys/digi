@@ -30,7 +30,7 @@ from digi import (
     view,
 )
 from digi.main import run
-from digi.data import pool
+from digi.state import pool, model
 from digi.reconcile import rc
 
 __all__ = [

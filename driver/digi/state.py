@@ -62,22 +62,37 @@ providers = {
 }
 
 
-def create_pool() -> Pool or None:
+def create_pool():
     global providers
-
     if digi.pool_provider == "":
         digi.pool_provider = "zed"
-
-    if digi.pool_provider in {"none", "false"} or digi.pool_provider is None:
-        return None
-
-    elif digi.pool_provider not in providers:
+    if digi.pool_provider not in providers:
         logger.fatal(f"unknown pool provider {digi.pool_provider}")
         sys.exit(1)
-    else:
-        return providers[digi.pool_provider](
-            pool_name(*digi.auri)
-        )
+    if digi.pool_provider in {"none", "false"}:
+        return None
+    return providers[digi.pool_provider](
+        pool_name(*digi.auri)
+    )
 
 
-pool = None
+class Model():
+    def get(self):
+        return digi.rc.view()
+
+    def patch(self, view):
+        _ = [util.update(view, attr, None, create=False) for attr in
+             {
+                 "control.intent",
+                 "data.input",
+                 "meta",
+             }]
+        util.patch_spec(digi.g, digi.v, digi.r,
+                        digi.n, digi.ns, view)
+
+
+def create_model():
+    return Model()
+
+
+pool, model = None, None

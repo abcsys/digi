@@ -1,3 +1,4 @@
+import copy
 import typing
 import traceback
 from collections import OrderedDict
@@ -68,14 +69,15 @@ class __Reconciler:
                 # handler edits the spec object
                 try:
                     # TBD allow subview to be a forest
-                    fn(subview=safe_lookup(proc_spec, path),
-                       proc_view=proc_spec,
-                       view=spec, old_view=old,
-                       mount=proc_spec.get("mount", {}),
-                       obs=proc_spec.get("obs", {}),
-                       back_prop=get_back_prop(diff),
-                       diff=diff,
-                       )
+                    fn(
+                        subview=safe_lookup(proc_spec, path),
+                        proc_view=proc_spec,
+                        view=spec, old_view=old,
+                        mount=proc_spec.get("mount", {}),
+                        obs=proc_spec.get("obs", {}),
+                        back_prop=get_back_prop(diff),
+                        diff=diff,
+                    )
                     self._pending_handler.add(id(fn))
                 except Exception as e:
                     self._logger.error(f"reconcile error: {e}")
@@ -177,7 +179,7 @@ class __Reconciler:
         self._handler_info_updated = False
 
     def view(self):
-        return self._view
+        return copy.deepcopy(self._view)
 
     def clear_pending(self):
         self._pending_handler.clear()
