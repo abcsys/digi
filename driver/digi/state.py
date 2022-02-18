@@ -66,11 +66,11 @@ def create_pool():
     global providers
     if digi.pool_provider == "":
         digi.pool_provider = "zed"
+    if digi.pool_provider in {"none", "false"}:
+        return None
     if digi.pool_provider not in providers:
         logger.fatal(f"unknown pool provider {digi.pool_provider}")
         sys.exit(1)
-    if digi.pool_provider in {"none", "false"}:
-        return None
     return providers[digi.pool_provider](
         pool_name(*digi.auri)
     )

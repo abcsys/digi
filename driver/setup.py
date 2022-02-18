@@ -18,7 +18,6 @@ setup(
         "pyyaml",
         "inflection",
         "python-box",
-        # "pyjq",
         "kubernetes",
         'kopf',
         "zed",
