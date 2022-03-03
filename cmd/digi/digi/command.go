@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"digi.dev/digi/cmd/digi/lake"
+	"digi.dev/digi/cmd/digi/sidecar"
 	"digi.dev/digi/cmd/digi/space"
 )
 
@@ -66,6 +67,7 @@ func init() {
 
 	RootCmd.AddCommand(gcCmd)
 	RootCmd.AddCommand(vizCmd)
+	RootCmd.AddCommand(sidecar.RootCmd)
 
 	RootCmd.AddCommand(space.RootCmd)
 	RootCmd.AddCommand(lake.RootCmd)

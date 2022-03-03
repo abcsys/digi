@@ -1,0 +1,8 @@
+group: digi.dev
+image: silveryfu/view.v1.digi.dev:latest
+imagepull: Always
+mounter: false
+name: view
+namespace: default
+plural: views
+version: v1

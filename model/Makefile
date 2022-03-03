@@ -143,7 +143,7 @@ stop:
 	echo $(NAME) || echo "$(NAME) isn't running"
 run-no-pool: | prepare model
 	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
-	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
+	helm template -f values.yaml --set name=$(NAME) --set pool_provider=none $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
 	kubectl apply -f run.yaml >/dev/null && echo $(NAME) || \
     echo "unable to run $(NAME)"
@@ -242,3 +242,7 @@ viz:
 	kubectl port-forward service/$(NAME) $(LOCALPORT):7534 >/dev/null
 viz-space:
 	echo TBD digiboard
+
+.PHONY: view
+view:
+	WORKDIR=$(DIGIHOME) digi run view $(NAME)-view --no-pool

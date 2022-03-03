@@ -31,10 +31,11 @@ digi:
 	cd cmd/; go install ./digi ./dq ./ds ./di
 install: | digi
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
-	rm $(HOMEDIR)/lake $(HOMEDIR)/sync $(HOMEDIR)/mount >/dev/null 2>&1 || true
+	rm $(HOMEDIR)/lake $(HOMEDIR)/sync $(HOMEDIR)/mount $(HOMEDIR)/view >/dev/null 2>&1 || true
 	ln -s $(SOURCE)/lake/ $(HOMEDIR)/lake
 	ln -s $(SOURCE)/space/sync/ $(HOMEDIR)/sync
 	ln -s $(SOURCE)/space/mount/ $(HOMEDIR)/mount
+	ln -s $(SOURCE)/sidecar/view $(HOMEDIR)/view
 	sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
 	cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR)
 python:
