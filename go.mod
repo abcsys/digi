@@ -16,7 +16,7 @@ require (
 	github.com/xlab/treeprint v1.1.0
 	golang.org/x/term v0.0.0-20210317153231-de623e64d2a6
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.18.6
+	k8s.io/api v0.19.0
 	k8s.io/apimachinery v0.22.3
 	k8s.io/client-go v12.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.6.3
@@ -25,5 +25,5 @@ require (
 replace (
 	digi.dev/digi v0.0.0 => ./
 	digi.dev/digi/space/sync v0.0.0 => ./space/sync
-	k8s.io/client-go => k8s.io/client-go v0.18.2
+	k8s.io/client-go => k8s.io/client-go v0.19.0
 )
