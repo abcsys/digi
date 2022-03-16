@@ -12,8 +12,8 @@ def run():
         Mounter(digi.g, digi.v, digi.r, digi.n, digi.ns,
                 log_level=digi.log_level).start()
     # pool client
-    digi.pool = digi.state.create_pool()
-    digi.model = digi.state.create_model()
+    digi.pool = digi.data.create_pool()
+    digi.model = digi.control.create_model()
 
     # reconciler
     _model = {
