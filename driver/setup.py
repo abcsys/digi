@@ -5,7 +5,7 @@ URLS = {
 
 setup(
     name="digi",
-    version="0.1.11",
+    version="0.2.0",
     description="dSpace driver library",
     url=URLS,
     author="Silvery Fu",
