@@ -84,6 +84,36 @@ def mount(*args, **kwargs):
     return decorator
 
 
+def ingress(*args, **kwargs):
+    if len(args) >= 1 and callable(args[0]):
+        _attr(path="ingress", *args, **kwargs)
+        return args[0]
+
+    def decorator(fn):
+        if len(args) >= 1:
+            _attr(fn, path="ingress." + args[0], *args[1:], **kwargs)
+        elif "path" in kwargs:
+            _attr(fn, path="ingress." + kwargs.pop("path"), *args, **kwargs)
+        return fn
+
+    return decorator
+
+
+def egress(*args, **kwargs):
+    if len(args) >= 1 and callable(args[0]):
+        _attr(path="egress", *args, **kwargs)
+        return args[0]
+
+    def decorator(fn):
+        if len(args) >= 1:
+            _attr(fn, path="egress." + args[0], *args[1:], **kwargs)
+        elif "path" in kwargs:
+            _attr(fn, path="egress." + kwargs.pop("path"), *args, **kwargs)
+        return fn
+
+    return decorator
+
+
 # XXX test path
 def attr(*args, **kwargs):
     if len(args) >= 1 and callable(args[0]):
@@ -96,7 +126,9 @@ def attr(*args, **kwargs):
 
     return decorator
 
+
 model = attr
+
 
 def _attr(fn, path=".", prio=0):
     # preprocess the path str -> tuple of str

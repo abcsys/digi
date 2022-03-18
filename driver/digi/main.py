@@ -30,7 +30,8 @@ def run():
 
     # force decorate the handlers
     from . import handler
-    _ = handler
+    from .data_sync import handler as sync_handler
+    _, _ = handler, sync_handler
 
     @kopf.on.startup(registry=_registry)
     def configure(settings: kopf.OperatorSettings, **_):

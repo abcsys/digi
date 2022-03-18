@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 import threading
@@ -9,6 +10,7 @@ import digi
 from digi import logger, util
 
 lake_url = "http://lake:6534"
+os.environ["ZED_LAKE"] = lake_url
 
 
 class Pool(ABC):
@@ -34,7 +36,8 @@ class ZedPool(Pool):
     def load(self, objects: List[dict]):
         ts = util.get_ts()
         for o in objects:
-            # TBD if ts already exist, rename it to event_ts
+            if "ts" in o:
+                o["event_ts"] = o["ts"]
             o["ts"] = ts
         data = "".join(json.dumps(o) for o in objects)
 
@@ -76,19 +79,4 @@ def create_pool():
     )
 
 
-class Model():
-    def get(self):
-        return digi.rc.view()
-
-    def patch(self, view):
-        _, e = util.patch_spec(digi.g, digi.v, digi.r,
-                        digi.n, digi.ns, view)
-        if e != None:
-            digi.logger.info(f"patch error: {e}")
-
-
-def create_model():
-    return Model()
-
-
-pool, model = None, None
+pool = None

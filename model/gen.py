@@ -115,6 +115,30 @@ additionalProperties:
 type: object
 """
 
+_ingress = """
+ingress:
+  properties:
+  type: object
+"""
+_ingress_attr = """
+properties:
+  dataflow:
+    type: string 
+type: object
+"""
+
+_egress = """
+egress:
+  properties:
+  type: object
+"""
+_egress_attr = """
+properties:
+  dataflow:
+    type: string 
+type: object
+"""
+
 _reflex = """
 reflex:
   additionalProperties:
@@ -243,6 +267,8 @@ def gen(name):
         data = make_data_attr()
         obs = make_attr("obs", _obs_attr, _obs, src_attrs=model.get("obs", {}))
         mount = make_attr("mount", _mount_attr, _mount, src_attrs=model.get("mount", {}))
+        ingress = make_attr("ingress", _ingress_attr, _ingress, src_attrs=model.get("ingress", {}))
+        egress = make_attr("egress", _egress_attr, _egress, src_attrs=model.get("egress", {}))
         reflex = make_attr("reflex", _reflex_attr, _reflex, src_attrs=model.get("reflex", {}))
 
         assert not (len(control) > 0 and len(data) > 0), "cannot have both control and data attrs!"
@@ -257,12 +283,14 @@ def gen(name):
         spec["properties"].update(data)
         spec["properties"].update(obs)
         spec["properties"].update(mount)
+        spec["properties"].update(ingress)
+        spec["properties"].update(egress)
         spec["properties"].update(reflex)
 
         # custom attribute
         for k, v in model.items():
             # TBD clean the attribute generation by making the attribute templates a map
-            if k not in {"group", "version", "kind",
+            if k not in {"group", "version", "kind", "ingress", "egress",
                          "meta", "control", "data", "obs", "mount", "reflex"}:
                 spec["properties"].update(make_attr(k, _misc_attr, _misc.format(name=k), src_attrs=v))
 
