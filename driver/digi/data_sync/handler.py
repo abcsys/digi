@@ -20,9 +20,10 @@ def do_ingress(ingress):
             out_flow=combine_dataflow,
             dest=digi.name,
         )
-        digi.logger.info(f"query: {_sync.query_str}")
         ingress_sync[name] = _sync
         _sync.start()
+        digi.logger.info(f"started ingress sync {name} "
+                         f"with query: {_sync.query_str}")
 
 
 @digi.on.egress
@@ -38,8 +39,9 @@ def do_egress(egress):
             sources=[digi.name],
             in_flow=dataflow,
             out_flow="",
-            dest=f"{digi.name}-egress",
+            dest=f"{digi.name}_egress",
         )
-        digi.logger.info(f"started sync {name}")
         egress_sync[name] = _sync
         _sync.start()
+        digi.logger.info(f"started egress sync {name} "
+                         f"with query: {_sync.query_str}")

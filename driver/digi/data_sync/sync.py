@@ -35,7 +35,7 @@ class Sync(threading.Thread):
         threading.Thread.__init__(self)
         self._stop_flag = threading.Event()
 
-    def start(self):
+    def run(self):
         self._stop_flag.clear()
         while not self._stop_flag.is_set():
             self.once()
