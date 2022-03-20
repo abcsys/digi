@@ -122,8 +122,16 @@ ingress:
 """
 _ingress_attr = """
 properties:
+  kind:
+    type: string
+  sources:
+    items:
+      type: string
+    type: array
   dataflow:
     type: string 
+  combine_dataflow:
+    type: string
 type: object
 """
 
