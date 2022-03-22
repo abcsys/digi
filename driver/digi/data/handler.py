@@ -1,5 +1,5 @@
 import digi
-import digi.data_sync.sync as sync
+import digi.data.sync as sync
 
 ingress_sync, egress_sync = dict(), dict()
 
