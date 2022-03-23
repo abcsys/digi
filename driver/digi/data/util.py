@@ -15,11 +15,10 @@ import typing
 #     destination itself
 def parse_source(source: dict) -> typing.List[str]:
     """
-    Given source attributes return the source's egress branch.
-
-    XXX assume name is a unique id to digi and ignore namespace
+    Given source attributes return its egress's pool@branch.
     """
     branch = source.get("egress", "main")
+    # XXX assume name is a unique id to digi and ignore namespace
     if "name" in source:
         return [f"{source['name']}@{branch}"]
 

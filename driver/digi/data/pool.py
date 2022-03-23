@@ -42,6 +42,9 @@ class ZedPool(Pool):
         self.lock.acquire()
         try:
             self.client.load(self.name, data)
+        except Exception as e:
+            digi.logger.warning(f"unable to load "
+                                f"{data} to {self.name}: {e}")
         finally:
             self.lock.release()
 

@@ -8,6 +8,7 @@ class Router:
     def __init__(self):
         self.ingress_sync = dict()
         self.egress_sync = dict()
+        self.sources = dict()
 
     def start_ingress(self):
         for name, _sync in self.ingress_sync.items():
@@ -23,6 +24,7 @@ class Router:
             dataflow, combine_dataflow = ig.get("dataflow", ""), \
                                          ig.get("combine_dataflow", "")
             for s in sources:
+                # TBD parse sources to a source class
                 parsed_sources += util.parse_source(s)
             if len(parsed_sources) == 0:
                 continue
@@ -38,6 +40,11 @@ class Router:
     def stop_ingress(self):
         for _, _sync in self.ingress_sync.items():
             _sync.stop()
+
+    def restart_ingress(self, config):
+        self.stop_ingress()
+        self.update_ingress(config=config)
+        self.start_ingress()
 
     def start_egress(self):
         for name, _sync in self.egress_sync.items():
@@ -62,28 +69,28 @@ class Router:
         for _, _sync in self.egress_sync.items():
             _sync.stop()
 
+    def restart_egress(self, config):
+        self.stop_egress()
+        self.update_egress(config=config)
+        self.start_egress()
+
 
 @digi.on.mount
 def do_mount(model, diff):
-    digi.logger.info(f"DEBUG: {diff}")
+    config = model.get("ingress", {})
+    # TBD filter to relevant mounts only
+    if digi.on.new_mount(diff):
+        digi.router.restart_ingress(config)
 
 
 @digi.on.ingress
 def do_ingress(config):
-    digi.router.stop_ingress()
-    digi.router.update_ingress(
-        config=config
-    )
-    digi.router.start_ingress()
+    digi.router.restart_ingress(config)
 
 
 @digi.on.egress
 def do_egress(config):
-    digi.router.stop_egress()
-    digi.router.update_egress(
-        config=config,
-    )
-    digi.router.start_egress()
+    digi.router.restart_egress(config)
 
 
 def create_router():
