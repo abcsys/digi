@@ -269,7 +269,7 @@ def new_mount(diff, gvr=None) -> bool:
     """Detect whether the diffs contain newly mounted digi."""
     for _diff in diff:
         op, path, _, _ = _diff
-        if op != "add" or path[-1] != "generation":
+        if op != "add" or (len(path) > 0 and path[-1] != "generation"):
             continue
         if gvr is None and path[:2] == ("add", "mount"):
             return True

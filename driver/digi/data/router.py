@@ -16,7 +16,7 @@ class Router:
             logger.info(f"started ingress sync {name} "
                         f"with query: {_sync.query_str}")
 
-    def update_ingress(self, config):
+    def update_ingress(self, config: dict):
         self.ingress_sync = dict()
 
         for name, ig in config.items():
@@ -25,6 +25,7 @@ class Router:
                                          ig.get("combine_dataflow", "")
             for s in sources:
                 # TBD parse sources to a source class
+                # TBD skip sources that are not in mount
                 parsed_sources += util.parse_source(s)
             if len(parsed_sources) == 0:
                 continue
@@ -41,7 +42,7 @@ class Router:
         for _, _sync in self.ingress_sync.items():
             _sync.stop()
 
-    def restart_ingress(self, config):
+    def restart_ingress(self, config: dict):
         self.stop_ingress()
         self.update_ingress(config=config)
         self.start_ingress()
@@ -55,21 +56,24 @@ class Router:
     def update_egress(self, config: dict):
         self.egress_sync = dict()
 
+        names = list()
         for name, ig in config.items():
             dataflow = ig.get("dataflow", "")
             _sync = sync.Sync(
                 sources=[digi.name],
                 in_flow=dataflow,
                 out_flow="",
-                dest=f"{digi.name}_egress",
+                dest=f"{digi.name}@{name}",
             )
             self.egress_sync[name] = _sync
+            names.append(name)
+        util.create_branches_if_not_exist(digi.name, names)
 
     def stop_egress(self):
         for _, _sync in self.egress_sync.items():
             _sync.stop()
 
-    def restart_egress(self, config):
+    def restart_egress(self, config: dict):
         self.stop_egress()
         self.update_egress(config=config)
         self.start_egress()

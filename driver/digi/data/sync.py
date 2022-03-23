@@ -27,8 +27,8 @@ class Sync(threading.Thread):
                  ):
         assert len(sources) > 0 and dest != ""
 
-        self.sources = sources
-        self.dest = dest
+        self.sources = self._normalize(sources)
+        self.dest = self._normalize_one(dest)
         self.in_flow = in_flow
         self.out_flow = out_flow
         self.query_str = self._make_query()
@@ -56,7 +56,9 @@ class Sync(threading.Thread):
         records = self.client.query(self.query_str)
         records = "".join(json.dumps(r) for r in records)  # XXX json only
         if len(records) > 0:
-            self.client.load(self.dest, records)
+            dest_pool, dest_branch = self._denormalize_one(self.dest)
+            self.client.load(dest_pool, records,
+                             branch_name=dest_branch)
 
     def _event_loop(self):
         s = requests.Session()
@@ -122,6 +124,17 @@ class Sync(threading.Thread):
                 if f"{pool_name}@{branch}" in self.source_set:
                     return Sync.SOURCE_COMMIT
         return Sync.SKIP
+
+    def _normalize(self, names: list) -> list:
+        return [self._normalize_one(n) for n in names]
+
+    def _normalize_one(self, name: str) -> str:
+        """Return source in form of pool@main."""
+        return f"{name}@main" if "@" not in name else name
+
+    def _denormalize_one(self, name: str) -> tuple:
+        pool, branch = name.split("@")
+        return pool, branch
 
 
 def from_config(path: str) -> Sync:

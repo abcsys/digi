@@ -1,5 +1,10 @@
-import digi
+import os
 import typing
+import zed
+import digi
+from digi.data import lake_url
+
+
 # Each digi can be a data source that has egress attributes.
 # Each egress attribute maps to a data pool branch, e.g., l1@main.
 # A source is uniquely identified by its group, version, kind,
@@ -32,3 +37,30 @@ def parse_source(source: dict) -> typing.List[str]:
     else:
         return [f"{digi.util.trim_default_space(name)}@{branch}"
                 for name in mounts.keys()]
+
+
+def create_branches_if_not_exist(pool: str, names: list):
+    client = zed.Client(base_url=lake_url)
+    records = client.query(f"from {pool}:branches")
+    branches = set(r["branch"]["name"] for r in records)
+    for name in names:
+        if name in branches:
+            continue
+        create_branch(client, pool, name)
+
+
+def create_branch(client, pool, name,
+                  commit=f"0x{'0' * 40}"):
+    """TBD move to and use zed/zed.py"""
+    r = client.session.post(client.base_url + f"/pool/{pool}",
+                            json={
+                                "name": name,
+                                "commit": commit,
+                            })
+    if r.status_code >= 400:
+        try:
+            error = r.json()['error']
+        except Exception:
+            r.raise_for_status()
+        else:
+            raise zed.RequestError(error, r)
