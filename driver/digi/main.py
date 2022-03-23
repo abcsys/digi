@@ -11,9 +11,10 @@ def run():
     if digi.enable_mounter:
         Mounter(digi.g, digi.v, digi.r, digi.n, digi.ns,
                 log_level=digi.log_level).start()
-    # pool client
-    digi.pool = digi.data.create_pool()
+
     digi.model = digi.control.create_model()
+    digi.pool = digi.data.create_pool()
+    digi.router = digi.data.create_router()
 
     # reconciler
     _model = {
@@ -30,7 +31,7 @@ def run():
 
     # force decorate the handlers
     from . import handler
-    from .data import handler as sync_handler
+    from .data import router as sync_handler
     _, _ = handler, sync_handler
 
     @kopf.on.startup(registry=_registry)

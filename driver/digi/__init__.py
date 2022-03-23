@@ -29,14 +29,16 @@ from digi import (
     mount,
     filter,
     view,
+    data,
+    control,
 )
+_, _ = data, control
 from digi.main import run
-from digi.data import pool
-from digi.control import model
 from digi.reconcile import rc
+model, pool, router = None, None, None
 
-_ = model
 __all__ = [
     "on", "util", "view", "filter",
-    "run", "logger", "mount", "pool", "rc"
+    "run", "logger", "mount", "rc",
+    "model", "pool", "router",
 ]

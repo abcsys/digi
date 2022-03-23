@@ -51,7 +51,8 @@ class Sync(threading.Thread):
     def once(self):
         records = self.client.query(self.query_str)
         records = "".join(json.dumps(r) for r in records)  # XXX json only
-        self.client.load(self.dest, records)
+        if len(records) > 0:
+            self.client.load(self.dest, records)
 
     def _event_loop(self):
         s = requests.Session()

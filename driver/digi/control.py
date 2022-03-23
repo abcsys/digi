@@ -1,4 +1,5 @@
 import digi
+import inflection
 
 
 class Model():
@@ -11,9 +12,17 @@ class Model():
         if e != None:
             digi.logger.info(f"patch error: {e}")
 
+    def get_mount(self, group=None,
+                  version=None,
+                  kind=None,
+                  resource=None) -> dict:
+        path = "mount"
+        if group and version and (kind or resource):
+            resource = inflection.pluralize(kind).lower() \
+                if resource is None else resource
+            path += f".'{group}/{version}/{resource}'"
+        return digi.util.get(digi.rc.view(), path)
+
 
 def create_model():
     return Model()
-
-
-model = None
