@@ -122,11 +122,22 @@ ingress:
 """
 _ingress_attr = """
 properties:
-  kind:
-    type: string
-  sources:
+  source:
     items:
-      type: string
+      properties:
+        group: 
+          type: string
+        version:
+          type: string
+        kind: 
+          type: string
+        name:
+          type: string
+        namespace:
+          type: string
+        egress:
+          type: string
+      type: object
     type: array
   dataflow:
     type: string 
@@ -182,6 +193,7 @@ name: {name}
 namespace: {namespace}
 group: {group}
 version: {version}
+kind: {kind}
 plural: {plural}
 mounter: {mounter}
 
@@ -370,10 +382,13 @@ def gen(name):
 
         # generate a helm values.yaml if missing
         values_file = os.path.join(_dir_path, "deploy", "values.yaml")
-        if not os.path.exists(values_file):
+        # XXX enable safe gen option in command line
+        # if not os.path.exists(values_file):
+        if True:
             values = _helm_values.format(
                 group=model["group"],
                 version=model["version"],
+                kind=model["kind"],
                 plural=inflection.pluralize(model["kind"]).lower(),
                 name=model["kind"].lower(),
                 namespace=model.get("namespace", "default"),

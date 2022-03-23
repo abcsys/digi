@@ -26,6 +26,8 @@ spec:
             value: {{ .Values.version }}
           - name: PLURAL
             value: {{ .Values.plural }}
+          - name: Kind
+            value: {{ .Values.kind }}
           - name: NAME
             value: {{ .Values.name }}
           - name: NAMESPACE

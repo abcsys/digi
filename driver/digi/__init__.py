@@ -9,8 +9,9 @@ logger.setLevel(log_level)
 # digi metadata and configurations
 g = group = os.environ.get("GROUP", "digi.dev")
 v = version = os.environ.get("VERSION", "v1")
+k = kind = os.environ.get("KIND", "test")
 r = resource = os.environ.get("PLURAL", "tests")
-n = name = os.environ.get("NAME", "test")
+n = name = os.environ.get("NAME", "t1")
 ns = namespace = os.environ.get("NAMESPACE", "default")
 duri = auri = (g, v, r, n, ns)
 
@@ -34,6 +35,7 @@ from digi.data import pool
 from digi.control import model
 from digi.reconcile import rc
 
+_ = model
 __all__ = [
     "on", "util", "view", "filter",
     "run", "logger", "mount", "pool", "rc"
