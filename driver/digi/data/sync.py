@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+
 import requests
 import typing
 import json
@@ -33,13 +34,16 @@ class Sync(threading.Thread):
         self.query_str = self._make_query()
         self.poll_interval = poll_interval
         self.client = zed.Client(base_url=lake_url)
-        self.source_ids = self._get_source_ids()
+        self.source_pool_ids = self._get_source_pool_ids()
+        self.source_set = set(self.sources)
 
         threading.Thread.__init__(self)
         self._stop_flag = threading.Event()
 
     def run(self):
         self._stop_flag.clear()
+
+        self.once()
         if self.poll_interval > 0:
             self._poll_loop()
         else:
@@ -95,11 +99,11 @@ class Sync(threading.Thread):
         else:
             return in_str
 
-    def _get_source_ids(self):
+    def _get_source_pool_ids(self):
         return {
             f"0x{r['id'].hex()}": r["name"]
             for r in self.client.query("from :pools")
-            if r["name"] in set(self.sources)
+            if r["name"] in set(s.split("@")[0] for s in self.sources)
         }
 
     def _parse_event(self, line: bytes, lines: typing.Iterator):
@@ -110,14 +114,13 @@ class Sync(threading.Thread):
         if line == "event: branch-commit":
             data = next(lines).decode().lstrip("data: ")
             pool_id = substr(data, "pool_id:", ",")
+            branch = substr(data, "branch:", ",").strip('"')
             # TBD cache commit_id
-            # TBD handle source branch
             # commit_id = substr(data, "commit_id:", ",")
-            # branch = substr(data, "branch:", ",")
-            if pool_id not in self.source_ids:
-                return Sync.SKIP
-            else:
-                return Sync.SOURCE_COMMIT
+            if pool_id in self.source_pool_ids:
+                pool_name = self.source_pool_ids[pool_id]
+                if f"{pool_name}@{branch}" in self.source_set:
+                    return Sync.SOURCE_COMMIT
         return Sync.SKIP
 
 
