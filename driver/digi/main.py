@@ -64,8 +64,7 @@ def run():
             try:
                 model = CleanView(dict(spec),
                                   trim_mount=digi.load_trim_mount).m()
-                model["_type"] = "model"
-                digi.pool.load([model])
+                digi.pool.load([model], branch="model")
                 digi.logger.info(f"done loading model snapshot to pool")
             except Exception as e:
                 digi.logger.warning(f"unable to load to pool: {e}")
@@ -100,6 +99,10 @@ def run():
     def on_delete(*args, **kwargs):
         _, _ = args, kwargs
         _stop.set()
+
+    if digi.pool is not None:
+        from digi.data.util import create_branches_if_not_exist
+        create_branches_if_not_exist(digi.name, ["model"])
 
     if digi.enable_visual:
         import os, sys, subprocess

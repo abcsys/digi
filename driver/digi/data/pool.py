@@ -16,7 +16,7 @@ class Pool(ABC):
         self.lock = threading.Lock()
 
     @abstractmethod
-    def load(self, objects: List[dict]):
+    def load(self, objects: List[dict], branch):
         raise NotImplementedError
 
     @abstractmethod
@@ -31,7 +31,7 @@ class ZedPool(Pool):
             base_url=os.environ.get("ZED_LAKE", "http://lake:6534")
         )
 
-    def load(self, objects: List[dict]):
+    def load(self, objects: List[dict], branch="main"):
         ts = digi.util.get_ts()
         for o in objects:
             if "ts" in o:
@@ -41,7 +41,7 @@ class ZedPool(Pool):
 
         self.lock.acquire()
         try:
-            self.client.load(self.name, data)
+            self.client.load(self.name, data, branch_name=branch)
         except Exception as e:
             digi.logger.warning(f"unable to load "
                                 f"{data} to {self.name}: {e}")
