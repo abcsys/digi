@@ -97,7 +97,7 @@ endif
 ifndef TAG
 override TAG = latest
 endif
-build: | prepare gen
+build: | gen prepare
 	# use DOCKER_BUILDKIT=0 to enable more messages
 	rsync $(driver_handler) $(build_dir)/ || true
 	cd $(build_dir) && $(DOCKER_CMD) buildx build -t $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH) $(BUILDFLAG) -f deploy/image/Dockerfile . || true

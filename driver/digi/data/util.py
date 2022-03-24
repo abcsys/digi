@@ -1,5 +1,5 @@
-import os
 import typing
+import inflection
 import zed
 import digi
 from digi.data import lake_url
@@ -18,25 +18,40 @@ from digi.data import lake_url
 #   corresponding attribute.
 #   - XXX self-reference is allowed with ingress pointing to the
 #     destination itself
-def parse_source(source: dict) -> typing.List[str]:
+# TBD add tests
+def parse_source(source: typing.Union[dict, str]) -> typing.List[str]:
     """
-    Given source attributes return its egress's pool@branch.
+    Return the list of egress pool@branch given source attributes.
     """
-    branch = source.get("egress", "main")
-    # XXX assume name is a unique id to digi and ignore namespace
-    if "name" in source:
-        return [f"{source['name']}@{branch}"]
-
-    group = source.get("group", digi.group)
-    version = source.get("version", digi.version)
-    kind = source.get("kind", digi.kind)
-
-    mounts = digi.model.get_mount(group, version, kind)
-    if mounts is None:
-        return []
+    digi.logger.info(f"DEBUG: {source}")
+    if isinstance(source, dict):
+        branch = source.get("egress", "main")
+        # XXX assume name is a unique id to digi and ignore namespace
+        if "name" in source:
+            return [f"{source['name']}@{branch}"]
+        else:
+            group = source.get("group", digi.group)
+            version = source.get("version", digi.version)
+            kind = source.get("kind", digi.kind)
+    elif isinstance(source, str):
+        parts = source.split("@")
+        branch = parts[1] if len(parts) > 1 else "main"
+        if "kind:" not in parts[0]:
+            return [f"{parts[0]}@{branch}"]
+        else:
+            # kind:g/v/k@main or kind:k@main; k <-> r
+            kind = parts[0].lstrip("kind:")
+            group, version, kind = digi.util.parse_kind(kind)
     else:
+        raise NotImplementedError
+
+    # TBD search by watch
+    mounts = digi.model.get_mount(group, version, inflection.pluralize(kind))
+    digi.logger.info(f"DEBUG: {group} {version} {kind} {mounts}")
+    if mounts:
         return [f"{digi.util.trim_default_space(name)}@{branch}"
                 for name in mounts.keys()]
+    return []
 
 
 def create_branches_if_not_exist(pool: str, names: list):
@@ -51,7 +66,7 @@ def create_branches_if_not_exist(pool: str, names: list):
 
 def create_branch(client, pool, name,
                   commit=f"0x{'0' * 40}"):
-    """TBD move to and use zed/zed.py"""
+    """TBD move to zed/zed.py"""
     r = client.session.post(client.base_url + f"/pool/{pool}",
                             json={
                                 "name": name,
@@ -64,3 +79,16 @@ def create_branch(client, pool, name,
             r.raise_for_status()
         else:
             raise zed.RequestError(error, r)
+
+
+def encode(obj: dict) -> str:
+    """Encode zjson. TBD move to zed/zed.py"""
+    raise NotImplementedError
+
+
+def _encode_type(typ: dict) -> str:
+    raise NotImplementedError
+
+
+def _encode_value(val: dict) -> str:
+    raise NotImplementedError

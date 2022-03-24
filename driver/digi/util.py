@@ -146,13 +146,19 @@ def parse_spaced_name(nsn) -> Tuple[str, str]:
     return parsed[1], parsed[0]
 
 
-def parse_gvr(gvr: str, g="", v="") -> Tuple[str, ...]:
+def parse_gvr(gvr: str) -> Tuple[str, str, str]:
     parsed = tuple(gvr.lstrip("/").split("/"))
-    assert len(parsed) == 3, f"{gvr} not in form of '[/]group/version/plural'"
-    # if len(parsed) != 3:
-    #     assert g != "" and v != "", "provide group and version to complete the gvr"
-    #     return g, v, parsed[-1]
-    return parsed
+    if len(parsed) == 1:
+        return digi.group, digi.version, parsed[0]
+    elif len(parsed) == 3:
+        g, v, r = parsed
+        return g, v, r
+    else:
+        raise Exception(f"{gvr} not in form of "
+                        f"'[/]group/version/(kind or resource)'")
+
+
+parse_kind = parse_gvr
 
 
 def model_id(g, v, r, n, ns) -> str:
@@ -481,6 +487,7 @@ def name_from_auri(auri: tuple):
 
 update = deep_set
 get = deep_get
+
 
 def get_ts():
     return datetime.datetime.now().isoformat() + "Z"

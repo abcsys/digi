@@ -139,9 +139,13 @@ properties:
           type: string
       type: object
     type: array
+  sources:
+    items:
+      type: string
+    type: array
   dataflow:
     type: string 
-  combine_dataflow:
+  dataflow_combine:
     type: string
 type: object
 """

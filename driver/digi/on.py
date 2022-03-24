@@ -271,8 +271,8 @@ def new_mount(diff, gvr=None) -> bool:
         op, path, _, _ = _diff
         if op != "add" or (len(path) > 0 and path[-1] != "generation"):
             continue
-        if gvr is None and path[:2] == ("add", "mount"):
+        if gvr is None and path[:2] == ("spec", "mount"):
             return True
-        elif path[:3] == ("add", "mount", gvr):
+        elif path[:3] == ("spec", "mount", gvr):
             return True
     return False

@@ -20,18 +20,20 @@ class Router:
         self.ingress_sync = dict()
 
         for name, ig in config.items():
-            sources, parsed_sources = ig.get("source", []), list()
+            sources = list()
             dataflow, combine_dataflow = ig.get("dataflow", ""), \
-                                         ig.get("combine_dataflow", "")
-            for s in sources:
-                # TBD parse sources to a source class
-                # TBD skip sources that are not in mount
-                parsed_sources += util.parse_source(s)
-            if len(parsed_sources) == 0:
+                                         ig.get("dataflow_combine", "")
+            digi.logger.info(f"DEBUG: ingress {ig.get('sources')}")
+            for s in ig.get("source", []):
+                sources += util.parse_source(s)
+            for s in ig.get("sources", []):
+                sources += util.parse_source(s)
+            # TBD deduplicate sources
+            if len(sources) == 0:
                 continue
 
             _sync = sync.Sync(
-                sources=parsed_sources,
+                sources=sources,
                 in_flow=dataflow,
                 out_flow=combine_dataflow,
                 dest=digi.name,
@@ -83,7 +85,9 @@ class Router:
 def do_mount(model, diff):
     config = model.get("ingress", {})
     # TBD filter to relevant mounts only
+    digi.logger.info(f"DEBUG: on mount {diff}")
     if digi.on.new_mount(diff):
+        digi.logger.info(f"DEBUG: on mount diff")
         digi.router.restart_ingress(config)
 
 

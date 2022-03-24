@@ -53,8 +53,8 @@ class Sync(threading.Thread):
         self._stop_flag.set()
 
     def once(self):
-        records = self.client.query(self.query_str)
-        records = "".join(json.dumps(r) for r in records)  # XXX json only
+        records = self.client.query_raw(self.query_str)  # over zjson
+        records = "".join(json.dumps(r) for r in records if isinstance(r["type"], dict))
         if len(records) > 0:
             dest_pool, dest_branch = self._denormalize_one(self.dest)
             self.client.load(dest_pool, records,
