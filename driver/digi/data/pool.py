@@ -41,19 +41,24 @@ class ZedPool(Pool):
              same_type=False):
         # update event and processing time
         if encoding == "zjson":
+            now = digi.util.get_ts()
             for o in objects:
-                if "ts" in o and "event_ts" not in o:
-                    o["event_ts"] = o["ts"]
-                o["ts"] = digi.util.get_ts()
+                # event_ts will be attached at the first
+                # data router if does exist from the source
+                if "event_ts" not in o:
+                    o["event_ts"] = o.get("ts", now)
+                o["ts"] = now
             data = "".join(zjson.encode(objects))
-        else:  # json
+        elif encoding == "json":
+            now = digi.util.get_ts(as_str=True)
             for o in objects:
-                if "ts" in o and "event_ts" not in o:
-                    # event_ts will be attached at the first
-                    # data router if does exist from the source
-                    o["event_ts"] = o["ts"]
-                o["ts"] = digi.util.get_ts(raw=False)
+                if "event_ts" not in o:
+                    o["event_ts"] = o.get("ts", now)
+                o["ts"] = now
             data = "".join(json.dumps(o) for o in objects)
+        else:
+            raise NotImplementedError
+
         self.lock.acquire()
         try:
             self.client.load(self.name, data,
