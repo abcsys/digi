@@ -49,7 +49,6 @@ class ZedPool(Pool):
                     o["event_ts"] = o["ts"]
                 o["ts"] = digi.util.get_ts(raw=False)
             data = "".join(json.dumps(o) for o in objects)
-
         self.lock.acquire()
         try:
             self.client.load(self.name, data, branch_name=branch)
@@ -68,7 +67,8 @@ def pool_name(g, v, r, n, ns):
     if ns == "default":
         return f"{n}"
     else:
-        return f"{ns}-{n}"
+        # TBD update digi creation
+        return f"{ns}_{n}"
 
 
 providers = {

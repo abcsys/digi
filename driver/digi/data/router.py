@@ -6,18 +6,23 @@ from digi.data import logger
 
 class Router:
     def __init__(self):
-        self.ingress_sync = dict()
-        self.egress_sync = dict()
+        self.ingress = Ingress()
+        self.egress = Egress()
+
+
+class Ingress:
+    def __init__(self):
+        self._syncs = dict()
         self.sources = dict()
 
-    def start_ingress(self):
-        for name, _sync in self.ingress_sync.items():
+    def start(self):
+        for name, _sync in self._syncs.items():
             _sync.start()
             logger.info(f"started ingress sync {name} "
                         f"with query: {_sync.query_str}")
 
-    def update_ingress(self, config: dict):
-        self.ingress_sync = dict()
+    def update(self, config: dict):
+        self._syncs = dict()
 
         for name, ig in config.items():
             sources = list()
@@ -35,67 +40,73 @@ class Router:
                 sources=sources,
                 in_flow=dataflow,
                 out_flow=combine_dataflow,
-                dest=digi.name,
+                dest=digi.pool.name,
             )
-            self.ingress_sync[name] = _sync
+            self._syncs[name] = _sync
 
-    def stop_ingress(self):
-        for _, _sync in self.ingress_sync.items():
+    def stop(self):
+        for _, _sync in self._syncs.items():
             _sync.stop()
 
-    def restart_ingress(self, config: dict):
-        self.stop_ingress()
-        self.update_ingress(config=config)
-        self.start_ingress()
+    def restart(self, config: dict):
+        self.stop()
+        self.update(config=config)
+        self.start()
 
-    def start_egress(self):
-        for name, _sync in self.egress_sync.items():
+
+class Egress:
+    def __init__(self):
+        self._syncs = dict()
+
+    def start(self):
+        for name, _sync in self._syncs.items():
             _sync.start()
             logger.info(f"started egress sync {name} "
                         f"with query: {_sync.query_str}")
 
-    def update_egress(self, config: dict):
-        self.egress_sync = dict()
+    def update(self, config: dict):
+        self._syncs = dict()
 
         names = list()
         for name, ig in config.items():
             dataflow = ig.get("dataflow", "")
             _sync = sync.Sync(
-                sources=[digi.name],
+                sources=[digi.pool.name],
                 in_flow=dataflow,
                 out_flow="",
-                dest=f"{digi.name}@{name}",
+                dest=f"{digi.pool.name}@{name}",
             )
-            self.egress_sync[name] = _sync
+            self._syncs[name] = _sync
             names.append(name)
-        util.create_branches_if_not_exist(digi.name, names)
+        util.create_branches_if_not_exist(digi.pool.name, names)
 
-    def stop_egress(self):
-        for _, _sync in self.egress_sync.items():
+    def stop(self):
+        for _, _sync in self._syncs.items():
             _sync.stop()
 
-    def restart_egress(self, config: dict):
-        self.stop_egress()
-        self.update_egress(config=config)
-        self.start_egress()
+    def restart(self, config: dict):
+        self.stop()
+        self.update(config=config)
+        self.start()
 
 
 @digi.on.mount
 def do_mount(model, diff):
     config = model.get("ingress", {})
+    # TBD move new_mount to decorator
     # TBD filter to relevant mounts only
     if digi.on.new_mount(diff):
-        digi.router.restart_ingress(config)
+        digi.router.ingress.restart(config)
 
 
 @digi.on.ingress
 def do_ingress(config):
-    digi.router.restart_ingress(config)
+    digi.router.ingress.restart(config)
 
 
 @digi.on.egress
 def do_egress(config):
-    digi.router.restart_egress(config)
+    digi.router.egress.restart(config)
 
 
 def create_router():
