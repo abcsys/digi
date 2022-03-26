@@ -143,9 +143,9 @@ properties:
     items:
       type: string
     type: array
-  dataflow:
+  flow:
     type: string 
-  dataflow_combine:
+  flow_agg:
     type: string
 type: object
 """
@@ -157,7 +157,7 @@ egress:
 """
 _egress_attr = """
 properties:
-  dataflow:
+  flow:
     type: string 
 type: object
 """

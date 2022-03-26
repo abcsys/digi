@@ -14,6 +14,8 @@ class Ingress:
     def __init__(self):
         self._syncs = dict()
         self.sources = dict()
+        # dataflow appended to the flow_agg
+        self.flow_aug= "put ts:=now()"
 
     def start(self):
         for name, _sync in self._syncs.items():
@@ -26,8 +28,8 @@ class Ingress:
 
         for name, ig in config.items():
             sources = list()
-            dataflow, combine_dataflow = ig.get("dataflow", ""), \
-                                         ig.get("dataflow_combine", "")
+            flow, flow_agg = ig.get("flow", ""), \
+                             ig.get("flow_agg", "")
             for s in ig.get("source", []):
                 sources += util.parse_source(s)
             for s in ig.get("sources", []):
@@ -36,10 +38,14 @@ class Ingress:
             if len(sources) == 0:
                 continue
 
+            if flow_agg == "":
+                _out_flow = self.flow_aug
+            else:
+                _out_flow = f"{flow_agg} | {self.flow_aug}"
             _sync = sync.Sync(
                 sources=sources,
-                in_flow=dataflow,
-                out_flow=combine_dataflow,
+                in_flow=flow,
+                out_flow=_out_flow,
                 dest=digi.pool.name,
             )
             self._syncs[name] = _sync
@@ -69,10 +75,10 @@ class Egress:
 
         names = list()
         for name, ig in config.items():
-            dataflow = ig.get("dataflow", "")
+            flow = ig.get("flow", "")
             _sync = sync.Sync(
                 sources=[digi.pool.name],
-                in_flow=dataflow,
+                in_flow=flow,
                 out_flow="",
                 dest=f"{digi.pool.name}@{name}",
             )
