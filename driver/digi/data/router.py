@@ -14,8 +14,13 @@ class Ingress:
     def __init__(self):
         self._syncs = dict()
         self.sources = dict()
-        # dataflow appended to the flow_agg
-        self.flow_aug= "put ts:=now()"
+        self.flow_pre = ""
+        self.flow_post = "put ts:=now()"
+        # TBD if ts not in the stream, e.g.,
+        # after an agg, add flow_post.
+        # Otherwise, use the original ts
+        # Option 2:
+        # event_ts, ts, pre_ts
 
     def start(self):
         for name, _sync in self._syncs.items():
@@ -39,9 +44,9 @@ class Ingress:
                 continue
 
             if flow_agg == "":
-                _out_flow = self.flow_aug
+                _out_flow = self.flow_post
             else:
-                _out_flow = f"{flow_agg} | {self.flow_aug}"
+                _out_flow = f"{flow_agg} | {self.flow_post}"
             _sync = sync.Sync(
                 sources=sources,
                 in_flow=flow,

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 import digi
-from digi.data import logger, zjson
+from digi.data import logger, zjson, util
 import zed
 
 
@@ -51,7 +51,9 @@ class ZedPool(Pool):
             data = "".join(json.dumps(o) for o in objects)
         self.lock.acquire()
         try:
-            self.client.load(self.name, data, branch_name=branch)
+            util.load(self.client, self.name, data,
+                      branch_name=branch, meta="")
+            # TBD generate meta message on source ts
         except Exception as e:
             digi.logger.warning(f"unable to load "
                                 f"{data} to {self.name}: {e}")
