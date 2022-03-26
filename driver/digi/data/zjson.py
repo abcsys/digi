@@ -40,6 +40,7 @@ def encode(objs: typing.List[dict]) -> str:
 
 
 def _encode_type(id_ctr, value) -> dict:
+    # TBD ref type
     if isinstance(value, dict):
         return {
             "kind": "record",

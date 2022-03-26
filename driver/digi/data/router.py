@@ -23,7 +23,6 @@ class Router:
             sources = list()
             dataflow, combine_dataflow = ig.get("dataflow", ""), \
                                          ig.get("dataflow_combine", "")
-            digi.logger.info(f"DEBUG: ingress {ig.get('sources')}")
             for s in ig.get("source", []):
                 sources += util.parse_source(s)
             for s in ig.get("sources", []):
@@ -85,9 +84,7 @@ class Router:
 def do_mount(model, diff):
     config = model.get("ingress", {})
     # TBD filter to relevant mounts only
-    digi.logger.info(f"DEBUG: on mount {diff}")
     if digi.on.new_mount(diff):
-        digi.logger.info(f"DEBUG: on mount diff")
         digi.router.restart_ingress(config)
 
 

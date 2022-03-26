@@ -23,7 +23,6 @@ def parse_source(source: typing.Union[dict, str]) -> typing.List[str]:
     """
     Return the list of egress pool@branch given source attributes.
     """
-    digi.logger.info(f"DEBUG: {source}")
     if isinstance(source, dict):
         branch = source.get("egress", "main")
         # XXX assume name is a unique id to digi and ignore namespace
@@ -79,16 +78,3 @@ def create_branch(client, pool, name,
             r.raise_for_status()
         else:
             raise zed.RequestError(error, r)
-
-
-def encode(obj: dict) -> str:
-    """Encode zjson. TBD move to zed/zed.py"""
-    raise NotImplementedError
-
-
-def _encode_type(typ: dict) -> str:
-    raise NotImplementedError
-
-
-def _encode_value(val: dict) -> str:
-    raise NotImplementedError

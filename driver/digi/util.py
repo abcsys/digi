@@ -489,5 +489,6 @@ update = deep_set
 get = deep_get
 
 
-def get_ts():
-    return datetime.datetime.now().isoformat() + "Z"
+def get_ts(raw=True):
+    t = datetime.datetime.now()
+    return t if raw else t.isoformat() + "Z"

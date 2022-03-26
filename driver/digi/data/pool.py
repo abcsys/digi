@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 import digi
+from digi.data import logger, zjson
 import zed
 
 
@@ -16,7 +17,7 @@ class Pool(ABC):
         self.lock = threading.Lock()
 
     @abstractmethod
-    def load(self, objects: List[dict], branch):
+    def load(self, objects: List[dict]):
         raise NotImplementedError
 
     @abstractmethod
@@ -31,13 +32,23 @@ class ZedPool(Pool):
             base_url=os.environ.get("ZED_LAKE", "http://lake:6534")
         )
 
-    def load(self, objects: List[dict], branch="main"):
-        ts = digi.util.get_ts()
-        for o in objects:
-            if "ts" in o:
-                o["event_ts"] = o["ts"]
-            o["ts"] = ts
-        data = "".join(json.dumps(o) for o in objects)
+    def load(self, objects: List[dict], *,
+             branch="main",
+             encoding="zjson",
+             same_type=False):
+        # update event and processing time
+        if encoding == "zjson":
+            for o in objects:
+                if "ts" in o and "event_ts" not in o:
+                    o["event_ts"] = o["ts"]
+                o["ts"] = digi.util.get_ts()
+            data = "".join(zjson.encode(objects))
+        else: # json
+            for o in objects:
+                if "ts" in o and "event_ts" not in o:
+                    o["event_ts"] = o["ts"]
+                o["ts"] = digi.util.get_ts(raw=False)
+            data = "".join(json.dumps(o) for o in objects)
 
         self.lock.acquire()
         try:
@@ -75,7 +86,7 @@ def create_pool():
         return None
 
     if digi.pool_provider not in providers:
-        digi.data.logger.fatal(f"unknown pool provider {digi.pool_provider}")
+        logger.fatal(f"unknown pool provider {digi.pool_provider}")
         sys.exit(1)
 
     return providers[digi.pool_provider](

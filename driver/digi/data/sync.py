@@ -29,7 +29,7 @@ class Sync(threading.Thread):
 
         self.sources = self._normalize(sources)
         self.dest = self._normalize_one(dest)
-        self.in_flow = in_flow
+        self.in_flow = in_flow  # TBD allow multi-in_flow
         self.out_flow = out_flow
         self.query_str = self._make_query()
         self.poll_interval = poll_interval
