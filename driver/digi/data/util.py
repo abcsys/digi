@@ -1,11 +1,6 @@
 import typing
 import inflection
-import json
-import getpass
-import urllib
-import zed
 import digi
-from digi.data import lake_url
 
 
 # Each digi can be a data source that has egress attributes.
@@ -53,61 +48,3 @@ def parse_source(source: typing.Union[dict, str]) -> typing.List[str]:
         return [f"{digi.util.trim_default_space(name)}@{branch}"
                 for name in mounts.keys()]
     return []
-
-
-def create_branches_if_not_exist(pool: str, names: list):
-    client = zed.Client(base_url=lake_url)
-    records = client.query(f"from {pool}:branches")
-    branches = set(r["branch"]["name"] for r in records)
-    for name in names:
-        if name in branches:
-            continue
-        create_branch(client, pool, name)
-
-
-"""TBD move below to zed/zed.py"""
-
-
-def create_branch(client, pool, name,
-                  commit=f"0x{'0' * 40}"):
-    r = client.session.post(client.base_url + f"/pool/{pool}",
-                            json={
-                                "name": name,
-                                "commit": commit,
-                            })
-    if r.status_code >= 400:
-        try:
-            error = r.json()['error']
-        except Exception:
-            r.raise_for_status()
-        else:
-            raise zed.RequestError(error, r)
-
-
-def load(client, pool_name_or_id, data, branch_name='main',
-         commit_author=getpass.getuser(), commit_body='', meta=''):
-    pool = urllib.parse.quote(pool_name_or_id)
-    branch = urllib.parse.quote(branch_name)
-    url = lake_url + '/pool/' + pool + '/branch/' + branch
-    commit_message = {'author': commit_author, 'body': commit_body, 'meta': meta}
-    headers = {'Zed-Commit': json.dumps(commit_message)}
-    r = client.session.post(url, headers=headers, data=data)
-    __raise_for_status(r)
-
-
-def __raise_for_status(response):
-    if response.status_code >= 400:
-        try:
-            error = response.json()['error']
-        except Exception:
-            response.raise_for_status()
-        else:
-            raise RequestError(error, response)
-
-
-class RequestError(Exception):
-    """Raised by Client methods when an HTTP request fails."""
-
-    def __init__(self, message, response):
-        super(RequestError, self).__init__(message)
-        self.response = response

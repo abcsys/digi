@@ -101,8 +101,7 @@ def run():
         _stop.set()
 
     if digi.pool is not None:
-        from digi.data.util import create_branches_if_not_exist
-        create_branches_if_not_exist(digi.name, ["model"])
+        digi.pool.create_branch_if_not_exist("model")
 
     if digi.enable_visual:
         import os, sys, subprocess

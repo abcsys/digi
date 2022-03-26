@@ -1,7 +1,7 @@
 import digi
 import digi.data.sync as sync
 import digi.data.util as util
-from digi.data import logger
+from digi.data import logger, zed
 
 
 class Router:
@@ -52,6 +52,7 @@ class Ingress:
                 in_flow=flow,
                 out_flow=_out_flow,
                 dest=digi.pool.name,
+                client=zed.Client(),
             )
             self._syncs[name] = _sync
 
@@ -78,7 +79,6 @@ class Egress:
     def update(self, config: dict):
         self._syncs = dict()
 
-        names = list()
         for name, ig in config.items():
             flow = ig.get("flow", "")
             _sync = sync.Sync(
@@ -86,10 +86,11 @@ class Egress:
                 in_flow=flow,
                 out_flow="",
                 dest=f"{digi.pool.name}@{name}",
+                client=zed.Client(),
             )
             self._syncs[name] = _sync
-            names.append(name)
-        util.create_branches_if_not_exist(digi.pool.name, names)
+            # TBD garbage collect unused branches
+            digi.pool.create_branch_if_not_exist(name)
 
     def stop(self):
         for _, _sync in self._syncs.items():

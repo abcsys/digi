@@ -1,4 +1,3 @@
-import os
 import sys
 import json
 import threading
@@ -6,8 +5,8 @@ from abc import ABC, abstractmethod
 from typing import List
 
 import digi
-from digi.data import logger, zjson, util
-import zed
+from digi.data import logger, zjson
+from digi.data import zed
 
 
 class Pool(ABC):
@@ -24,12 +23,16 @@ class Pool(ABC):
     def query(self, query: str):
         raise NotImplementedError
 
+    @abstractmethod
+    def create_branch_if_not_exist(self, query: str):
+        raise NotImplementedError
+
 
 class ZedPool(Pool):
     def __init__(self, name):
         super().__init__(name)
         self.client = zed.Client(
-            base_url=os.environ.get("ZED_LAKE", "http://lake:6534")
+            base_url=digi.data.lake_url
         )
 
     def load(self, objects: List[dict], *,
@@ -43,16 +46,20 @@ class ZedPool(Pool):
                     o["event_ts"] = o["ts"]
                 o["ts"] = digi.util.get_ts()
             data = "".join(zjson.encode(objects))
-        else: # json
+        else:  # json
             for o in objects:
                 if "ts" in o and "event_ts" not in o:
+                    # event_ts will be attached at the first
+                    # data router if does exist from the source
                     o["event_ts"] = o["ts"]
                 o["ts"] = digi.util.get_ts(raw=False)
             data = "".join(json.dumps(o) for o in objects)
         self.lock.acquire()
         try:
-            util.load(self.client, self.name, data,
-                      branch_name=branch, meta="")
+            self.client.load(self.name, data,
+                             branch_name=branch,
+                             commit_author=digi.name,
+                             meta="")
             # TBD generate meta message on source ts
         except Exception as e:
             digi.logger.warning(f"unable to load "
@@ -62,6 +69,10 @@ class ZedPool(Pool):
 
     def query(self, query):
         return self.client.query(query)
+
+    def create_branch_if_not_exist(self, branch: str):
+        if not self.client.branch_exist(self.name, branch):
+            self.client.create_branch(self.name, branch)
 
 
 def pool_name(g, v, r, n, ns):

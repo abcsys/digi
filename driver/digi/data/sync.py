@@ -1,7 +1,6 @@
 import os
 import time
 import threading
-
 import requests
 import typing
 import json
@@ -24,6 +23,7 @@ class Sync(threading.Thread):
                  *,
                  poll_interval: float = -1,  # sec, <0: use push
                  lake_url: str = default_lake_url,
+                 client: zed.Client = None,
                  ):
         assert len(sources) > 0 and dest != ""
 
@@ -33,7 +33,7 @@ class Sync(threading.Thread):
         self.out_flow = out_flow
         self.query_str = self._make_query()
         self.poll_interval = poll_interval
-        self.client = zed.Client(base_url=lake_url)
+        self.client = zed.Client(base_url=lake_url) if client is None else client
         self.source_pool_ids = self._get_source_pool_ids()
         self.source_set = set(self.sources)
 
