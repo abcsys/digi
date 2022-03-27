@@ -65,7 +65,7 @@ class ZedPool(Pool):
                              branch_name=branch,
                              commit_author=digi.name,
                              meta="")
-            # TBD generate meta message on source ts
+            # TBD load from digi also commits source ts in meta
         except Exception as e:
             digi.logger.warning(f"unable to load "
                                 f"{data} to {self.name}: {e}")

@@ -47,6 +47,7 @@ class Ingress:
                 out_flow=_out_flow,
                 dest=digi.pool.name,
                 client=zed.Client(),
+                owner=digi.name,
             )
             self._syncs[name] = _sync
 
@@ -81,6 +82,7 @@ class Egress:
                 out_flow=flow_lib.refresh_ts,
                 dest=f"{digi.pool.name}@{name}",
                 client=zed.Client(),
+                owner=digi.name,
             )
             self._syncs[name] = _sync
             # TBD garbage collect unused branches

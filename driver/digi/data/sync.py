@@ -3,9 +3,10 @@ import time
 import threading
 import requests
 import typing
+import copy
 import json
 import yaml
-import zed
+from . import zed  # TBD use upstream
 
 default_lake_url = os.environ.get("ZED_LAKE", "http://localhost:9867")
 
@@ -22,20 +23,32 @@ class Sync(threading.Thread):
                  out_flow: str = "",
                  *,
                  poll_interval: float = -1,  # sec, <0: use push
+                 eoio: bool = True,  # exactly-once in-order
+                 patch_ts: bool = True,
+                 patch_from: bool = True,
+                 owner: str = "sync",  # commit author in load
                  lake_url: str = default_lake_url,
                  client: zed.Client = None,
                  ):
         assert len(sources) > 0 and dest != ""
+        assert (patch_ts and patch_from) or not eoio
 
         self.sources = self._normalize(sources)
         self.dest = self._normalize_one(dest)
         self.in_flow = in_flow  # TBD allow multi-in_flow
         self.out_flow = out_flow
-        self.query_str = self._make_query()
         self.poll_interval = poll_interval
+        self.eoio = eoio
+        self.patch_ts = patch_ts
+        self.patch_from = patch_from
+        self.owner = owner
+
+        self.query_str = self._make_query()
         self.client = zed.Client(base_url=lake_url) if client is None else client
         self.source_pool_ids = self._get_source_pool_ids()
         self.source_set = set(self.sources)
+        self.source_ts = dict()  # track {source: max(ts)}
+        # TBD load source_ts from dest pool on restart
 
         threading.Thread.__init__(self)
         self._stop_flag = threading.Event()
@@ -53,12 +66,29 @@ class Sync(threading.Thread):
         self._stop_flag.set()
 
     def once(self):
-        records = self.client.query_raw(self.query_str)  # over zjson
-        records = "".join(json.dumps(r) for r in records if isinstance(r["type"], dict))
+        raw = list(self.client.query_raw(self.query_str))  # over zjson
+        if self.eoio:
+            # embed per-source progress in meta
+            decoded = zed.decode_raw(copy.deepcopy(raw))
+            for r in decoded:
+                if r["from"] not in self.source_ts:
+                    self.source_ts[r["from"]] = r["ts"]
+                else:
+                    self.source_ts[r["from"]] = max(r["ts"], self.source_ts[r["from"]])
+            meta = json.dumps(self.source_ts)
+        else:
+            meta = ""
+        # load to dest
+        records = "".join(json.dumps(r) for r in raw
+                          if isinstance(r["type"], dict))
         if len(records) > 0:
             dest_pool, dest_branch = self._denormalize_one(self.dest)
-            self.client.load(dest_pool, records,
-                             branch_name=dest_branch)
+            self.client.load(
+                dest_pool, records,
+                branch_name=dest_branch,
+                commit_author=self.owner,
+                meta=meta,
+            )
 
     def _event_loop(self):
         s = requests.Session()
@@ -83,19 +113,21 @@ class Sync(threading.Thread):
 
     def _make_query(self) -> str:
         in_str, out_str = "", self.out_flow
-        if len(self.sources) > 1:
-            in_str = "from (\n"
-            for source in self.sources:
-                in_str += f"pool {source}"
-                if self.in_flow != "":
-                    in_str += f" => {self.in_flow}"
-                in_str += "\n"
-            in_str += ")"
-        else:
-            in_str = f"from {self.sources[0]}"
+        flow_patch_ts = "switch (case has(ts) => yield this " \
+                        "default => put ts := now())"
+        in_str = "from (\n"
+        for source in self.sources:
+            in_str += f"pool {source} => yield this"  # TBD omit yield
+            flow_patch_from = f"put from := '{source}'"
             if self.in_flow != "":
                 in_str += f" | {self.in_flow}"
-
+            if self.patch_from:
+                in_str += f" | {flow_patch_from}"
+            if self.patch_ts:
+                in_str += f" | {flow_patch_ts}"
+            if len(self.sources) > 1:
+                in_str += "\n"
+        in_str += ")"
         if out_str != "":
             return f"{in_str} | {out_str}"
         else:

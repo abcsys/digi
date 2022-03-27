@@ -2,6 +2,8 @@ import json
 import datetime
 import typing
 
+"""TBD add decoder and patch upstream zed/zed.py"""
+
 _py_to_zed_primitive_type = {
     "<class 'int'>": "int64",
     "<class 'datetime.timedelta'>": "duration",
@@ -25,9 +27,6 @@ class __Counter:
     def get_and_inc(self):
         self.ctr += 1
         return self.ctr
-
-
-"""TBD move to zed/zed.py and add decoder"""
 
 
 def encode(objs: typing.List[dict]) -> str:

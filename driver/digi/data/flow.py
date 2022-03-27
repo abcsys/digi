@@ -6,3 +6,6 @@ refresh_ts = """switch (
     default => put ts := now() | put event_ts := ts
 ) 
 """
+
+patch_ts = "switch ( case has(ts) => yield this " \
+           "default => put ts := now() )"

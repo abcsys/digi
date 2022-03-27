@@ -3,10 +3,10 @@ import getpass
 import urllib
 import zed
 
-"""TBD use zed.Client directly after patch PR merged."""
-
 
 class Client(zed.Client):
+    """TBD patch upstream"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -32,3 +32,7 @@ class Client(zed.Client):
     def branch_exist(self, pool, name):
         records = self.query(f"from {pool}:branches")
         return name in set(r["branch"]["name"] for r in records)
+
+
+# TBD use zjson.decode after upstream patch
+from zed import decode_raw
