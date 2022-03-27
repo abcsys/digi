@@ -2,6 +2,7 @@ import digi
 import digi.data.sync as sync
 import digi.data.util as util
 from digi.data import logger, zed
+from digi.data import flow as flow_lib
 
 
 class Router:
@@ -14,13 +15,6 @@ class Ingress:
     def __init__(self):
         self._syncs = dict()
         self.sources = dict()
-        self.flow_pre = ""
-        self.flow_post = "put ts:=now()"
-        # TBD if ts not in the stream, e.g.,
-        # after an agg, add flow_post.
-        # Otherwise, use the original ts
-        # Option 2:
-        # event_ts, ts, pre_ts
 
     def start(self):
         for name, _sync in self._syncs.items():
@@ -44,9 +38,9 @@ class Ingress:
                 continue
 
             if flow_agg == "":
-                _out_flow = self.flow_post
+                _out_flow = flow_lib.refresh_ts
             else:
-                _out_flow = f"{flow_agg} | {self.flow_post}"
+                _out_flow = f"{flow_agg} | {flow_lib.refresh_ts}"
             _sync = sync.Sync(
                 sources=sources,
                 in_flow=flow,
@@ -84,7 +78,7 @@ class Egress:
             _sync = sync.Sync(
                 sources=[digi.pool.name],
                 in_flow=flow,
-                out_flow="",
+                out_flow=flow_lib.refresh_ts,
                 dest=f"{digi.pool.name}@{name}",
                 client=zed.Client(),
             )
