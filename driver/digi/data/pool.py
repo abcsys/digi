@@ -55,7 +55,7 @@ class ZedPool(Pool):
                 if "event_ts" not in o:
                     o["event_ts"] = o.get("ts", now)
                 o["ts"] = now
-            data = "".join(json.dumps(o) for o in objects)
+            data = "\n".join(json.dumps(o) for o in objects)
         else:
             raise NotImplementedError
 
