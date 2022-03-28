@@ -80,7 +80,7 @@ class Sync(threading.Thread):
                 else:
                     self.source_ts[source] = max(max_ts, self.source_ts[source])
             else:
-                self.source_ts[source] = None
+                self.source_ts[source] = datetime.datetime.min
         records = "\n".join(zjson.encode(records))
         if len(records) > 0:
             dest_pool, dest_branch = self._denormalize_one(self.dest)
@@ -125,7 +125,7 @@ class Sync(threading.Thread):
         in_str += ")\n"  # wrap up from clause
         out_str = f"fork (=> has(__from) => " \
                   f"{'pass' if self.out_flow == '' else self.out_flow})"
-        return f"{in_str} | yield this | {out_str}"
+        return f"{in_str} | sort this | {out_str}"
 
     def _source_ts_json(self) -> str:
         return json.dumps({
