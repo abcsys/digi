@@ -147,6 +147,8 @@ properties:
     type: string 
   flow_agg:
     type: string
+  eoio:
+    type: boolean
 type: object
 """
 

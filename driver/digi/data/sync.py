@@ -39,7 +39,7 @@ class Sync(threading.Thread):
         self.owner = owner
         # if eoio enabled, the sync agent will
         # process only those records that contain
-        # a 'ts' field
+        # a 'ts' field; XXX assume pool key is ts
         self.eoio = eoio
         # TBD fetch from dest pool on restart
         self.source_ts = dict()  # track {source: max(ts)}
@@ -64,25 +64,24 @@ class Sync(threading.Thread):
         self._stop_flag.set()
 
     def once(self):
+        records = list()
         if self.eoio:
-            records = list()
             self.query_str = self._make_query()
-            for r in self.client.query(self.query_str):
-                if "__from" not in r:
-                    records.append(r)
-                    continue
-                source, max_ts = r["__from"], r["max_ts"]
+        for r in self.client.query(self.query_str):
+            if "__from" not in r:
+                records.append(r)
+                continue
+            source, max_ts = r["__from"], r["max_ts"]
+            if self.eoio:
                 if max_ts is None:
                     raise Exception(f"no ts found in records from {source}")
                 if source not in self.source_ts:
                     self.source_ts[source] = max_ts
                 else:
                     self.source_ts[source] = max(max_ts, self.source_ts[source])
-            records = "\n".join(zjson.encode(records))
-        else:  # skip decode/encode
-            raw = self.client.query_raw(self.query_str)
-            records = "".join(json.dumps(r) for r in raw
-                              if isinstance(r["type"], dict))
+            else:
+                self.source_ts[source] = None
+        records = "\n".join(zjson.encode(records))
         if len(records) > 0:
             dest_pool, dest_branch = self._denormalize_one(self.dest)
             self.client.load(
@@ -114,8 +113,6 @@ class Sync(threading.Thread):
             time.sleep(self.poll_interval)
 
     def _make_query(self) -> str:
-        out_str = f"switch (case has(__from) => pass default => " \
-                  f"{'pass' if self.out_flow == '' else self.out_flow})"
         in_str = "from (\n"
         for source in self.sources:
             filter_flow = f"ts > {zjson.encode_datetime(self.source_ts.get(source, datetime.datetime.min))} |" \
@@ -126,6 +123,8 @@ class Sync(threading.Thread):
             if len(self.sources) > 1:
                 in_str += "\n"
         in_str += ")\n"  # wrap up from clause
+        out_str = f"fork (=> has(__from) => " \
+                  f"{'pass' if self.out_flow == '' else self.out_flow})"
         return f"{in_str} | yield this | {out_str}"
 
     def _source_ts_json(self) -> str:

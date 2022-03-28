@@ -46,6 +46,7 @@ class Ingress:
                 in_flow=flow,
                 out_flow=_out_flow,
                 dest=digi.pool.name,
+                eoio=ig.get("eoio", True),
                 client=zed.Client(),
                 owner=digi.name,
             )
@@ -81,6 +82,7 @@ class Egress:
                 in_flow=flow,
                 out_flow=flow_lib.refresh_ts,
                 dest=f"{digi.pool.name}@{name}",
+                eoio=ig.get("eoio", True),
                 client=zed.Client(),
                 owner=digi.name,
             )
