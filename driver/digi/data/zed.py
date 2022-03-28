@@ -32,7 +32,3 @@ class Client(zed.Client):
     def branch_exist(self, pool, name):
         records = self.query(f"from {pool}:branches")
         return name in set(r["branch"]["name"] for r in records)
-
-
-# TBD use zjson.decode after upstream patch
-from zed import decode_raw

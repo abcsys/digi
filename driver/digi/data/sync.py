@@ -1,12 +1,13 @@
 import os
 import time
 import threading
+
+import digi
 import requests
 import typing
-import copy
-import json
 import yaml
-from . import zed  # TBD use upstream
+import json
+from . import zed, zjson  # TBD use upstream
 
 default_lake_url = os.environ.get("ZED_LAKE", "http://localhost:9867")
 
@@ -24,30 +25,28 @@ class Sync(threading.Thread):
                  *,
                  poll_interval: float = -1,  # sec, <0: use push
                  eoio: bool = True,  # exactly-once in-order
-                 patch_ts: bool = True,
-                 patch_from: bool = True,
-                 owner: str = "sync",  # commit author in load
+                 owner: str = "sync",  # commit author
                  lake_url: str = default_lake_url,
                  client: zed.Client = None,
                  ):
         assert len(sources) > 0 and dest != ""
-        assert (patch_ts and patch_from) or not eoio
 
         self.sources = self._normalize(sources)
         self.dest = self._normalize_one(dest)
-        self.in_flow = in_flow  # TBD allow multi-in_flow
+        self.in_flow = in_flow  # TBD multi-in_flow
         self.out_flow = out_flow
         self.poll_interval = poll_interval
-        self.eoio = eoio
-        self.patch_ts = patch_ts
-        self.patch_from = patch_from
         self.owner = owner
-
         self.query_str = self._make_query()
         self.client = zed.Client(base_url=lake_url) if client is None else client
-        self.source_pool_ids = self._get_source_pool_ids()
+        self.source_pool_ids = self._fetch_source_pool_ids()
         self.source_set = set(self.sources)
-        self.source_ts = dict()  # track {source: max(ts)}
+        # when eoio is enabled, the sync agent will
+        # process only those records that contain
+        # a 'ts' field
+        self.eoio = eoio
+        # track {source: max(ts)}
+        self.source_ts = dict()
         # TBD load source_ts from dest pool on restart
 
         threading.Thread.__init__(self)
@@ -66,28 +65,32 @@ class Sync(threading.Thread):
         self._stop_flag.set()
 
     def once(self):
-        raw = list(self.client.query_raw(self.query_str))  # over zjson
         if self.eoio:
-            # embed per-source progress in meta
-            decoded = zed.decode_raw(copy.deepcopy(raw))
-            for r in decoded:
-                if r["from"] not in self.source_ts:
-                    self.source_ts[r["from"]] = r["ts"]
+            records = list()
+            self.query_str = self._make_query()
+            for r in self.client.query(self.query_str):
+                if "__from" not in r:
+                    records.append(r)
+                    continue
+                source, max_ts = r["__from"], r["max_ts"]
+                if max_ts is None:
+                    raise Exception(f"no ts found in records from {source}")
+                if source not in self.source_ts:
+                    self.source_ts[source] = max_ts
                 else:
-                    self.source_ts[r["from"]] = max(r["ts"], self.source_ts[r["from"]])
-            meta = json.dumps(self.source_ts)
-        else:
-            meta = ""
-        # load to dest
-        records = "".join(json.dumps(r) for r in raw
-                          if isinstance(r["type"], dict))
+                    self.source_ts[source] = max(max_ts, self.source_ts[source])
+            records = "\n".join(zjson.encode(records))
+        else:  # skip decode/encode
+            raw = self.client.query_raw(self.query_str)
+            records = "".join(json.dumps(r) for r in raw
+                              if isinstance(r["type"], dict))
         if len(records) > 0:
             dest_pool, dest_branch = self._denormalize_one(self.dest)
             self.client.load(
                 dest_pool, records,
                 branch_name=dest_branch,
                 commit_author=self.owner,
-                meta=meta,
+                meta=self._source_ts_json(),
             )
 
     def _event_loop(self):
@@ -112,35 +115,37 @@ class Sync(threading.Thread):
             time.sleep(self.poll_interval)
 
     def _make_query(self) -> str:
-        in_str, out_str = "", self.out_flow
-        flow_patch_ts = "switch (case has(ts) => yield this " \
-                        "default => put ts := now())"
+        out_str = f"fork (=> has(__from) => " \
+                  f"{'pass' if self.out_flow == '' else self.out_flow})"
         in_str = "from (\n"
         for source in self.sources:
-            in_str += f"pool {source} => yield this"  # TBD omit yield
-            flow_patch_from = f"put from := '{source}'"
-            if self.in_flow != "":
-                in_str += f" | {self.in_flow}"
-            if self.patch_from:
-                in_str += f" | {flow_patch_from}"
-            if self.patch_ts:
-                in_str += f" | {flow_patch_ts}"
+            # TBD: use self.source_ts
+            in_str += f"pool {source} => fork (" \
+                      f"=> select max(ts) as max_ts | put __from := '{source}' " \
+                      f"=> {'pass' if self.in_flow == '' else self.in_flow})"
             if len(self.sources) > 1:
                 in_str += "\n"
-        in_str += ")"
-        if out_str != "":
-            return f"{in_str} | {out_str}"
-        else:
-            return in_str
+        in_str += ")\n"  # wrap up from clause
+        return f"{in_str} | yield this | {out_str}"
 
-    def _get_source_pool_ids(self):
+    def _source_ts_json(self) -> str:
+        return json.dumps({
+            source: zjson.encode_datetime(ts)
+            for source, ts in self.source_ts.items()
+        })
+
+    def _fetch_source_ts(self):
+        # TBD restore source_ts from commit meta
+        raise NotImplementedError
+
+    def _fetch_source_pool_ids(self) -> dict:
         return {
             f"0x{r['id'].hex()}": r["name"]
             for r in self.client.query("from :pools")
             if r["name"] in set(s.split("@")[0] for s in self.sources)
         }
 
-    def _parse_event(self, line: bytes, lines: typing.Iterator):
+    def _parse_event(self, line: bytes, lines: typing.Iterator) -> int:
         def substr(s, start, end):
             return (s.split(start))[1].split(end)[0]
 
@@ -157,14 +162,17 @@ class Sync(threading.Thread):
                     return Sync.SOURCE_COMMIT
         return Sync.SKIP
 
-    def _normalize(self, names: list) -> list:
-        return [self._normalize_one(n) for n in names]
+    @staticmethod
+    def _normalize(names: list) -> list:
+        return [Sync._normalize_one(n) for n in names]
 
-    def _normalize_one(self, name: str) -> str:
+    @staticmethod
+    def _normalize_one(name: str) -> str:
         """Return source in form of pool@main."""
         return f"{name}@main" if "@" not in name else name
 
-    def _denormalize_one(self, name: str) -> tuple:
+    @staticmethod
+    def _denormalize_one(name: str) -> tuple:
         pool, branch = name.split("@")
         return pool, branch
 

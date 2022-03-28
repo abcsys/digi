@@ -1,6 +1,7 @@
 import sys
 import json
 import threading
+import datetime
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -40,8 +41,8 @@ class ZedPool(Pool):
              encoding="zjson",
              same_type=False):
         # update event and processing time
+        now = datetime.datetime.now()
         if encoding == "zjson":
-            now = digi.util.get_ts()
             for o in objects:
                 # event_ts will be attached at the first
                 # data router if does exist from the source
@@ -50,7 +51,7 @@ class ZedPool(Pool):
                 o["ts"] = now
             data = "".join(zjson.encode(objects))
         elif encoding == "json":
-            now = digi.util.get_ts(as_str=True)
+            now = zjson.encode_datetime(now)  # as str
             for o in objects:
                 if "event_ts" not in o:
                     o["event_ts"] = o.get("ts", now)

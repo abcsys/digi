@@ -487,8 +487,3 @@ def name_from_auri(auri: tuple):
 
 update = deep_set
 get = deep_get
-
-
-def get_ts(as_str=False):
-    t = datetime.datetime.now()
-    return t.isoformat() + "Z" if as_str else t

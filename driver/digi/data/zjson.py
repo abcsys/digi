@@ -79,12 +79,16 @@ def _encode_value(value) -> typing.Union[list, str]:
     elif isinstance(value, set):
         return [_encode_value(_v) for _v in value]
     elif isinstance(value, datetime.datetime):
-        return value.isoformat().replace("+00:00", "") + "Z"
+        return encode_datetime(value)
     # TBD check stringification for other primitive types
     elif str(type(value)) in _py_to_zed_primitive_type:
         return str(value)
     else:
         raise Exception(f"cannot encode value of type {type(value)}")
+
+
+def encode_datetime(value: datetime.datetime) -> str:
+    return value.isoformat().replace("+00:00", "") + "Z"
 
 
 if __name__ == '__main__':

@@ -69,7 +69,7 @@ class Egress:
         for name, _sync in self._syncs.items():
             _sync.start()
             logger.info(f"started egress sync {name} "
-                        f"with query: {_sync.query_str}")
+                        f"with query:\n{_sync.query_str}")
 
     def update(self, config: dict):
         self._syncs = dict()
