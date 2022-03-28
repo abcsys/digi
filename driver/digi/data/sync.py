@@ -114,7 +114,7 @@ class Sync(threading.Thread):
             time.sleep(self.poll_interval)
 
     def _make_query(self) -> str:
-        out_str = f"fork (=> has(__from) => " \
+        out_str = f"switch (case has(__from) => pass default => " \
                   f"{'pass' if self.out_flow == '' else self.out_flow})"
         in_str = "from (\n"
         for source in self.sources:
