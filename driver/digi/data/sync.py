@@ -1,8 +1,8 @@
+import datetime
 import os
 import time
 import threading
 
-import digi
 import requests
 import typing
 import yaml
@@ -37,17 +37,16 @@ class Sync(threading.Thread):
         self.out_flow = out_flow
         self.poll_interval = poll_interval
         self.owner = owner
+        # if eoio enabled, the sync agent will
+        # process only those records that contain
+        # a 'ts' field
+        self.eoio = eoio
+        # TBD fetch from dest pool on restart
+        self.source_ts = dict()  # track {source: max(ts)}
         self.query_str = self._make_query()
         self.client = zed.Client(base_url=lake_url) if client is None else client
         self.source_pool_ids = self._fetch_source_pool_ids()
         self.source_set = set(self.sources)
-        # when eoio is enabled, the sync agent will
-        # process only those records that contain
-        # a 'ts' field
-        self.eoio = eoio
-        # track {source: max(ts)}
-        self.source_ts = dict()
-        # TBD load source_ts from dest pool on restart
 
         threading.Thread.__init__(self)
         self._stop_flag = threading.Event()
@@ -119,8 +118,9 @@ class Sync(threading.Thread):
                   f"{'pass' if self.out_flow == '' else self.out_flow})"
         in_str = "from (\n"
         for source in self.sources:
-            # TBD: use self.source_ts
-            in_str += f"pool {source} => fork (" \
+            filter_flow = f"ts > {zjson.encode_datetime(self.source_ts.get(source, datetime.datetime.min))} |" \
+                if self.eoio else ""
+            in_str += f"pool {source} => {filter_flow} fork (" \
                       f"=> select max(ts) as max_ts | put __from := '{source}' " \
                       f"=> {'pass' if self.in_flow == '' else self.in_flow})"
             if len(self.sources) > 1:
