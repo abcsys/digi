@@ -41,12 +41,11 @@ class Sync(threading.Thread):
         # process only those records that contain
         # a 'ts' field; XXX assume pool key is ts
         self.eoio = eoio
-        # TBD fetch from dest pool on restart
-        self.source_ts = dict()  # track {source: max(ts)}
-        self.query_str = self._make_query()
         self.client = zed.Client(base_url=lake_url) if client is None else client
+        self.source_ts = self._fetch_source_ts()  # track {source: max(ts)}
         self.source_pool_ids = self._fetch_source_pool_ids()
         self.source_set = set(self.sources)
+        self.query_str = self._make_query()
 
         threading.Thread.__init__(self)
         self._stop_flag = threading.Event()
@@ -115,7 +114,8 @@ class Sync(threading.Thread):
     def _make_query(self) -> str:
         in_str = "from (\n"
         for source in self.sources:
-            filter_flow = f"ts > {zjson.encode_datetime(self.source_ts.get(source, datetime.datetime.min))} |" \
+            cur_ts = self.source_ts.get(source, datetime.datetime.min)
+            filter_flow = f"ts > {zjson.encode_datetime(cur_ts)} |" \
                 if self.eoio else ""
             in_str += f"pool {source} => {filter_flow} fork (" \
                       f"=> select max(ts) as max_ts | put __from := '{source}' " \
@@ -133,9 +133,26 @@ class Sync(threading.Thread):
             for source, ts in self.source_ts.items()
         })
 
-    def _fetch_source_ts(self):
-        # TBD restore source_ts from commit meta
-        raise NotImplementedError
+    def _fetch_source_ts(self) -> dict:
+        source_ts = dict()
+        pool, branch = self._denormalize_one(self.dest)
+        # filter to branches that have at least one commit
+        branch_flow = f"from {pool}:branches | " \
+                      f"select branch.name as branch," \
+                      f"branch.commit as commit |" \
+                      f"commit > 0x{'0' * 40}"
+        if branch not in set(
+                r["branch"] for r in self.client.query(branch_flow)
+        ):
+            return source_ts
+        meta_flow = f"from {self.dest}:log | " \
+                    f"typeof(this)==<Commit> | " \
+                    f"over meta | " \
+                    f"max(cast(value, <time>)) by key | " \
+                    f"rename max_ts:=max"
+        for r in self.client.query(meta_flow):
+            source_ts[r["key"][0]] = r["max_ts"]
+        return source_ts
 
     def _fetch_source_pool_ids(self) -> dict:
         return {

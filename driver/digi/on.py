@@ -265,10 +265,13 @@ def _attr(fn, path=".", prio=0):
            condition=filter_.has_diff,
            path=_path)
 
-def new_mount(diff, gvr=None) -> bool:
+def mount_change(diff, gvr=None) -> bool:
     """Detect whether the diffs contain newly mounted digi."""
     for _diff in diff:
         op, path, _, _ = _diff
+        # XXX simplify conditions
+        if op == "remove" and len(path) == 4 and path[:2] == ("spec", "mount"):
+            return True
         if op != "add" or (len(path) > 0 and path[-1] != "generation"):
             continue
         if gvr is None and path[:2] == ("spec", "mount"):

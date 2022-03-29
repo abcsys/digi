@@ -105,7 +105,8 @@ def do_mount(model, diff):
     config = model.get("ingress", {})
     # TBD move new_mount to decorator
     # TBD filter to relevant mounts only
-    if digi.on.new_mount(diff):
+    # XXX mount removal doesn't provide new data
+    if digi.on.mount_change(diff):
         digi.router.ingress.restart(config)
 
 
