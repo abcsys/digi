@@ -14,7 +14,6 @@ class Router:
 class Ingress:
     def __init__(self):
         self._syncs = dict()
-        self.sources = dict()
 
     def start(self):
         for name, _sync in self._syncs.items():
@@ -60,6 +59,12 @@ class Ingress:
         self.stop()
         self.update(config=config)
         self.start()
+
+    @staticmethod
+    def _any_source():
+        # TBD fetch all sources - digi and egresses
+        # for digis that are mounted
+        raise NotImplementedError
 
 
 class Egress:

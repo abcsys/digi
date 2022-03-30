@@ -42,8 +42,12 @@ def parse_source(source: typing.Union[dict, str]) -> typing.List[str]:
     else:
         raise NotImplementedError
 
-    # TBD search by watch
-    mounts = digi.model.get_mount(group, version, inflection.pluralize(kind))
+    # TBD support branch any
+    if kind == "any":
+        mounts = digi.model.get_mount(any=True)
+    else:
+        mounts = digi.model.get_mount(group, version, inflection.pluralize(kind))
+
     if mounts:
         return [f"{digi.util.trim_default_space(name)}@{branch}"
                 for name in mounts.keys()]
