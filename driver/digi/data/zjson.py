@@ -80,9 +80,11 @@ def _encode_value(value) -> typing.Union[list, str]:
         return [_encode_value(_v) for _v in value]
     elif isinstance(value, datetime.datetime):
         return encode_datetime(value)
-    # TBD check stringification for other primitive types
     elif str(type(value)) in _py_to_zed_primitive_type:
-        return str(value)
+        if type(value) == bool:
+            return str(value).lower()
+        else:
+            return str(value)
     else:
         raise Exception(f"cannot encode value of type {type(value)}")
 
@@ -97,7 +99,7 @@ if __name__ == '__main__':
         {},
         [],
         {"watt": "12"},
-        {"watt": "12", "user": ["alice"]},
+        {"watt": "12", "user": {"alice": True}},
     ]
     print("\n".join((encode(test))))
     # import zed
