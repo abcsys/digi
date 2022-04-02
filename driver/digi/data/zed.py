@@ -2,6 +2,7 @@ import json
 import getpass
 import urllib
 import zed
+from . import zjson
 
 
 class Client(zed.Client):
@@ -32,3 +33,6 @@ class Client(zed.Client):
     def branch_exist(self, pool, name):
         records = self.query(f"from {pool}:branches")
         return name in set(r["branch"]["name"] for r in records)
+
+    def query(self, query):
+        return zjson.decode_raw(self.query_raw(query))

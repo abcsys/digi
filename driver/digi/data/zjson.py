@@ -1,8 +1,13 @@
-import json
-import datetime
 import typing
+import datetime
+import dateutil.parser
+import binascii
+import decimal
+import ipaddress
+import json
+import durationpy
 
-"""TBD add decoder and patch upstream zed/zed.py"""
+"""TBD patch upstream zed/zed.py"""
 
 _py_to_zed_primitive_type = {
     "<class 'int'>": "int64",
@@ -93,6 +98,103 @@ def _encode_value(value) -> typing.Union[list, str, None]:
 
 def encode_datetime(value: datetime.datetime) -> str:
     return value.isoformat().replace("+00:00", "") + "Z"
+
+
+class QueryError(Exception):
+    """Raised by Client.query() when a query fails."""
+    pass
+
+
+def decode_raw(raw):
+    types = {}
+    for msg in raw:
+        typ, value = msg['type'], msg['value']
+        if isinstance(typ, dict):
+            yield _decode_value(_decode_type(types, typ), value)
+        elif typ == 'QueryError':
+            raise QueryError(value['error'])
+
+
+def _decode_type(types, typ):
+    kind = typ['kind']
+    if kind == 'ref':
+        return types[typ['id']]
+    if kind == 'primitive':
+        return typ
+    elif kind == 'record':
+        if typ['fields'] is None:
+            # XXX
+            pass
+        for f in typ['fields']:
+            f['type'] = _decode_type(types, f['type'])
+    elif kind in ['array', 'set']:
+        typ['type'] = _decode_type(types, typ['type'])
+    elif kind == 'map':
+        typ['key_type'] = _decode_type(types, typ['key_type'])
+        typ['val_type'] = _decode_type(types, typ['val_type'])
+    elif kind == 'union':
+        typ['types'] = [_decode_type(types, t) for t in typ['types']]
+    elif kind == 'enum':
+        pass
+    elif kind in ['error', 'named']:
+        typ['type'] = _decode_type(types, typ['type'])
+    else:
+        raise Exception(f'unknown type kind {kind}')
+    types[typ['id']] = typ
+    return typ
+
+
+def _decode_value(typ, value):
+    if value is None:
+        return None
+    kind = typ['kind']
+    if kind == 'primitive':
+        name = typ['name']
+        if name in ['uint8', 'uint16', 'uint32', 'uint64',
+                    'int8', 'int16', 'int32', 'int64']:
+            return int(value)
+        if name == 'duration':
+            return durationpy.from_str(value)
+        if name == 'time':
+            return dateutil.parser.isoparse(value)
+        if name in ['float16', 'float32', 'float64']:
+            return float(value)
+        if name == 'decimal':
+            return decimal.Decimal(value)
+        if name == 'bool':
+            return value in {'T', 'true'}  # TBD patch upstream
+        if name == 'bytes':
+            return binascii.a2b_hex(value[2:])
+        if name == 'string':
+            return value
+        if name == 'ip':
+            return ipaddress.ip_address(value)
+        if name == 'net':
+            return ipaddress.ip_network(value)
+        if name in 'type':
+            return value
+        if name == 'null':
+            return None
+        raise Exception(f'unknown primitive name {name}')
+    if kind == 'record':
+        return {f['name']: _decode_value(f['type'], v)
+                for f, v in zip(typ['fields'], value)}
+    if kind == 'array':
+        return [_decode_value(typ['type'], v) for v in value]
+    if kind == 'set':
+        return {_decode_value(typ['type'], v) for v in value}
+    if kind == 'map':
+        key_type, val_type = typ['key_type'], typ['val_type']
+        return {_decode_value(key_type, v[0]): _decode_value(val_type, v[1])
+                for v in value}
+    if kind == 'union':
+        type_index, val = value
+        return _decode_value(typ['types'][int(type_index)], val)
+    if kind == 'enum':
+        return typ['symbols'][int(value)]
+    if kind in ['error', 'named']:
+        return _decode_value(typ['type'], value)
+    raise Exception(f'unknown type kind {kind}')
 
 
 if __name__ == '__main__':
