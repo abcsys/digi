@@ -71,7 +71,7 @@ def _encode_type(id_ctr, value) -> dict:
         }
 
 
-def _encode_value(value) -> typing.Union[list, str]:
+def _encode_value(value) -> typing.Union[list, str, None]:
     if isinstance(value, dict):
         return [_encode_value(_v) for _, _v in value.items()]
     elif isinstance(value, list):
@@ -81,6 +81,8 @@ def _encode_value(value) -> typing.Union[list, str]:
     elif isinstance(value, datetime.datetime):
         return encode_datetime(value)
     elif str(type(value)) in _py_to_zed_primitive_type:
+        if value is None:
+            return None
         if type(value) == bool:
             return str(value).lower()
         else:

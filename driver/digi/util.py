@@ -460,24 +460,34 @@ def parse_auri(s: str) -> Auri or None:
 
 
 class Loader(threading.Thread):
-    def __init__(self, load_fn: callable, load_interval: float = 1):
+    def __init__(self, load_fn: callable,
+                 load_interval: float = 1, *,
+                 load_interval_fn: Callable = None,
+                 ):
         threading.Thread.__init__(self)
         self.load_fn = load_fn
         self.load_interval = load_interval
+        self.load_interval_fn: Callable = load_interval_fn
         self._stop_flag = threading.Event()
 
     def run(self):
         self._stop_flag.clear()
         while not self._stop_flag.is_set():
             self.load_fn()
-            time.sleep(self.load_interval)
+            if self.load_interval_fn is None:
+                i = self.load_interval
+            else:
+                i = self.load_interval_fn()
+            time.sleep(i)
 
     def stop(self):
         self._stop_flag.set()
 
-    def reset(self, load_interval: float = None) -> None:
+    def reset(self, load_interval: float = None,
+              load_interval_fn: Callable = None) -> None:
         if load_interval is not None:
             self.load_interval = load_interval
+            self.load_interval_fn = load_interval_fn
         self.stop()
 
 

@@ -1,16 +1,17 @@
+import sys
 import digi
-import inflection
 
 
 class Model():
     def get(self):
         return digi.rc.view()
 
-    def patch(self, view):
-        _, e = digi.util.patch_spec(digi.g, digi.v, digi.r,
-                                    digi.n, digi.ns, view)
+    def patch(self, view, gen=sys.maxsize):
+        cur_gen, r, e = digi.util.check_gen_and_patch_spec(digi.g, digi.v, digi.r,
+                                                           digi.n, digi.ns, view, gen)
         if e != None:
             digi.logger.info(f"patch error: {e}")
+        return cur_gen, r, e
 
     def get_mount(self,
                   group=digi.name,
