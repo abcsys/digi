@@ -161,6 +161,8 @@ _egress_attr = """
 properties:
   flow:
     type: string 
+  eoio:
+    type: boolean
 type: object
 """
 

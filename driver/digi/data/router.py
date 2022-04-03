@@ -122,6 +122,7 @@ def do_ingress(config):
 
 @digi.on.egress
 def do_egress(config):
+    # TBD fix twice start
     digi.router.egress.restart(config)
 
 
