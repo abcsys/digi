@@ -46,6 +46,7 @@ class Ingress:
                 out_flow=_out_flow,
                 dest=digi.pool.name,
                 eoio=ig.get("eoio", True),
+                patch_source=ig.get("patch_source", False),
                 client=zed.Client(),
                 owner=digi.name,
             )

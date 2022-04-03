@@ -25,6 +25,7 @@ class Sync(threading.Thread):
                  *,
                  poll_interval: float = -1,  # sec, <0: use push
                  eoio: bool = True,  # exactly-once in-order
+                 patch_source: bool = False,
                  owner: str = "sync",  # commit author
                  lake_url: str = default_lake_url,
                  client: zed.Client = None,
@@ -37,6 +38,7 @@ class Sync(threading.Thread):
         self.out_flow = out_flow
         self.poll_interval = poll_interval
         self.owner = owner
+        self.patch_source = patch_source
         # if eoio enabled, the sync agent will
         # process only those records that contain
         # a 'ts' field; XXX assume pool key is ts
@@ -117,7 +119,9 @@ class Sync(threading.Thread):
             cur_ts = self.source_ts.get(source, datetime.datetime.min)
             filter_flow = f"ts > {zjson.encode_datetime(cur_ts)} |" \
                 if self.eoio else ""
-            in_str += f"pool {source} => {filter_flow} fork (" \
+            patch_source_flow = f"put from := '{source}' |" \
+                if self.patch_source else ""
+            in_str += f"pool {source} => {filter_flow} {patch_source_flow} fork (" \
                       f"=> select max(ts) as max_ts | put __from := '{source}' " \
                       f"=> {'pass' if self.in_flow == '' else self.in_flow})"
             if len(self.sources) > 1:

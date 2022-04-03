@@ -149,6 +149,8 @@ properties:
     type: string
   eoio:
     type: boolean
+  patch_source:
+    type: boolean
 type: object
 """
 
