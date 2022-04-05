@@ -94,6 +94,7 @@ class Sync(threading.Thread):
 
     def _event_loop(self):
         s = requests.Session()
+        # TBD fix stream timeout
         with s.get(f"{default_lake_url}/events",
                    headers=None, stream=True) as resp:
             lines = resp.iter_lines()
@@ -127,7 +128,7 @@ class Sync(threading.Thread):
             if len(self.sources) > 1:
                 in_str += "\n"
         in_str += ")\n"  # wrap up from clause
-        out_str = f"fork (=> has(__from) => " \
+        out_str = f"switch (case has(__from) => pass default => " \
                   f"{'pass' if self.out_flow == '' else self.out_flow})"
         return f"{in_str} | sort this | {out_str}"
 
