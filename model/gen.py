@@ -234,8 +234,11 @@ if __name__ == '__main__':
 """
 
 
-def pluralize(s):
-    return inflection.pluralize(s)
+def pluralize_lower(s: str):
+    s = s.lower()
+    return {
+        "campus": "campuses"
+    }.get(s, inflection.pluralize(s))
 
 
 def gen(name):
@@ -247,10 +250,10 @@ def gen(name):
     crds = list()
     for model in models:
         # assemble the crd
-        header = _header.format(name=pluralize(model["kind"].lower()) + "." + model["group"],
+        header = _header.format(name=pluralize_lower(model["kind"]) + "." + model["group"],
                                 group=model["group"],
                                 kind=model["kind"],
-                                plural=pluralize(model["kind"].lower()),
+                                plural=pluralize_lower(model["kind"]),
                                 singular=model["kind"].lower())
         header = yaml.load(header, Loader=yaml.FullLoader)
 
@@ -399,7 +402,7 @@ def gen(name):
                 group=model["group"],
                 version=model["version"],
                 kind=model["kind"],
-                plural=inflection.pluralize(model["kind"]).lower(),
+                plural=pluralize_lower(model["kind"]),
                 name=model["kind"].lower(),
                 namespace=model.get("namespace", "default"),
                 mounter="true" if "mount" in model else "false",
