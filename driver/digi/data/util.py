@@ -17,7 +17,8 @@ import digi
 #   - XXX self-reference is allowed with ingress pointing to the
 #     destination itself
 # TBD add tests
-def parse_source(source: typing.Union[dict, str]) -> typing.List[str]:
+def parse_source(source: typing.Union[dict, str], *,
+                 exist_only: bool = True) -> typing.List[str]:
     """
     Return the list of egress pool@branch given source attributes.
     """
@@ -42,13 +43,13 @@ def parse_source(source: typing.Union[dict, str]) -> typing.List[str]:
     else:
         raise NotImplementedError
 
-    # TBD support branch any
     if kind == "any":
         mounts = digi.model.get_mount(any=True)
     else:
         mounts = digi.model.get_mount(group, version, inflection.pluralize(kind))
+    pools = [digi.util.trim_default_namespace(name) for name in mounts.keys()] \
+        if mounts else []
 
-    if mounts:
-        return [f"{digi.util.trim_default_space(name)}@{branch}"
-                for name in mounts.keys()]
-    return []
+    return [f"{pool}@{branch}"
+            for pool in pools if not exist_only
+            or digi.data.lake.branch_exist(pool, branch)]

@@ -93,6 +93,9 @@ def trim_default_space(n):
     return n.replace("default/", "")
 
 
+trim_namespace = trim_default_namespace = trim_default_space
+
+
 def simple_name(n):
     return trim_default_space(n)
 
