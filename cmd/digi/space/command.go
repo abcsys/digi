@@ -159,7 +159,7 @@ var checkCmd = &cobra.Command{
 var switchCmd = &cobra.Command{
 	Use:     "checkout NAME",
 	Short:   "Switch to a digi space",
-	Aliases: []string{"checkout", "c"},
+	Aliases: []string{"checkout", "c", "switch"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// TBD switch should take care of local alias cache, e.g., per
@@ -177,6 +177,9 @@ var aliasCmd = &cobra.Command{
 	Aliases: []string{"rename"},
 	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
+		// TBD alias in a space should have its own section in the
+		//	config file ('digictx'); upon checkout, both the kubectx
+		//	and digictx should get switched
 		_ = helper.RunMake(map[string]string{
 			"OLD_NAME": args[0],
 			"NAME":     args[1],

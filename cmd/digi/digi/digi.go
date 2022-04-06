@@ -548,10 +548,16 @@ var (
 )
 
 var listCmd = &cobra.Command{
-	Use:     "list",
-	Short:   "Get a list of running digis",
-	Aliases: []string{"ps", "ls"},
-	Args:    cobra.ExactArgs(0),
+	Use:   "list [SCOPE]",
+	Short: "Get a list of running digis",
+	Long: `
+The list command returns a list of running digis. If the optional 
+scope is given, the returned digis are limited to the scope in the
+form of, e.g., r1.lamp. The scope is parsed using the local 
+alias cache.
+`,
+	Aliases: []string{"ls"},
+	Args:    cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 		showAll, _ := cmd.Flags().GetBool("all")
@@ -562,9 +568,13 @@ var listCmd = &cobra.Command{
 		if !showAll {
 			flags += " -l app!=lake,app!=syncer"
 		}
-		_ = helper.RunMake(map[string]string{
-			"FLAG": flags,
-		}, "list", true, false)
+		if len(args) == 0 {
+			_ = helper.RunMake(map[string]string{
+				"FLAG": flags,
+			}, "list", true, false)
+		} else {
+
+		}
 	},
 }
 

@@ -1,11 +1,17 @@
 package api
 
-//import "k8s.io/apimachinery/pkg/types"
-//
-//// Given a namespace/name, return the Auri by querying the apiserver.
-//// Use alias as an alternative.
-
-// Resolve from local alias cache
+// ResolveFromLocal returns local alias cache
 func ResolveFromLocal(name string) error {
 	return ResolveAndPrint(name)
+}
+
+// ResolveWithScope r1.lamp@energy
+func ResolveWithScope(duri string) (string, error) {
+
+	return "", nil
+}
+
+// TBD
+func FetchMounts() (string, error) {
+	return "", nil
 }
