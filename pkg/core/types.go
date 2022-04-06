@@ -98,6 +98,8 @@ type Auri struct {
 	Path string `json:"path,omitempty"`
 }
 
+type Duri = Auri
+
 func (ar *Auri) Gvr() schema.GroupVersionResource {
 	return ar.Kind.Gvr()
 }
