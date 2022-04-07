@@ -1,5 +1,5 @@
 # update with your container repo
-DRIVER_REPO = rithvikchuppala
+DRIVER_REPO = [NAME]
 
 # default to rootless docker; may set to
 # `sudo docker` depending on your setup
