@@ -25,6 +25,9 @@ class Ingress:
         self._syncs = dict()
 
         for name, ig in config.items():
+            if ig.get("pause", False):
+                continue
+
             sources = list()
             flow, flow_agg = ig.get("flow", ""), \
                              ig.get("flow_agg", "")
@@ -83,7 +86,8 @@ class Egress:
         self._syncs = dict()
 
         for name, ig in config.items():
-            if ig.get("driver_managed", False):
+            if ig.get("driver_managed", False) \
+                    or ig.get("pause", False):
                 continue
 
             flow = ig.get("flow", "")
@@ -120,14 +124,13 @@ def do_mount(model, diff):
         digi.router.ingress.restart(config)
 
 
-@digi.on.ingress
+@digi.on.ingress(prio=128) # handler runs at last XXX sys.maxsize
 def do_ingress(config):
     digi.router.ingress.restart(config)
 
 
-@digi.on.egress
+@digi.on.egress(prio=128)
 def do_egress(config):
-    # TBD fix twice start
     digi.router.egress.restart(config)
 
 

@@ -151,6 +151,8 @@ properties:
     type: boolean
   patch_source:
     type: boolean
+  pause:
+    type: boolean
 type: object
 """
 
@@ -166,6 +168,8 @@ properties:
   eoio:
     type: boolean
   driver_managed:
+    type: boolean
+  pause:
     type: boolean
 type: object
 """
