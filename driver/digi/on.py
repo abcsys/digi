@@ -20,6 +20,8 @@ def meta(*args, **kwargs):
             _attr(fn, path="meta." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
             _attr(fn, path="meta." + kwargs.pop("path"), *args, **kwargs)
+        else:
+            _attr(fn, path="meta", *args, **kwargs)
         return fn
 
     return decorator
@@ -35,6 +37,8 @@ def control(*args, **kwargs):
             _attr(fn, path="control." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
             _attr(fn, path="control." + kwargs.pop("path"), *args, **kwargs)
+        else:
+            _attr(fn, path="control", *args, **kwargs)
         return fn
 
     return decorator
@@ -50,6 +54,8 @@ def data(*args, **kwargs):
             _attr(fn, path="data." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
             _attr(fn, path="data." + kwargs.pop("path"), *args, **kwargs)
+        else:
+            _attr(fn, path="data", *args, **kwargs)
         return fn
 
     return decorator
@@ -65,6 +71,8 @@ def obs(*args, **kwargs):
             _attr(fn, path="obs." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
             _attr(fn, path="obs." + kwargs.pop("path"), *args, **kwargs)
+        else:
+            _attr(fn, path="obs", *args, **kwargs)
         return fn
 
     return decorator
@@ -80,6 +88,8 @@ def mount(*args, **kwargs):
             _attr(fn, path="mount." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
             _attr(fn, path="mount." + kwargs.pop("path"), *args, **kwargs)
+        else:
+            _attr(fn, path="mount", *args, **kwargs)
         return fn
 
     return decorator
@@ -95,6 +105,8 @@ def ingress(*args, **kwargs):
             _attr(fn, path="ingress." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
             _attr(fn, path="ingress." + kwargs.pop("path"), *args, **kwargs)
+        else:
+            _attr(fn, path="ingress", *args, **kwargs)
         return fn
 
     return decorator
@@ -110,6 +122,8 @@ def egress(*args, **kwargs):
             _attr(fn, path="egress." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
             _attr(fn, path="egress." + kwargs.pop("path"), *args, **kwargs)
+        else:
+            _attr(fn, path="egress", *args, **kwargs)
         return fn
 
     return decorator
