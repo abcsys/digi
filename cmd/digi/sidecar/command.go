@@ -8,10 +8,10 @@ import (
 
 var (
 	RootCmd = &cobra.Command{
-		Use:   "sidecar [command]",
-		Short: "Create and manage sidecars",
+		Use:     "sidecar [command]",
+		Short:   "Create and manage sidecars",
 		Aliases: []string{"sc"},
-		Args:  cobra.MinimumNArgs(1),
+		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 		},
 	}
