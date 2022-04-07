@@ -40,6 +40,7 @@ class Ingress:
                 _out_flow = flow_lib.refresh_ts
             else:
                 _out_flow = f"{flow_agg} | {flow_lib.refresh_ts}"
+
             _sync = sync.Sync(
                 sources=sources,
                 in_flow=flow,
@@ -82,6 +83,9 @@ class Egress:
         self._syncs = dict()
 
         for name, ig in config.items():
+            if ig.get("driver_managed", False):
+                continue
+
             flow = ig.get("flow", "")
             _sync = sync.Sync(
                 sources=[digi.pool.name],

@@ -1,12 +1,13 @@
-import datetime
 import os
 import time
+import datetime
 import threading
-
-import requests
 import typing
-import yaml
+import requests
 import json
+import yaml
+from collections import defaultdict
+
 from . import zed, zjson  # TBD use upstream
 
 default_lake_url = os.environ.get("ZED_LAKE", "http://localhost:9867")
@@ -18,7 +19,7 @@ class Sync(threading.Thread):
     SKIP = 2
 
     def __init__(self,
-                 sources: list,
+                 sources: typing.List[str],
                  dest: str,
                  in_flow: str = "",
                  out_flow: str = "",
@@ -65,6 +66,11 @@ class Sync(threading.Thread):
         self._stop_flag.set()
 
     def once(self):
+        records = self.read()
+        if len(records) != 0:
+            self.load(records)
+
+    def read(self) -> list:
         records = list()
         if self.eoio:
             self.query_str = self._make_query()
@@ -82,19 +88,20 @@ class Sync(threading.Thread):
                     self.source_ts[source] = max(max_ts, self.source_ts[source])
             else:
                 self.source_ts[source] = datetime.datetime.min
+        return records
+
+    def load(self, records: list):
         records = "\n".join(zjson.encode(records))
-        if len(records) > 0:
-            dest_pool, dest_branch = self._denormalize_one(self.dest)
-            self.client.load(
-                dest_pool, records,
-                branch_name=dest_branch,
-                commit_author=self.owner,
-                meta=self._source_ts_json(),
-            )
+        dest_pool, dest_branch = self._denormalize_one(self.dest)
+        self.client.load(
+            dest_pool, records,
+            branch_name=dest_branch,
+            commit_author=self.owner,
+            meta=self._source_ts_json(),
+        )
 
     def _event_loop(self):
         s = requests.Session()
-        # TBD fix stream timeout
         with s.get(f"{default_lake_url}/events",
                    headers=None, stream=True) as resp:
             lines = resp.iter_lines()
@@ -196,6 +203,26 @@ class Sync(threading.Thread):
     def _denormalize_one(name: str) -> tuple:
         pool, branch = name.split("@")
         return pool, branch
+
+
+class Watch(Sync):
+    """A destination-less sync that runs a UDF in once()."""
+
+    def __init__(self, fn: typing.Callable,
+                 source_ts=None, *args, **kwargs):
+        self.fn = fn
+        self.source_ts = source_ts
+
+        super().__init__(dest="none", *args, **kwargs)
+
+    def once(self):
+        self.fn(self.read())
+
+    def _fetch_source_ts(self) -> dict:
+        if self.source_ts is None:
+            return defaultdict(lambda: datetime.datetime.min)
+        else:
+            return self.source_ts
 
 
 def from_config(path: str) -> Sync:

@@ -55,6 +55,8 @@ class __Reconciler:
         # read-only copy to be used in external application
         self._view = dict()
 
+        self._data_watches = dict()
+
     def run(self, spec, old, diff, *args, **kwargs):
         spec = dict(spec)
         proc_spec = dict(spec)
@@ -183,6 +185,18 @@ class __Reconciler:
 
     def clear_pending(self):
         self._pending_handler.clear()
+
+    def add_data_watch(self, name, watch):
+        self._data_watches[name] = watch
+
+    def start_data_watch(self):
+        for name, watch in self._data_watches.items():
+            # TBD check if this egress is on the model, if not
+            #  do digi.model.patch()
+            # TBD we assume egress name is the same as watch's
+            digi.pool.create_branch_if_not_exist(name)
+            watch.start()
+            digi.logger.info(f"data watch {name} started")
 
 
 def safe_lookup(d: dict, path: tuple):

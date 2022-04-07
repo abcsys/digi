@@ -165,6 +165,8 @@ properties:
     type: string 
   eoio:
     type: boolean
+  driver_managed:
+    type: boolean
 type: object
 """
 

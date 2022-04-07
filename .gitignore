@@ -231,14 +231,15 @@ BenchmarkDotNet.Artifacts/
 # pyenv config
 .python-version
 
-# ide and misc
+# JetBrains
 .idea/
-.chglog/
-*.pyc
-.DS_Store
 
-# binaries
+# binaries, packages, caches
 space/sync/cmd/manager/manager
 space/policy/cmd/manager/manager
-
+*.pyc
 dist/
+
+# misc
+.chglog/
+.DS_Store

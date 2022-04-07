@@ -120,3 +120,4 @@ def run():
 
     # TBD graceful termination
     _ready, _stop = util.run_operator(_registry, log_level=digi.log_level)
+    digi.rc.start_data_watch()

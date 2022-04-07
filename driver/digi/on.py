@@ -1,6 +1,7 @@
 import inspect
 from collections import OrderedDict
 
+import digi
 import digi.util as util
 import digi.filter as filter_
 from digi.reconcile import rc
@@ -265,6 +266,7 @@ def _attr(fn, path=".", prio=0):
            condition=filter_.has_diff,
            path=_path)
 
+
 def mount_change(diff, gvr=None) -> bool:
     """Detect whether the diffs contain newly mounted digi."""
     for _diff in diff:
@@ -279,3 +281,47 @@ def mount_change(diff, gvr=None) -> bool:
         elif path[:3] == ("spec", "mount", gvr):
             return True
     return False
+
+
+def pool(*args, **kwargs):
+    # TBD load max_ts on restart; the max_ts should be stored
+    #   at a persistent location and written atomically, e.g.,
+    #   the digi.model or digi.pool
+
+    class DelayedWatch:
+        def __init__(self, fn, *args, **kwargs):
+            self.fn = fn
+            self.args = args
+            self.kwargs = kwargs
+            self.watch = None
+
+        def start(self):
+            self.watch = digi.pool.watch(
+                self.fn, *self.args, **self.kwargs
+            )
+            self.watch.start()
+
+        def stop(self):
+            self.watch.stop()
+
+    # @pool
+    if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
+        digi.rc.add_data_watch(
+            name=watch_name(args[0]),
+            watch=DelayedWatch(args[0], *args, **kwargs),
+        )
+        return args[0]
+
+    # @pool(*args, **kwargs)
+    def decorator(fn):
+        digi.rc.add_data_watch(
+            name=watch_name(fn),
+            watch=DelayedWatch(fn, *args, **kwargs),
+        )
+        return fn
+
+    return decorator
+
+
+def watch_name(fn):
+    return fn.__name__.lstrip("gen_")

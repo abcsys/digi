@@ -3,11 +3,11 @@ import json
 import threading
 import datetime
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Callable
 
 import digi
 from digi.data import logger, zjson
-from digi.data import zed
+from digi.data import zed, sync
 
 
 class Pool(ABC):
@@ -22,6 +22,11 @@ class Pool(ABC):
 
     @abstractmethod
     def query(self, query: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def watch(self, once: Callable, *,
+              branch: str = "main"):
         raise NotImplementedError
 
     @abstractmethod
@@ -73,8 +78,22 @@ class ZedPool(Pool):
         finally:
             self.lock.release()
 
-    def query(self, query):
+    def query(self, query: str):
+        if query != "":
+            query = f"| {query}"
+        query = f"from {self.name} {query}"
         return self.client.query(query)
+
+    def watch(self, fn: Callable, *,
+              in_flow: str = "",
+              eoio: bool = True,
+              ):
+        """Watch changes of the main pool and run UDF."""
+        source = f"{self.name}@main"
+        return sync.Watch(fn,
+                          sources=[source],
+                          eoio=eoio,
+                          in_flow=in_flow)
 
     def create_branch_if_not_exist(self, branch: str):
         if not self.client.branch_exist(self.name, branch):
