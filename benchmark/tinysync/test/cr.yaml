@@ -1,0 +1,5 @@
+apiVersion: benchmark.digi.dev/v1
+kind: Tinysync
+metadata:
+  name: tinysync-test
+spec: {}

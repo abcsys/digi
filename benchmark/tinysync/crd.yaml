@@ -1,0 +1,41 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: tinysyncs.benchmark.digi.dev
+spec:
+  group: benchmark.digi.dev
+  names:
+    kind: Tinysync
+    listKind: TinysyncList
+    plural: tinysyncs
+    singular: tinysync
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              egress:
+                properties:
+                  out:
+                    properties:
+                      driver_managed:
+                        type: boolean
+                      eoio:
+                        type: boolean
+                      flow:
+                        type: string
+                    type: object
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true

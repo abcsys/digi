@@ -1,0 +1,9 @@
+group: benchmark.digi.dev
+image: silveryfu/tinysync.v1.benchmark.digi.dev:latest
+imagepull: Always
+kind: Tinysync
+mounter: false
+name: tinysync
+namespace: default
+plural: tinysyncs
+version: v1

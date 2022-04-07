@@ -1,0 +1,5 @@
+group: benchmark.digi.dev
+version: v1
+kind: Tinysync
+egress:
+  out: object
