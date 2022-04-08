@@ -9,4 +9,4 @@ refresh_ts = """switch (
 patch_ts = "switch ( case has(ts) => yield this " \
            "default => put ts := now() )"
 
-drop_meta = "drop __handler"
+drop_meta = "not __meta"

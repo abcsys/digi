@@ -65,12 +65,14 @@ func isQuery(s string) bool {
 }
 
 func Query(name, query string, flags *pflag.FlagSet) error {
+	// TBD load filter meta somewhere centralized
+	inFlow := "not __meta"
 	if name != "" {
 		// TBD handle name as 'pool'@branch
 		if query != "" {
-			query = fmt.Sprintf("from %s | %s", name, query)
+			query = fmt.Sprintf("from %s | %s | %s", name, inFlow, query)
 		} else {
-			query = fmt.Sprintf("from %s", name)
+			query = fmt.Sprintf("from %s | %s", name, inFlow)
 		}
 	}
 

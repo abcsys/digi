@@ -465,6 +465,17 @@ var stopCmd = &cobra.Command{
 	},
 }
 
+// TBD (rithvik)
+//var configCmd = &cobra.Command{
+//	Use:     "config [<options>]",
+//	Short:   "Configure repos etc.",
+//	Aliases: []string{"configure", ""},
+//	Args:    cobra.ExactArgs(0),
+//	Run: func(cmd *cobra.Command, args []string) {
+//		//q, _ := cmd.Flags().GetBool("quiet")
+//	},
+//}
+
 var rmkCmd = &cobra.Command{
 	Use:     "rmk KIND [KIND ...]",
 	Short:   "Remove a kind locally",

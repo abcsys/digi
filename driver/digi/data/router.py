@@ -73,6 +73,8 @@ class Ingress:
 
 
 class Egress:
+    INIT = {"__meta": "init"}
+
     def __init__(self):
         self._syncs = dict()
 
@@ -94,7 +96,7 @@ class Egress:
             _sync = sync.Sync(
                 sources=[digi.pool.name],
                 in_flow=flow,
-                out_flow=flow_lib.refresh_ts,
+                out_flow=f"{flow_lib.drop_meta} | {flow_lib.refresh_ts}",
                 dest=f"{digi.pool.name}@{name}",
                 eoio=ig.get("eoio", True),
                 client=zed.Client(),
@@ -124,7 +126,7 @@ def do_mount(model, diff):
         digi.router.ingress.restart(config)
 
 
-@digi.on.ingress(prio=128) # handler runs at last XXX sys.maxsize
+@digi.on.ingress(prio=128)  # handler runs at last XXX sys.maxsize
 def do_ingress(config):
     digi.router.ingress.restart(config)
 

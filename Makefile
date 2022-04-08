@@ -1,5 +1,6 @@
 # update with your container repo
-DRIVER_REPO = [NAME]
+# TBD digi config
+DRIVER_REPO = silveryfu
 
 # default to rootless docker; may set to
 # `sudo docker` depending on your setup

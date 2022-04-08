@@ -8,6 +8,7 @@ from typing import List, Callable
 import digi
 from digi.data import logger, zjson
 from digi.data import zed, sync
+from digi.data import router
 
 
 class Pool(ABC):
@@ -98,6 +99,7 @@ class ZedPool(Pool):
     def create_branch_if_not_exist(self, branch: str):
         if not self.client.branch_exist(self.name, branch):
             self.client.create_branch(self.name, branch)
+            self.load([router.Egress.INIT], branch=branch)
 
 
 def pool_name(g, v, r, n, ns):
