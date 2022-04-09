@@ -32,7 +32,6 @@ class Sync(threading.Thread):
                  client: zed.Client = None,
                  ):
         assert len(sources) > 0 and dest != ""
-
         self.sources = self._normalize(sources)
         self.dest = self._normalize_one(dest)
         self.in_flow = in_flow  # TBD multi-in_flow

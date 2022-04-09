@@ -57,21 +57,23 @@ class ZedPool(Pool):
                 o["ts"] = now
             data = "".join(zjson.encode(objects))
         elif encoding == "json":
-            now = zjson.encode_datetime(now)  # as str
+            zjson_now = zjson.encode_datetime(now)  # as str
             for o in objects:
                 if "event_ts" not in o:
-                    o["event_ts"] = o.get("ts", now)
-                o["ts"] = now
+                    o["event_ts"] = o.get("ts", zjson_now)
+                o["ts"] = zjson_now
             data = "\n".join(json.dumps(o) for o in objects)
         else:
             raise NotImplementedError
 
         self.lock.acquire()
         try:
+            # TBD better source name
+            meta = json.dumps({f"{digi.name}": zjson.encode_datetime(now)})
             self.client.load(self.name, data,
                              branch_name=branch,
                              commit_author=digi.name,
-                             meta="")
+                             meta=meta)
             # TBD load from digi also commits source ts in meta
         except Exception as e:
             digi.logger.warning(f"unable to load "

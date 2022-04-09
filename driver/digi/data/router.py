@@ -35,6 +35,7 @@ class Ingress:
                 sources += util.parse_source(s)
             for s in ig.get("sources", []):
                 sources += util.parse_source(s)
+
             # TBD deduplicate sources
             if len(sources) == 0:
                 continue
