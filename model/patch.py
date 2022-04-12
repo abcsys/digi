@@ -92,13 +92,14 @@ def patch():
             if _gvr in crd_deps and len(crd_deps[_gvr]) != 0:
                 continue
             break
-        assert _gvr
+
+        assert _gvr and len(crd_deps[_gvr]) == 0, f"dep loop {_gvr} {crd_deps}"
 
         for parent_gvr, parent_deps in crd_deps.items():
             if _gvr in parent_deps:
                 patch_mount(_gvr, crds[_gvr], parent_gvr, crds[parent_gvr])
                 parent_deps.remove(_gvr)
-        _ = crds.pop(_gvr)
+        _, _ = crds.pop(_gvr), crd_deps.pop(_gvr)
 
     for _gvr, _crds in crd_groups.items():
         with open(f_crds[_gvr], "w") as f:

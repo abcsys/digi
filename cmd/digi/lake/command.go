@@ -74,6 +74,11 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 		} else {
 			query = fmt.Sprintf("from %s | %s", name, inFlow)
 		}
+	} else if query != "" {
+		// TBD insert inFlow after from in query
+		query = fmt.Sprintf("%s | %s", query, inFlow)
+	} else {
+		return fmt.Errorf("missing query")
 	}
 
 	var flagStr string
