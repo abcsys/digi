@@ -1,6 +1,7 @@
 group: digi.dev
 image: silveryfu/lake.v1.digi.dev:latest
 imagepull: Always
+kind: lake
 mounter: false
 pool_provider: none
 name: lake

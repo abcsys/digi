@@ -1,11 +1,11 @@
 import typing
 import datetime
 import dateutil.parser
+import durationpy
 import binascii
 import decimal
 import ipaddress
 import json
-import durationpy
 
 """TBD patch upstream zed/zed.py"""
 
@@ -85,6 +85,8 @@ def _encode_value(value) -> typing.Union[list, str, None]:
         return [_encode_value(_v) for _v in value]
     elif isinstance(value, datetime.datetime):
         return encode_datetime(value)
+    elif isinstance(value, datetime.timedelta):
+        return durationpy.to_str(value)
     elif str(type(value)) in _py_to_zed_primitive_type:
         if value is None:
             return None
