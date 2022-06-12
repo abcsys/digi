@@ -6,4 +6,4 @@ plural: digis
 mounter: true
 image: library/digi
 pool_provider: zed
-strict_mount: true
+mount_mode: permissive

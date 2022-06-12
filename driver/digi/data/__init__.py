@@ -10,6 +10,9 @@ from digi.data.router import create_router
 from digi.data.zed import Client
 from digi.data.sync import Sync, Watch
 
-_, _ = create_router, create_pool
-_, _ = Sync, Watch
 lake = Client()
+
+__all__ = [
+    "Sync", "Watch",
+    "create_router", "create_pool"
+]

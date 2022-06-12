@@ -1,9 +1,9 @@
+import typing
 import inspect
 from collections import OrderedDict
 
 import digi
 import digi.util as util
-import digi.filter as filter_
 from digi.reconcile import rc
 
 """Filters."""
@@ -12,16 +12,16 @@ from digi.reconcile import rc
 def meta(*args, **kwargs):
     # if decorator not parameterized
     if len(args) >= 1 and callable(args[0]):
-        _attr(path="meta", *args, **kwargs)
+        register(path="meta", *args, **kwargs)
         return args[0]
 
     def decorator(fn):
         if len(args) >= 1:
-            _attr(fn, path="meta." + args[0], *args[1:], **kwargs)
+            register(fn, path="meta." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
-            _attr(fn, path="meta." + kwargs.pop("path"), *args, **kwargs)
+            register(fn, path="meta." + kwargs.pop("path"), *args, **kwargs)
         else:
-            _attr(fn, path="meta", *args, **kwargs)
+            register(fn, path="meta", *args, **kwargs)
         return fn
 
     return decorator
@@ -29,16 +29,16 @@ def meta(*args, **kwargs):
 
 def control(*args, **kwargs):
     if len(args) >= 1 and callable(args[0]):
-        _attr(path="control", *args, **kwargs)
+        register(path="control", *args, **kwargs)
         return args[0]
 
     def decorator(fn):
         if len(args) >= 1:
-            _attr(fn, path="control." + args[0], *args[1:], **kwargs)
+            register(fn, path="control." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
-            _attr(fn, path="control." + kwargs.pop("path"), *args, **kwargs)
+            register(fn, path="control." + kwargs.pop("path"), *args, **kwargs)
         else:
-            _attr(fn, path="control", *args, **kwargs)
+            register(fn, path="control", *args, **kwargs)
         return fn
 
     return decorator
@@ -46,16 +46,16 @@ def control(*args, **kwargs):
 
 def data(*args, **kwargs):
     if len(args) >= 1 and callable(args[0]):
-        _attr(path="data", *args, **kwargs)
+        register(path="data", *args, **kwargs)
         return args[0]
 
     def decorator(fn):
         if len(args) >= 1:
-            _attr(fn, path="data." + args[0], *args[1:], **kwargs)
+            register(fn, path="data." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
-            _attr(fn, path="data." + kwargs.pop("path"), *args, **kwargs)
+            register(fn, path="data." + kwargs.pop("path"), *args, **kwargs)
         else:
-            _attr(fn, path="data", *args, **kwargs)
+            register(fn, path="data", *args, **kwargs)
         return fn
 
     return decorator
@@ -63,16 +63,16 @@ def data(*args, **kwargs):
 
 def obs(*args, **kwargs):
     if len(args) >= 1 and callable(args[0]):
-        _attr(path="obs", *args, **kwargs)
+        register(path="obs", *args, **kwargs)
         return args[0]
 
     def decorator(fn):
         if len(args) >= 1:
-            _attr(fn, path="obs." + args[0], *args[1:], **kwargs)
+            register(fn, path="obs." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
-            _attr(fn, path="obs." + kwargs.pop("path"), *args, **kwargs)
+            register(fn, path="obs." + kwargs.pop("path"), *args, **kwargs)
         else:
-            _attr(fn, path="obs", *args, **kwargs)
+            register(fn, path="obs", *args, **kwargs)
         return fn
 
     return decorator
@@ -80,16 +80,16 @@ def obs(*args, **kwargs):
 
 def mount(*args, **kwargs):
     if len(args) >= 1 and callable(args[0]):
-        _attr(path="mount", *args, **kwargs)
+        register(path="mount", *args, **kwargs)
         return args[0]
 
     def decorator(fn):
         if len(args) >= 1:
-            _attr(fn, path="mount." + args[0], *args[1:], **kwargs)
+            register(fn, path="mount." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
-            _attr(fn, path="mount." + kwargs.pop("path"), *args, **kwargs)
+            register(fn, path="mount." + kwargs.pop("path"), *args, **kwargs)
         else:
-            _attr(fn, path="mount", *args, **kwargs)
+            register(fn, path="mount", *args, **kwargs)
         return fn
 
     return decorator
@@ -97,16 +97,16 @@ def mount(*args, **kwargs):
 
 def ingress(*args, **kwargs):
     if len(args) >= 1 and callable(args[0]):
-        _attr(path="ingress", *args, **kwargs)
+        register(path="ingress", *args, **kwargs)
         return args[0]
 
     def decorator(fn):
         if len(args) >= 1:
-            _attr(fn, path="ingress." + args[0], *args[1:], **kwargs)
+            register(fn, path="ingress." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
-            _attr(fn, path="ingress." + kwargs.pop("path"), *args, **kwargs)
+            register(fn, path="ingress." + kwargs.pop("path"), *args, **kwargs)
         else:
-            _attr(fn, path="ingress", *args, **kwargs)
+            register(fn, path="ingress", *args, **kwargs)
         return fn
 
     return decorator
@@ -114,38 +114,34 @@ def ingress(*args, **kwargs):
 
 def egress(*args, **kwargs):
     if len(args) >= 1 and callable(args[0]):
-        _attr(path="egress", *args, **kwargs)
+        register(path="egress", *args, **kwargs)
         return args[0]
 
     def decorator(fn):
         if len(args) >= 1:
-            _attr(fn, path="egress." + args[0], *args[1:], **kwargs)
+            register(fn, path="egress." + args[0], *args[1:], **kwargs)
         elif "path" in kwargs:
-            _attr(fn, path="egress." + kwargs.pop("path"), *args, **kwargs)
+            register(fn, path="egress." + kwargs.pop("path"), *args, **kwargs)
         else:
-            _attr(fn, path="egress", *args, **kwargs)
+            register(fn, path="egress", *args, **kwargs)
         return fn
 
     return decorator
 
 
-# XXX test path
-def attr(*args, **kwargs):
+def model(*args, **kwargs):
     if len(args) >= 1 and callable(args[0]):
-        _attr(path=".", *args, **kwargs)
+        register(path=".", *args, **kwargs)
         return args[0]
 
     def decorator(fn):
-        _attr(fn, *args, **kwargs)
+        register(fn, *args, **kwargs)
         return fn
 
     return decorator
 
 
-model = attr
-
-
-def _attr(fn, path=".", prio=0):
+def register(fn, path=".", prio=0, cond=digi.filter.changed):
     # preprocess the path str -> tuple of str
     _path = list()
     ps = path.split(".")
@@ -277,7 +273,7 @@ def _attr(fn, path=".", prio=0):
 
     rc.add(handler=wrapper_fn,
            priority=prio,
-           condition=filter_.has_diff,
+           condition=cond,
            path=_path)
 
 

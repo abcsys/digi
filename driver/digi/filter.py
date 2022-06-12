@@ -6,19 +6,21 @@ def always(*args, **kwargs):
     return True
 
 
-def has_diff(_, diff, path, *args, **kwargs) -> bool:
+def changed(_, diff, path, *args, **kwargs) -> bool:
     _, _ = args, kwargs
-    changed_paths = {(".",): True}
     # TBD: add shared diff for all handlers
     # TBD: support incremental diff
+    return path_changed(diff, path)
 
+
+def path_changed(diff: list, path: tuple):
+    changed_paths = {(".",): True}
     for op, path_, old, new in diff:
-        # on create
+        # when create
         if old is None and len(path_) == 0:
             changed_paths.update(_from_model(new))
         else:
             changed_paths.update(_from_path_tuple(path_))
-
     if path in changed_paths or len(diff) == 0:
         return True
     return False

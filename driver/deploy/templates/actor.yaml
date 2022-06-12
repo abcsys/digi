@@ -41,8 +41,8 @@ spec:
           - name: POOL_PROVIDER
             value: {{ quote .Values.pool_provider }}
           # composition
-          - name: STRICT_MOUNT
-            value: {{ quote .Values.strict_mount }}
+          - name: MOUNT_MODE
+            value: {{ quote .Values.mount_mode }}
           - name: TRIM_MOUNT_ON_LOAD
             value: {{ quote .Values.trim_mount_on_load }}
           # visualization

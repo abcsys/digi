@@ -21,11 +21,13 @@ Event propagation:
   the child's intent;
 """
 
-if os.environ.get("STRICT_MOUNT", "true") == "true":
+_mount_mode = os.environ.get("MOUNT_MODE", "permissive")
+TRIM_FROM_PARENT, TRIM_FROM_CHILD = set(), set() # don't trim any
+if _mount_mode == "strict":
     TRIM_FROM_PARENT = {"status", "output", "obs", "meta"}
     TRIM_FROM_CHILD  = {"intent", "input"}
-else:
-    TRIM_FROM_PARENT = TRIM_FROM_CHILD = set()
+elif _mount_mode == "intent_rec":
+    TRIM_FROM_CHILD = set()
 
 class Watch:
     def __init__(self, g, v, r, n, ns="default", *,
