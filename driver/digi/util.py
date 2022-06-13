@@ -4,7 +4,6 @@ import time
 import asyncio
 import contextlib
 import threading
-import datetime
 
 import digi
 import inflection
@@ -170,6 +169,13 @@ def model_id(g, v, r, n, ns) -> str:
 
 def gvr(g, v, r) -> str:
     return f"{g}/{v}/{r}"
+
+
+def gvr_from_kind(kind, g=digi.g, v=digi.v):
+    return f"{g}/{v}/{inflection.pluralize(kind)}"
+
+
+gvr_of = gvr_from_kind
 
 
 def is_gvr(s: str) -> bool:
@@ -507,6 +513,26 @@ class Loader(Loop):
               load_interval_fn: Callable = None) -> None:
         super().reset(loop_interval=load_interval,
                       loop_interval_fn=load_interval_fn)
+
+
+_report_loops = dict()
+
+
+def report_loop(fn: Callable):
+    global _report_loops
+    _report_loops[fn.__name__] = Loader(load_fn=fn)
+
+    @digi.on.meta
+    def do_meta(meta):
+        i = meta.get("report_interval", -1)
+        _report_loops[fn.__name__].stop()
+        if i > 0:
+            _loop = digi.util.Loader(
+                load_fn=fn,
+                load_interval=i,
+            )
+            _report_loops[fn.__name__] = _loop
+            _loop.start()
 
 
 def name_from_auri(auri: tuple):
