@@ -61,7 +61,7 @@ class __Reconciler:
         spec = dict(spec)
         proc_spec = dict(spec)
 
-        self._view = spec
+        self._view = proc_spec
         self._update_handler_info(spec, diff)
         self._compile_handler()
 

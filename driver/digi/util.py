@@ -462,36 +462,51 @@ def parse_auri(s: str) -> Auri or None:
     return Auri(**parsed)
 
 
-class Loader(threading.Thread):
-    def __init__(self, load_fn: callable,
-                 load_interval: float = 1, *,
-                 load_interval_fn: Callable = None,
+class Loop(threading.Thread):
+    def __init__(self, loop_fn: callable,
+                 loop_interval: float = 1, *,
+                 loop_interval_fn: Callable = None,
                  ):
         threading.Thread.__init__(self)
-        self.load_fn = load_fn
-        self.load_interval = load_interval
-        self.load_interval_fn: Callable = load_interval_fn
+        self.loop_fn = loop_fn
+        self.loop_interval = loop_interval
+        self.loop_interval_fn: Callable = loop_interval_fn
         self._stop_flag = threading.Event()
 
     def run(self):
         self._stop_flag.clear()
         while not self._stop_flag.is_set():
-            self.load_fn()
-            if self.load_interval_fn is None:
-                i = self.load_interval
+            self.loop_fn()
+            if self.loop_interval_fn is None:
+                i = self.loop_interval
             else:
-                i = self.load_interval_fn()
+                i = self.loop_interval_fn()
             time.sleep(i)
 
     def stop(self):
         self._stop_flag.set()
 
+    def reset(self, loop_interval: float = None,
+              loop_interval_fn: Callable = None) -> None:
+        if loop_interval is not None:
+            self.loop_interval = loop_interval
+            self.loop_interval_fn = loop_interval_fn
+        self.stop()
+
+
+class Loader(Loop):
+    def __init__(self, load_fn: callable,
+                 load_interval: float = 1, *,
+                 load_interval_fn: Callable = None,
+                 ):
+        super().__init__(loop_fn=load_fn,
+                         loop_interval=load_interval,
+                         loop_interval_fn=load_interval_fn)
+
     def reset(self, load_interval: float = None,
               load_interval_fn: Callable = None) -> None:
-        if load_interval is not None:
-            self.load_interval = load_interval
-            self.load_interval_fn = load_interval_fn
-        self.stop()
+        super().reset(loop_interval=load_interval,
+                      loop_interval_fn=load_interval_fn)
 
 
 def name_from_auri(auri: tuple):
