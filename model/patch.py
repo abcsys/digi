@@ -39,7 +39,13 @@ def patch_mount(_gvr, crd, parent_gvr, parent_crd):
 
 def patch():
     # XXX multiple versions might fail
-    model_dirs = filter(os.path.isdir, os.listdir(_dir_path))
+    model_dirs = list(filter(os.path.isdir, os.listdir(_dir_path)))
+
+    # XXX user should pass in external model dependencies; below hard-coded adding mocks
+    if os.path.exists("mocks"):
+        _mock_path = os.listdir(os.path.join(_dir_path, "mocks"))
+        for md in filter(os.path.isdir, _mock_path):
+            model_dirs.append(os.path.join("mocks", md))
 
     # crd yamls
     f_crds = dict()
@@ -93,7 +99,7 @@ def patch():
                 continue
             break
 
-        assert _gvr and len(crd_deps[_gvr]) == 0, f"dep loop {_gvr} {crd_deps}"
+        assert _gvr and len(crd_deps[_gvr]) == 0, f"dep loop or missing {_gvr} {crd_deps}"
 
         for parent_gvr, parent_deps in crd_deps.items():
             if _gvr in parent_deps:

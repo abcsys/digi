@@ -6,12 +6,33 @@ class Model():
     def get(self):
         return digi.rc.view()
 
-    def patch(self, view, gen=sys.maxsize):
-        cur_gen, r, e = digi.util.check_gen_and_patch_spec(digi.g, digi.v, digi.r,
-                                                           digi.n, digi.ns, view, gen)
+    def patch(self, view_or_path, value=None, gen=sys.maxsize):
+        """If first arg given is a view patch it directly; if not
+        use it as the path and use the second to compose the view.
+        This is useful when the updated value has a prefix."""
+        if isinstance(view_or_path, dict):
+            view = view_or_path
+        elif isinstance(view_or_path, str):
+            path, view = view_or_path, dict()
+            fields = path.strip(".").split(".")
+            front = view
+            for field in fields[:-1]:
+                front[field] = dict()
+                front = front[field]
+            front[fields[-1]] = value
+        else:
+            raise NotImplementedError
+
+        cur_gen, r, e = digi.util.check_gen_and_patch_spec(
+            digi.g, digi.v, digi.r, digi.n, digi.ns,
+            view, gen)
+
         if e != None:
             digi.logger.info(f"patch error: {e}")
         return cur_gen, r, e
+
+    def update(self, *args, **kwargs):
+        return self.patch(*args, **kwargs)
 
     def get_mount(self,
                   group=digi.name,

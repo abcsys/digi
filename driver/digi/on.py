@@ -78,6 +78,10 @@ def obs(*args, **kwargs):
     return decorator
 
 
+# TODO fix dbox compatibility
+status = obs
+
+
 def mount(*args, **kwargs):
     if len(args) >= 1 and callable(args[0]):
         register(path="mount", *args, **kwargs)

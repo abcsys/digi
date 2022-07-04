@@ -291,7 +291,7 @@ def put(path, src, target, transform=lambda x: x):
 
 
 def deep_get(d: dict, path: Union[str, Iterable], default=None) -> Any:
-    """accepts paths in form root.'digi.dev/test'.control.power"""
+    """Can accept paths in form root.'digi.dev/test'.control.power"""
     if "'" in path or '"' in path:
         path = path.replace('"', "'")
         parsed = list()
