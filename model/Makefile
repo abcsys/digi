@@ -62,14 +62,14 @@ list:
 edit:
 	# TBD add revision number in the temporary file
 	(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
-    || kubectl get $(PLURAL).$(GROUP) $(NAME) -oyaml) | kubectl neat -l 0 \
+    || kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | kubectl neat -l 0 \
     > $(FILE) && vi $(FILE) && kubectl apply -f $(FILE); rm $(FILE)
 edit-all:
 	kubectl edit $(PLURAL) $(NAME) 2>&1 || kubectl edit $(PLURAL).$(GROUP) $(NAME)
 
 .PHONY: clean-test test
 clean-test:
-	kubectl delete $(PLURAL).$(GROUP) $(NAME) >/dev/null 2>&1 || true
+	kubectl delete $(PLURAL).$(VERSION).$(GROUP) $(NAME) >/dev/null 2>&1 || true
 test: | all clean-test
 	kubectl apply -f $(WORKDIR)/$(KIND)/test/cr.yaml
 	cd $(WORKDIR) && GROUP=$(GROUP) VERSION=$(VERSION) KIND=$(KIND) \
@@ -138,7 +138,7 @@ stop:
 	kubectl delete clusterrolebinding $(NAME) >/dev/null || true & \
 	kubectl delete service $(NAME) >/dev/null || true & \
 	((kubectl delete $(PLURAL) $(NAME) >/dev/null || \
-	kubectl delete $(PLURAL).$(GROUP) $(NAME)) >/dev/null || true) & \
+	kubectl delete $(PLURAL).$(VERSION).$(GROUP) $(NAME)) >/dev/null || true) & \
 	kubectl delete deployment $(NAME) >/dev/null && \
 	echo $(NAME) || echo "$(NAME) isn't running"
 run-no-pool: | prepare model
@@ -152,10 +152,10 @@ run-no-pool: | prepare model
 .PHONY: check watch
 check:
 	(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
- 	|| kubectl get $(PLURAL).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)
+ 	|| kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)
 watch:
 	watch -n$(INTERVAL) -t "(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
- 	|| kubectl get $(PLURAL).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)"
+ 	|| kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)"
 
 ifndef SHELL_BIN
 override SHELL_BIN = sh

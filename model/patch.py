@@ -1,7 +1,5 @@
 import yaml
 import os
-import sys
-import pprint as pp
 from collections import defaultdict
 
 """
