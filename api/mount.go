@@ -20,11 +20,12 @@ const (
 // Mounter contains methods to mount one or multiple digis
 // to the target digi
 type Mounter struct {
-	Mounts []*space.Mount
-	Op     int
+	Mounts   []*space.Mount
+	Op       int
+	NumRetry int
 }
 
-func NewMounter(sourceNames []string, targetName string, op int, mode string) (*Mounter, error) {
+func NewMounter(sourceNames []string, targetName string, op int, mode string, numRetry int) (*Mounter, error) {
 	var mounts []*space.Mount
 	target, err := ParseAuri(targetName)
 	if err != nil {
@@ -44,8 +45,9 @@ func NewMounter(sourceNames []string, targetName string, op int, mode string) (*
 	}
 
 	return &Mounter{
-		Mounts: mounts,
-		Op:     op,
+		Mounts:   mounts,
+		Op:       op,
+		NumRetry: numRetry,
 	}, nil
 }
 
@@ -55,7 +57,7 @@ func (m *Mounter) Do() error {
 		return fmt.Errorf("unable to create k8s client: %v", err)
 	}
 
-	tj, err := c.GetResourceJson(&m.Mounts[0].Target)
+	tj, err := c.GetModelJson(&m.Mounts[0].Target)
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
@@ -139,7 +141,7 @@ func (m *Mounter) Do() error {
 			return fmt.Errorf("unrecognized mount mode")
 		}
 	}
-	return c.UpdateFromJson(tj)
+	return c.UpdateFromJson(tj, m.NumRetry)
 }
 
 func (m *Mounter) mountExists(j string, path []string) (bool, error) {

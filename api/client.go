@@ -28,7 +28,7 @@ func NewClient() (*Client, error) {
 	}, nil
 }
 
-func (c *Client) GetResourceJson(ar *core.Auri) (string, error) {
+func (c *Client) GetModelJson(ar *core.Auri) (string, error) {
 	gvr := ar.Gvr()
 	d, err := c.k.DynamicClient.Resource(gvr).Namespace(ar.Namespace).Get(context.TODO(), ar.Name, metav1.GetOptions{})
 	if err != nil {
@@ -45,13 +45,29 @@ func (c *Client) GetResourceJson(ar *core.Auri) (string, error) {
 
 // UpdateFromJson updates the API resource on the apiserver specified in the given json string.
 // It uses the resource discovery and dynamic client to avoid unmarshalling into a concrete type.
-func (c *Client) UpdateFromJson(j string) error {
+func (c *Client) UpdateFromJson(j string, numRetry int) error {
 	var obj *unstructured.Unstructured
-	if err := json.Unmarshal([]byte(j), &obj); err != nil {
+	var err error
+	if err = json.Unmarshal([]byte(j), &obj); err != nil {
 		return fmt.Errorf("unable to unmarshall %s: %v", j, err)
 	}
-
 	// update the target
+	for i := 1; i <= (numRetry + 1); i++ {
+		res, err := c.getResource(obj)
+		if err != nil {
+			// don't retry on resource fetch error
+			return err
+		}
+		// retry in case of update conflict
+		_, err = c.k.DynamicClient.Resource(res).Namespace(obj.GetNamespace()).Update(context.TODO(), obj, metav1.UpdateOptions{})
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
+func (c *Client) getResource(obj *unstructured.Unstructured) (schema.GroupVersionResource, error) {
 	gvk := obj.GroupVersionKind()
 	gk := schema.GroupKind{Group: gvk.Group, Kind: gvk.Kind}
 
@@ -59,18 +75,16 @@ func (c *Client) UpdateFromJson(j string) error {
 	// TODO: measure time;
 	groupResources, err := restmapper.GetAPIGroupResources(c.k.Clientset.Discovery())
 	if err != nil {
-		return fmt.Errorf("unable to discover resources: %v", err)
+		return schema.GroupVersionResource{}, fmt.Errorf("unable to discover resources: %v", err)
 	}
 
 	rm := restmapper.NewDiscoveryRESTMapper(groupResources)
 	mapping, err := rm.RESTMapping(gk, gvk.Version)
 
 	if err != nil {
-		return fmt.Errorf("unable to map resource: %v", err)
+		return schema.GroupVersionResource{}, fmt.Errorf("unable to map resource: %v", err)
 	}
-
-	_, err = c.k.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace()).Update(context.TODO(), obj, metav1.UpdateOptions{})
-	return err
+	return mapping.Resource, nil
 }
 
 // ParseAuri returns an Auri from a slash separated string.

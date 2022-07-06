@@ -26,7 +26,6 @@ import (
 // # Replay
 // digi box replay home/   		// replay a trace
 
-
 var (
 	QueryCmd = &cobra.Command{
 		Use:     "query [OPTIONS] [NAME] QUERY",

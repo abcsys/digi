@@ -79,6 +79,7 @@ _loops = dict()
 
 def loop(fn: typing.Callable, managed=True):
     """E.g. @dbox.loop(managed=False)"""
+    # TBD take interval function
     global _loops
     _loops[fn.__name__] = util.Loop(loop_fn=fn)
 
@@ -95,3 +96,11 @@ def loop(fn: typing.Callable, managed=True):
             )
             _loops[fn.__name__] = _loop
             _loop.start()
+
+
+def make_event_interval(avg_t):
+    def fn() -> int:
+        min_, max_ = int(avg_t / 2), int(avg_t * 2)
+        return random.randint(min_, max_)
+
+    return fn

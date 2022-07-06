@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const DefaultMountRetry = 3
+
 var (
 	controllers = map[string]bool{
 		"lake":    true,
@@ -44,8 +46,9 @@ var mountCmd = &cobra.Command{
 		if d, _ := cmd.Flags().GetBool("delete"); d {
 			op = api.UNMOUNT
 		}
+		numRetry, _ := cmd.Flags().GetInt("num-retry")
 
-		mt, err := api.NewMounter(sources, target, op, mode)
+		mt, err := api.NewMounter(sources, target, op, mode, numRetry)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -215,6 +218,7 @@ func init() {
 	mountCmd.Flags().BoolP("yield", "y", false, "Yield a mount")
 	mountCmd.Flags().BoolP("activate", "a", false, "Activate a mount")
 	mountCmd.Flags().StringP("mode", "m", space.DefaultMountMode, "Set mount mode")
+	mountCmd.Flags().IntP("num-retry", "n", DefaultMountRetry, "Set mount mode")
 
 	RootCmd.AddCommand(pipeCmd)
 	pipeCmd.Flags().BoolP("delete", "d", false, "Unpipe source from target")
