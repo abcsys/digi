@@ -15,6 +15,9 @@ dbox provides utilities for handling a scene hierarchy:
 dbox uses its own global random generator instance to separate from
 other use cases of random module.
 """
+seed = 42
+event_random = random.Random()
+sim_random = random.Random()
 random = random.Random()
 
 
@@ -30,18 +33,22 @@ init = init_default
 
 
 def seeding():
-    global random
-    cur_seed = 42
+    global seed, random, event_random, sim_random
+    cur_seed = seed
     random.seed(cur_seed)
+    event_random.seed(cur_seed)
+    sim_random.seed(cur_seed)
 
     @on.meta
     def do_seed(meta):
+        global seed
         nonlocal cur_seed
-        seed = meta.get("seed")
-        if seed != cur_seed:
-            cur_seed = seed
+        _seed = meta.get("seed")
+        if _seed != cur_seed:
+            cur_seed = _seed
             if cur_seed is not None:
-                random.seed(seed)
+                random.seed(_seed)
+                seed = _seed
 
 
 def managing():
