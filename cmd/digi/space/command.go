@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/spf13/cobra"
+
 	"digi.dev/digi/api"
 	"digi.dev/digi/cmd/digi/helper"
 	"digi.dev/digi/space"
-	"github.com/spf13/cobra"
 )
 
 const DefaultMountRetry = 3
@@ -100,7 +101,7 @@ var startCmd = &cobra.Command{
 				if ok, _ := controllers[name]; !ok {
 					log.Fatalf("unknown controller: %s\n", name)
 				}
-				_ = helper.RunMake(nil, "start-"+name, true, false)
+				_ = StartController(name)
 			}
 		}
 	},
@@ -117,10 +118,18 @@ var stopCmd = &cobra.Command{
 				if ok, _ := controllers[name]; !ok {
 					log.Fatalf("unknown controller: %s\n", name)
 				}
-				_ = helper.RunMake(nil, "stop-"+name, true, false)
+				_ = StopController(name)
 			}
 		}
 	},
+}
+
+func StartController(name string) error {
+	return helper.RunMake(nil, "start-"+name, true, false)
+}
+
+func StopController(name string) error {
+	return helper.RunMake(nil, "stop-"+name, true, false)
 }
 
 var listCmd = &cobra.Command{

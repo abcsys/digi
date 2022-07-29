@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"digi.dev/digi/api/k8s"
 	"digi.dev/digi/pkg/core"
@@ -58,7 +59,9 @@ func (c *Client) UpdateFromJson(j string, numRetry int) error {
 			// don't retry on resource fetch error
 			return err
 		}
-		// retry in case of update conflict
+		// retry in case of update conflict;
+		// add a buffer to try avoiding apiserver throttling
+		time.Sleep(1 * time.Second)
 		_, err = c.k.DynamicClient.Resource(res).Namespace(obj.GetNamespace()).Update(context.TODO(), obj, metav1.UpdateOptions{})
 		if err == nil {
 			break

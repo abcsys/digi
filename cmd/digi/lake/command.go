@@ -5,9 +5,11 @@ import (
 	"log"
 	"strings"
 
-	"digi.dev/digi/cmd/digi/helper"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"digi.dev/digi/cmd/digi/helper"
+	"digi.dev/digi/cmd/digi/space"
 )
 
 var (
@@ -36,17 +38,30 @@ var (
 		Short: "Manage the digi lake",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			// TBD
 		},
 	}
 
 	startCmd = &cobra.Command{
-		Use:     "start [command]",
+		Use:     "start",
 		Short:   "Start the digi lake",
-		Aliases: []string{"init"},
-		Args:    cobra.MinimumNArgs(1),
+		Aliases: []string{"start"},
+		Args:    cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			// TBD
+			if err := space.StartController("lake"); err != nil {
+				log.Fatalln(err)
+			}
+		},
+	}
+
+	stopCmd = &cobra.Command{
+		Use:     "stop",
+		Short:   "Stop the digi lake",
+		Aliases: []string{"stop"},
+		Args:    cobra.ExactArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := space.StopController("lake"); err != nil {
+				log.Fatalln(err)
+			}
 		},
 	}
 
@@ -56,6 +71,15 @@ var (
 		Short: "Port forward to the digi lake",
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = helper.RunMake(map[string]string{}, "connect-lake", true, false)
+		},
+	}
+
+	loadCmd = &cobra.Command{
+		Use:     "load NAME PATH",
+		Short:   "load dataset to the pool",
+		Args:    cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			// TBD
 		},
 	}
 )
@@ -88,7 +112,7 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 	}{
 		{"f", "format"},
 		{"Z", ""},
-		// ...
+		// ...supported zed flags
 	} {
 		switch f.full {
 		case "":
@@ -105,9 +129,16 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 		}
 	}
 
+	var cmdFlagStr string
+	s, _ := flags.GetBool("timed")
+	if s {
+		cmdFlagStr += "time"
+	}
+
 	return helper.RunMake(map[string]string{
-		"QUERY": query,
-		"FLAG":  flagStr,
+		"QUERY":   query,
+		"ZEDFLAG": flagStr,
+		"FLAG":    cmdFlagStr,
 	}, "query", true, false)
 }
 
@@ -117,8 +148,11 @@ func init() {
 
 	RootCmd.AddCommand(connectCmd)
 	RootCmd.AddCommand(startCmd)
+	RootCmd.AddCommand(stopCmd)
+	RootCmd.AddCommand(loadCmd)
 
 	QueryCmd.Flags().StringP("format", "f", "", "Output data format.")
 	QueryCmd.Flags().BoolP("Z", "Z", false, "Pretty formatted output.")
+	QueryCmd.Flags().BoolP("timed", "t", false, "Report the query latency.")
 	// ...
 }
