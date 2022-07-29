@@ -168,7 +168,7 @@ connect:
 ifndef LAKENAME
 override LAKENAME = lake
 endif
-.PHONY: query connect-lake start-lake stop-lake
+.PHONY: query connect-lake start-lake stop-lake load
 # TBD enforce single lake or use service to identify lake
 query:
 	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
@@ -179,6 +179,8 @@ start-lake:
 	WORKDIR=$(DIGIHOME) digi run lake lake --no-pool
 stop-lake:
 	digi stop lake
+load:
+	cd $(WORKDIR) && zed load -use $(NAME) $(FILE)
 
 # syncer
 .PHONY: start-syncer stop-syncer

@@ -75,11 +75,16 @@ var (
 	}
 
 	loadCmd = &cobra.Command{
-		Use:     "load NAME PATH",
-		Short:   "load dataset to the pool",
-		Args:    cobra.ExactArgs(2),
+		Use:   "load NAME FILE",
+		Short: "load dataset to the pool",
+		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			// TBD
+			name, path := args[0], args[1]
+			_ = helper.RunMake(map[string]string{
+				"NAME": name,
+				"FILE": path,
+
+			}, "load", true, false)
 		},
 	}
 )
