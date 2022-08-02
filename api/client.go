@@ -61,10 +61,12 @@ func (c *Client) UpdateFromJson(j string, numRetry int) error {
 		}
 		// retry in case of update conflict;
 		// add a buffer to try avoiding apiserver throttling
-		time.Sleep(1 * time.Second)
 		_, err = c.k.DynamicClient.Resource(res).Namespace(obj.GetNamespace()).Update(context.TODO(), obj, metav1.UpdateOptions{})
 		if err == nil {
 			break
+		} else if i < numRetry {
+			fmt.Printf("retrying %d time due to %v \n", i+1, err)
+			time.Sleep(2 * time.Second)
 		}
 	}
 	return err
