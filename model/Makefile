@@ -172,7 +172,7 @@ endif
 # TBD enforce single lake or use service to identify lake
 query:
 	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-        -- bash -c '$(FLAG) zed query $(ZEDFLAG) "$(QUERY)"'
+        -- bash -c "$(FLAG) zed query $(ZEDFLAG) '$(QUERY)'"
 connect-lake:
 	kubectl port-forward service/$(LAKENAME) 9867:6534 || true
 start-lake:

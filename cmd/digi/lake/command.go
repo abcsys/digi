@@ -83,7 +83,6 @@ var (
 			_ = helper.RunMake(map[string]string{
 				"NAME": name,
 				"FILE": path,
-
 			}, "load", true, false)
 		},
 	}
@@ -137,7 +136,7 @@ func Query(name, query string, flags *pflag.FlagSet) error {
 	var cmdFlagStr string
 	s, _ := flags.GetBool("timed")
 	if s {
-		cmdFlagStr += "time"
+		cmdFlagStr += "TIMEFORMAT='%R s'; time"
 	}
 
 	return helper.RunMake(map[string]string{
