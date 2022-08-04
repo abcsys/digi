@@ -95,6 +95,8 @@ func isQuery(s string) bool {
 func Query(name, query string, flags *pflag.FlagSet) error {
 	// TBD load filter meta somewhere centralized
 	inFlow := "not __meta"
+	// XXX makefile has bash -c "" with quotes, need to escape query
+	query = strings.ReplaceAll(query, "\"", "\\\"")
 	if name != "" {
 		// TBD handle name as 'pool'@branch
 		if query != "" {
