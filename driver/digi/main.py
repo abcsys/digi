@@ -71,7 +71,7 @@ def run():
 
         # skip the last self-write
         # TBD for parallel reconciliation may need to lock rc.gen before patch
-        if gen == rc.skip_gen:
+        if gen == rc.skip_gen and rc.should_skip():
             digi.logger.info(f"skipped gen {gen} due to self-write")
             return
 

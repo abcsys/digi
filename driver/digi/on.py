@@ -230,6 +230,11 @@ def register(fn, path=".", prio=0, cond=digi.filter.changed):
             kwarg_filter.update({"diff": p})
             args[p] = None
 
+    for p in ["meta"]:
+        if p in sig.parameters:
+            kwarg_filter.update({"meta": p})
+            args[p] = None
+
     for p in ["typ", "child_typ"]:
         if p in sig.parameters:
             kwarg_filter.update({"typ": p})
@@ -254,12 +259,14 @@ def register(fn, path=".", prio=0, cond=digi.filter.changed):
             kwarg_filter["back_prop"] = k
         elif i == 7:
             kwarg_filter["diff"] = k
+        elif i == 8:
+            kwarg_filter["meta"] = k
         else:
             break
 
     def wrapper_fn(subview, proc_view, view,
                    old_view, mount, obs, back_prop,
-                   diff):
+                   diff, meta):
         kwargs = dict()
         for _k, _v in [("subview", subview),
                        ("proc_view", proc_view),
@@ -269,6 +276,7 @@ def register(fn, path=".", prio=0, cond=digi.filter.changed):
                        ("obs", obs),
                        ("back_prop", back_prop),
                        ("diff", diff),
+                       ("meta", meta),
                        ("typ", child_typ),
                        ]:
             if _k in kwarg_filter:

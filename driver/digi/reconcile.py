@@ -36,8 +36,9 @@ class __Reconciler:
         self._logger = digi.logger
 
         self.skip_gen = -1
-        self.count = 0
+        self._skip = True
         self.last_seen_gen = -1
+        self.count = 0
 
         # handler info (e.g., priority) are used to
         # generate the self.handlers upon handler updates;
@@ -79,6 +80,7 @@ class __Reconciler:
                         obs=proc_spec.get("obs", {}),
                         back_prop=get_back_prop(diff),
                         diff=diff,
+                        meta=proc_spec.get("meta", {}),
                     )
                     self._pending_handler.add(id(fn))
                 except Exception as e:
@@ -197,6 +199,17 @@ class __Reconciler:
             digi.pool.create_branch_if_not_exist(name)
             watch.start()
             digi.logger.info(f"data watch {name} started")
+
+    def do_not_skip(self):
+        """Set to ensure the next reconciliation loop won't be
+        skipped even if the last generation is done by the digi.
+        The flag is reset upon the should_skip() call."""
+        self._skip = False
+
+    def should_skip(self):
+        skip = self._skip
+        self._skip = True
+        return skip
 
 
 def safe_lookup(d: dict, path: tuple):
