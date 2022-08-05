@@ -360,6 +360,7 @@ var runCmd = &cobra.Command{
 		noAlias, _ := cmd.Flags().GetBool("no-alias")
 		logLevel, _ := cmd.Flags().GetInt("log-level")
 		visual, _ := cmd.Flags().GetBool("enable-visual")
+		deployFile, _ := cmd.Flags().GetString("deploy-file")
 		kopfLog := "false"
 		if k, _ := cmd.Flags().GetBool("kopf-log"); k {
 			kopfLog = "true"
@@ -403,6 +404,7 @@ var runCmd = &cobra.Command{
 					"NAME":    name,
 					"KOPFLOG": kopfLog,
 					"RUNFLAG": runFlag,
+					"CR":      deployFile,
 				}, cmdStr, false, quiet); err == nil {
 					if !noAlias {
 						// TBD check potential race

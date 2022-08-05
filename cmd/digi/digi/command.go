@@ -42,6 +42,7 @@ func init() {
 	runCmd.Flags().Bool("show-kopf-log", false, "Enable kopf logging")
 	runCmd.Flags().BoolP("enable-visual", "v", false, "Enable default visualization")
 	runCmd.Flags().IntP("log-level", "l", -1, "Logging level")
+	runCmd.Flags().StringP("deploy-file", "d", "cr.yaml", "Deployment file.")
 	stopCmd.Flags().StringP("kind", "k", "", "Digi kind")
 
 	RootCmd.AddCommand(testCmd)

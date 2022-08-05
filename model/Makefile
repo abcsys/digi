@@ -22,6 +22,11 @@ ifndef DOCKER_CMD
 override DOCKER_CMD = CMD_TEMP
 endif
 
+ifndef CR
+override CR = cr.yaml
+endif
+
+
 digi_src := $(GOPATH)/src/digi.dev/digi
 driver_dir := $(digi_src)/driver
 driver_handler := $(WORKDIR)/$(PROFILE)/driver/*
@@ -79,16 +84,19 @@ test: | all clean-test
 	# TBD allow using pool
 
 # driver
-.PHONY: prepare
-prepare:
+.PHONY: prepare-build-dir prepare-build prepare-deploy prepare
+prepare-build-dir:
 	rm -r $(build_dir) >/dev/null 2>&1 || true
 	mkdir -p $(build_dir)/deploy/
+prepare-build:
 	rsync -r $(driver_dir) $(build_dir)
 	rsync $(driver_dir)/digi/handler.py $(build_dir)/
 	rsync $(driver_dir)/digi/visual.py $(build_dir)/
+prepare-deploy:
 	rsync -r $(driver_dir)/deploy $(build_dir) || true
 	# app specific configs overwrite the generic ones
 	rsync -r $(digi_config) $(build_dir)/deploy || true
+prepare: | prepare-build-dir prepare-build prepare-deploy
 
 .PHONY: build clear-manifest
 ifndef ARCH
@@ -123,10 +131,10 @@ pull:
 run: | prepare model
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- bash -c "zed drop -f $(NAME) >/dev/null 2>&1" || true
-	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
+	cd $(build_dir)/deploy && mv $(CR) ./templates; \
 	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
-	kubectl apply -f run.yaml >/dev/null || (echo "unable to run $(NAME), check cr.yaml"; exit 1) && \
+	kubectl apply -f run.yaml >/dev/null || (echo "unable to run $(NAME), check $(CR)"; exit 1) && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- bash -c "zed create $(NAME)") >/dev/null && echo $(NAME) || echo "unable to create pool $(NAME)"
 	rm -rf $(build_dir)
@@ -142,7 +150,7 @@ stop:
 	kubectl delete deployment $(NAME) >/dev/null && \
 	echo $(NAME) || echo "$(NAME) isn't running"
 run-no-pool: | prepare model
-	cd $(build_dir)/deploy && mv cr.yaml ./templates; \
+	cd $(build_dir)/deploy && mv $(CR) ./templates; \
 	helm template -f values.yaml --set name=$(NAME) --set pool_provider=none $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
 	kubectl apply -f run.yaml >/dev/null && echo $(NAME) || \
