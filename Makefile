@@ -17,6 +17,7 @@ dep:
 	# prerequisites:
 	kubectl >/dev/null || "kubectl missing: check https://kubernetes.io/docs/tasks/tools/#kubectl"; exit 1
 	kubectl krew >/dev/null || "krew missing: check https://krew.sigs.k8s.io/docs/user-guide/setup/install/"; exit 1
+	# requires hem3 installation
 	# kubectl-neat
 	cd /tmp; go get github.com/silveryfu/kubectl-neat@digi && \
 	mkdir ~/.krew >/dev/null 2>&1 || true && \
