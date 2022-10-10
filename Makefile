@@ -30,7 +30,7 @@ dep:
 	# optional: local zed python lib
 	pip3 install "git+https://github.com/silveryfu/zed#subdirectory=python/zed"
 digi:
-	cd cmd/; go install ./digi ./dq ./ds ./di
+	cd cmd/; go install ./digi ./dq ./ds ./di ./dbox
 install: | digi
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
 	rm $(HOMEDIR)/lake $(HOMEDIR)/sync $(HOMEDIR)/mount $(HOMEDIR)/view >/dev/null 2>&1 || true

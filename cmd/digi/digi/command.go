@@ -3,6 +3,7 @@ package digi
 import (
 	"log"
 
+	"digi.dev/digi/cmd/digi/box"
 	"digi.dev/digi/cmd/digi/lake"
 	"digi.dev/digi/cmd/digi/sidecar"
 	"digi.dev/digi/cmd/digi/space"
@@ -73,4 +74,6 @@ func init() {
 	RootCmd.AddCommand(space.RootCmd)
 	RootCmd.AddCommand(lake.RootCmd)
 	RootCmd.AddCommand(lake.QueryCmd)
+
+	RootCmd.AddCommand(box.RootCmd)
 }

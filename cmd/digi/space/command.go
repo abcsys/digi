@@ -24,10 +24,10 @@ var (
 
 var RootCmd = &cobra.Command{
 	Use:   "space [command]",
-	Short: "Manage digis in a dSpace",
+	Short: "Manage the dSpace",
 }
 
-var mountCmd = &cobra.Command{
+var MountCmd = &cobra.Command{
 	Use:     "mount SRC [SRC..] TARGET",
 	Short:   "Mount a digi to another",
 	Aliases: []string{"m"},
@@ -222,12 +222,12 @@ func init() {
 	RootCmd.AddCommand(startCmd)
 	RootCmd.AddCommand(stopCmd)
 
-	RootCmd.AddCommand(mountCmd)
-	mountCmd.Flags().BoolP("delete", "d", false, "Unmount source from target")
-	mountCmd.Flags().BoolP("yield", "y", false, "Yield a mount")
-	mountCmd.Flags().BoolP("activate", "a", false, "Activate a mount")
-	mountCmd.Flags().StringP("mode", "m", space.DefaultMountMode, "Set mount mode")
-	mountCmd.Flags().IntP("num-retry", "n", DefaultMountRetry, "Set mount mode")
+	RootCmd.AddCommand(MountCmd)
+	MountCmd.Flags().BoolP("delete", "d", false, "Unmount source from target")
+	MountCmd.Flags().BoolP("yield", "y", false, "Yield a mount")
+	MountCmd.Flags().BoolP("activate", "a", false, "Activate a mount")
+	MountCmd.Flags().StringP("mode", "m", space.DefaultMountMode, "Set mount mode")
+	MountCmd.Flags().IntP("num-retry", "n", DefaultMountRetry, "Set mount mode")
 
 	RootCmd.AddCommand(pipeCmd)
 	pipeCmd.Flags().BoolP("delete", "d", false, "Unpipe source from target")
