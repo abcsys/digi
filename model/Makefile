@@ -249,7 +249,7 @@ endif
 viz:
 	echo 127.0.0.1:$(LOCALPORT)
 	open http://127.0.0.1:$(LOCALPORT) >/dev/null 2>&1 || true
-	kubectl port-forward service/$(NAME) $(LOCALPORT):7534 >/dev/null
+	kubectl port-forward service/$(NAME) $(LOCALPORT):7534 >/dev/null && (echo "unable to viz $(NAME), $(NAME) likely run without -v flag"; exit 1)
 viz-space:
 	echo TBD digiboard
 
