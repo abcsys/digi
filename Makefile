@@ -33,11 +33,11 @@ digi:
 	cd cmd/; go install ./digi ./dq ./ds ./di ./dbox
 install: | digi
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
-	rm $(HOMEDIR)/lake $(HOMEDIR)/sync $(HOMEDIR)/mount $(HOMEDIR)/view >/dev/null 2>&1 || true
+	rm $(HOMEDIR)/lake $(HOMEDIR)/space $(HOMEDIR)/message $(HOMEDIR)/sidecar >/dev/null 2>&1 || true
 	ln -s $(SOURCE)/lake/ $(HOMEDIR)/lake
-	ln -s $(SOURCE)/space/sync/ $(HOMEDIR)/sync
-	ln -s $(SOURCE)/space/mount/ $(HOMEDIR)/mount
-	ln -s $(SOURCE)/sidecar/view $(HOMEDIR)/view
+	ln -s $(SOURCE)/space/ $(HOMEDIR)/space
+	ln -s $(SOURCE)/message/ $(HOMEDIR)/message
+	ln -s $(SOURCE)/sidecar/ $(HOMEDIR)/sidecar
 	sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
 	cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR)
 python:

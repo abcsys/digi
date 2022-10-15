@@ -2,4 +2,3 @@ apiVersion: message.digi.dev/v1
 kind: Emqx
 metadata:
   name: {{ .Values.name }}
-spec: {}

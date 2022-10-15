@@ -1,11 +1,15 @@
+import sys
+import subprocess
+
 import digi
 
 
-@digi.on.model
-def h(model):
-    ...
-
-
 if __name__ == '__main__':
-    digi.run()
+    try:
+        subprocess.check_call("emqx start &", shell=True)
+    except subprocess.CalledProcessError:
+        digi.logger.fatal("unable to start emqx")
+        sys.exit(1)
 
+    digi.logger.info("started emqx")
+    digi.run()

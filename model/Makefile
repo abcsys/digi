@@ -194,14 +194,29 @@ load:
 .PHONY: start-syncer stop-syncer
 start-syncer:
  	# force restart syncer
-	cd $(DIGIHOME)/sync && \
+	cd $(DIGIHOME)/space/sync && \
 	kubectl delete -f deploy/ >/dev/null 2>&1 || true && \
 	kubectl apply -f deploy/crds/ >/dev/null && \
 	kubectl apply -f deploy/ >/dev/null && echo syncer
 stop-syncer:
-	cd $(DIGIHOME)/sync && \
+	cd $(DIGIHOME)/space/sync && \
  	kubectl delete -f deploy/crds/ >/dev/null && \
 	kubectl delete -f deploy/ >/dev/null && echo syncer
+
+# message/emqx
+.PHONY: start-emqx stop-emqx
+start-emqx:
+ 	# force restart syncer
+	cd $(DIGIHOME)/message/emqx && \
+	kubectl delete -f deploy/ >/dev/null 2>&1 || true && \
+	kubectl apply -f deploy/crds/ >/dev/null && \
+	kubectl apply -f deploy/ >/dev/null && echo emqx
+stop-emqx:
+	cd $(DIGIHOME)/message/emqx && \
+ 	kubectl delete -f deploy/crds/ >/dev/null && \
+	kubectl delete -f deploy/ >/dev/null && echo emqx
+
+# TBD global mounter
 
 .PHONY: start-space stop-space
 start-space: | start-lake start-syncer # ...
