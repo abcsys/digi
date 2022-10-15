@@ -1,0 +1,9 @@
+group: message.digi.dev
+image: silveryfu/emqx.v1.message.digi.dev:latest
+imagepull: Always
+kind: Emqx
+mounter: false
+name: emqx
+namespace: default
+plural: emqxes
+version: v1

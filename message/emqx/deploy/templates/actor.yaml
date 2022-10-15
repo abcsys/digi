@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: emqx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: {{ .Values.name }}
+      app: emqx
+  template:
+    metadata:
+      labels:
+        name: {{ .Values.name }}
+        app: emqx
+    spec:
+      serviceAccountName: {{ .Values.name }}
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.image }}
+          imagePullPolicy: {{ .Values.imagepull }}
+          env:
+          - name: GROUP
+            value: {{ .Values.group }}
+          - name: VERSION
+            value: {{ .Values.version }}
+          - name: PLURAL
+            value: {{ .Values.plural }}
+          - name: NAME
+            value: {{ .Values.name }}
+          - name: NAMESPACE
+            value: {{ .Values.namespace }}
+          - name: MOUNTER
+            value: {{ quote .Values.mounter }}
+          - name: LOGLEVEL
+            value: {{ .Values.log_level | default "20" | quote }}
+          - name: POOL_PROVIDER
+            value: {{ .Values.pool_provider }}
+          ports: # https://www.emqx.io/docs/en/v3.0/guide.html#start-emq-x-broker
+          - containerPort: 1883  # MQTT
+          - containerPort: 8883  # MQTT SSL
+          - containerPort: 8083  # MQTT WebSocket
+          - containerPort: 8080  # HTTP API
+          - containerPort: 18083 # Dashboard console
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    name: {{ .Values.name }}
+    app: emqx
+spec:
+  ports: # emqx
+  - port: 1883
+    targetPort: 1883
+    protocol: TCP
+  - port: 8883
+    targetPort: 8883
+    protocol: TCP
+  - port: 8083
+    targetPort: 8083
+    protocol: TCP
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - port: 18083
+    targetPort: 18083
+    protocol: TCP
+  selector:
+    name: {{ .Values.name }}
