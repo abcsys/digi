@@ -219,8 +219,8 @@ stop-emqx:
 # TBD global mounter
 
 .PHONY: start-space stop-space
-start-space: | start-lake start-syncer # ...
-stop-space: | stop-lake stop-syncer
+start-space: | start-lake # ...
+stop-space: | stop-lake
 .PHONY: list-space switch-space rename-space show-space
 list-space:
 	kubectl ctx $(FLAG)
