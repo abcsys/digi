@@ -579,7 +579,7 @@ alias cache.
 		}
 		flags := ""
 		if !showAll {
-			flags += " -l app!=lake,app!=syncer"
+			flags += " -l app!=lake,app!=syncer,app!=emqx"
 		}
 		if len(args) == 0 {
 			_ = helper.RunMake(map[string]string{

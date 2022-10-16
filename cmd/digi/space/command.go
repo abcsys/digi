@@ -18,6 +18,7 @@ var (
 		"lake":    true,
 		"syncer":  true,
 		"mounter": true,
+		"emqx":    true,
 		// ...
 	}
 )
