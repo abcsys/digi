@@ -203,20 +203,14 @@ stop-syncer:
  	kubectl delete -f deploy/crds/ >/dev/null && \
 	kubectl delete -f deploy/ >/dev/null && echo syncer
 
+# TBD global mounter
+
 # message/emqx
 .PHONY: start-emqx stop-emqx
 start-emqx:
- 	# force restart syncer
-	cd $(DIGIHOME)/message/emqx && \
-	kubectl delete -f deploy/ >/dev/null 2>&1 || true && \
-	kubectl apply -f deploy/crds/ >/dev/null && \
-	kubectl apply -f deploy/ >/dev/null && echo emqx
+	WORKDIR=$(DIGIHOME) digi run message/emqx emqx
 stop-emqx:
-	cd $(DIGIHOME)/message/emqx && \
- 	kubectl delete -f deploy/crds/ >/dev/null && \
-	kubectl delete -f deploy/ >/dev/null && echo emqx
-
-# TBD global mounter
+	digi stop emqx
 
 .PHONY: start-space stop-space
 start-space: | start-lake # ...
