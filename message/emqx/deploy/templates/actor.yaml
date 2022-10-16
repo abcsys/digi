@@ -57,19 +57,24 @@ metadata:
     app: emqx
 spec:
   ports: # emqx
-  - port: 1883
+  - name: mqtt
+    port: 1883
     targetPort: 1883
     protocol: TCP
-  - port: 8883
+  - name: mqtt-ssl
+    port: 8883
     targetPort: 8883
     protocol: TCP
-  - port: 8083
+  - name: mqtt-websocket
+    port: 8083
     targetPort: 8083
     protocol: TCP
-  - port: 8080
+  - name: http-api
+    port: 8080
     targetPort: 8080
     protocol: TCP
-  - port: 18083
+  - name: dashboard
+    port: 18083
     targetPort: 18083
     protocol: TCP
   selector:
