@@ -194,6 +194,13 @@ Podfile.lock
 # IDE specific folder for JetBrains IDEs
 .idea/
 
+# Clion artifacts
+cmake-build-debug/
+
+# Visual Studio Code artifacts
+.vscode/*
+.history/
+
 # Bazel files
 bazel-*
 bazel_format_virtual_environment/
@@ -218,21 +225,11 @@ bm_*.json
 # cmake build files
 **/cmake/build/
 
-# Visual Studio Code artifacts
-.vscode/*
-.history/
-
-# Clion artifacts
-cmake-build-debug/
-
 # Benchmark outputs
 BenchmarkDotNet.Artifacts/
 
 # pyenv config
 .python-version
-
-# JetBrains
-.idea/
 
 # binaries, packages, caches
 space/sync/cmd/manager/manager

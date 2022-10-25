@@ -12,22 +12,23 @@ SOURCE = $(GOPATH)/src/digi.dev/digi
 
 VERSION = $(shell git describe --tags --dirty --always)
 
+PREREQUISITES = kubectl
+K := $(foreach exec,$(PREREQUISITES),\
+        $(if $(shell which $(exec)),"kubectl detected",$(error "No $(exec) in PATH")))
+
 .PHONY: dep
 dep:
-	# kubectx
-	kubectl krew install ctx
-	# optional: local zed cli
 	cd /tmp; git clone https://github.com/silveryfu/zed.git && \
 	cd zed; make install; cd ..; rm -rf zed
-	# optional: local zed python lib
-	pip3 install "git+https://github.com/silveryfu/zed#subdirectory=python/zed"
 
 .PHONY: digi neat install
 digi:
 	cd cmd/; go install ./digi ./dq ./ds ./di ./dbox
 neat:
 	cd sidecar/neat; go install .
-install: | digi neat
+ctx:
+	cd sidecar/ctx/cmd/ctx; go install .
+install: | digi neat ctx
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
 	rm $(HOMEDIR)/lake $(HOMEDIR)/space $(HOMEDIR)/message $(HOMEDIR)/sidecar >/dev/null 2>&1 || true
 	ln -s $(SOURCE)/lake/ $(HOMEDIR)/lake
