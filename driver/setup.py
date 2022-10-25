@@ -5,10 +5,10 @@ URLS = {
 
 setup(
     name="digi",
-    version="0.2.4",
-    description="dSpace driver library",
+    version="0.2.5",
+    description="Digi driver library",
     url=URLS,
-    author="Silvery Fu",
+    author="Team Digi",
     author_email="silveryfu@gmail.com",
     license="BSD-3-Clause License",
     packages=find_packages(exclude=("tests",)),
