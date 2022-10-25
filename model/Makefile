@@ -217,17 +217,17 @@ start-space: | start-lake # ...
 stop-space: | stop-lake
 .PHONY: list-space switch-space rename-space show-space
 list-space:
-	kubectl ctx $(FLAG)
+	ctx $(FLAG)
 switch-space:
-	kubectl ctx $(NAME) > /dev/null && echo "Switched to space $(NAME)"
+	ctx $(NAME) > /dev/null && echo "Switched to space $(NAME)"
 rename-space:
 	kubectl config rename-context $(OLD_NAME) $(NAME) >/dev/null \
 	&& echo "Space $(OLD_NAME) renamed to $(NAME)"
 ifndef SPACE
-override SPACE = `kubectl ctx -c`
+override SPACE = `ctx -c`
 endif
 show-space:
-	kubectl ctx $(SPACE) > /dev/null
+	ctx $(SPACE) > /dev/null
 	# XXX fix auto-switch space after show
 	printf "Apiserver:\n"
 	kubectl cluster-info | grep Kubernetes | cut -d " " -f 7
