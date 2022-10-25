@@ -12,16 +12,8 @@ SOURCE = $(GOPATH)/src/digi.dev/digi
 
 VERSION = $(shell git describe --tags --dirty --always)
 
-.PHONY: dep digi install
+.PHONY: dep
 dep:
-	# prerequisites:
-	kubectl >/dev/null || "kubectl missing: check https://kubernetes.io/docs/tasks/tools/#kubectl"; exit 1
-	kubectl krew >/dev/null || "krew missing: check https://krew.sigs.k8s.io/docs/user-guide/setup/install/"; exit 1
-	# requires hem3 installation
-	# kubectl-neat
-	cd /tmp; go get github.com/silveryfu/kubectl-neat@digi && \
-	mkdir ~/.krew >/dev/null 2>&1 || true && \
-	cp $(GOPATH)/bin/kubectl-neat ~/.krew/bin/kubectl-neat
 	# kubectx
 	kubectl krew install ctx
 	# optional: local zed cli
@@ -29,9 +21,13 @@ dep:
 	cd zed; make install; cd ..; rm -rf zed
 	# optional: local zed python lib
 	pip3 install "git+https://github.com/silveryfu/zed#subdirectory=python/zed"
+
+.PHONY: digi neat install
 digi:
 	cd cmd/; go install ./digi ./dq ./ds ./di ./dbox
-install: | digi
+neat:
+	cd sidecar/neat; go install .
+install: | digi neat
 	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
 	rm $(HOMEDIR)/lake $(HOMEDIR)/space $(HOMEDIR)/message $(HOMEDIR)/sidecar >/dev/null 2>&1 || true
 	ln -s $(SOURCE)/lake/ $(HOMEDIR)/lake
