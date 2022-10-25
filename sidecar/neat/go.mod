@@ -12,6 +12,9 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/tidwall/gjson v1.3.2
 	github.com/tidwall/sjson v1.0.4
+)
+
+require (
 	github.com/gogo/protobuf v1.2.2-0.20190723190241-65acae22fc9d // indirect
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
