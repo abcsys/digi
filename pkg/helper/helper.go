@@ -18,11 +18,9 @@ import (
 // MuxRequest generates transformers that add a mux tag to reconciliation requests;
 // use it in a watch call, e.g.:
 //
-// err = c.Watch(&source.Kind{Type: &someResource}, &handler.EnqueueRequestsFromMapFunc{
-//		ToRequests: muxFunc(someTag),
-//	})
-//
-//
+//	err = c.Watch(&source.Kind{Type: &someResource}, &handler.EnqueueRequestsFromMapFunc{
+//			ToRequests: muxFunc(someTag),
+//		})
 func MuxRequest(tag string) handler.ToRequestsFunc {
 	return handler.ToRequestsFunc(func(m handler.MapObject) []reconcile.Request {
 		return []reconcile.Request{

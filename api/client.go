@@ -99,6 +99,7 @@ func (c *Client) getResource(obj *unstructured.Unstructured) (schema.GroupVersio
 //  3. /namespace/name.[];
 //  4. /name.[] (use alias);
 //  5. name.[] (use alias);
+//
 // .[]: model attributes
 func ParseAuri(s string) (core.Auri, error) {
 	ss := strings.Split(s, fmt.Sprintf("%c", core.UriSeparator))
