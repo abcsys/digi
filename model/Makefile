@@ -67,7 +67,7 @@ list:
 edit:
 	# TBD add revision number in the temporary file
 	(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
-    || kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | kubectl neat -l 0 \
+    || kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | neat -l 0 \
     > $(FILE) && vi $(FILE) && kubectl apply -f $(FILE); rm $(FILE)
 edit-all:
 	kubectl edit $(PLURAL) $(NAME) 2>&1 || kubectl edit $(PLURAL).$(GROUP) $(NAME)
@@ -160,10 +160,10 @@ run-no-pool: | prepare model
 .PHONY: check watch
 check:
 	(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
- 	|| kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)
+ 	|| kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | neat $(NEATLEVEL)
 watch:
 	watch -n$(INTERVAL) -t "(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
- 	|| kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | kubectl neat $(NEATLEVEL)"
+ 	|| kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | neat $(NEATLEVEL)"
 
 ifndef SHELL_BIN
 override SHELL_BIN = sh
