@@ -219,7 +219,7 @@ stop-space: | stop-lake
 list-space:
 	ctx $(FLAG)
 switch-space:
-	ctx $(NAME) > /dev/null && echo "Switched to space $(NAME)"
+	ctx $(NAME) > /dev/null 2>&1 && echo "Switched to space $(NAME)" || echo "Unable to switch to space $(NAME)"
 rename-space:
 	kubectl config rename-context $(OLD_NAME) $(NAME) >/dev/null \
 	&& echo "Space $(OLD_NAME) renamed to $(NAME)"
