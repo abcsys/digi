@@ -37,6 +37,7 @@ install: | digi neat ctx
 	ln -s $(SOURCE)/sidecar/ $(HOMEDIR)/sidecar
 	sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
 	cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR)
+	cp ./model/helper.py $(HOMEDIR)
 python:
 	cd driver; pip install -e .
 

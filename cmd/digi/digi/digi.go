@@ -225,6 +225,49 @@ var pushCmd = &cobra.Command{
 	},
 }
 
+var commitCmd = &cobra.Command{
+	Use:   "commit NAME [NAME ...]",
+	Short: "Generate a snapshot file for a given digi",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		var workDir string
+		if workDir = os.Getenv("WORKDIR"); workDir == "" {
+			workDir = "."
+		}
+
+		for _, name := range args {
+			_, err := api.Resolve(name)
+			if err != nil {
+				log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
+			}
+		}
+
+		for _, name := range args {
+			duri, err := api.Resolve(name)
+			kind := duri.Kind
+
+			params := map[string]string{
+				"GROUP":     kind.Group,
+				"VERSION":   kind.Version,
+				"KIND":      kind.Name,
+				"PLURAL":    kind.Plural(),
+				"NAME":      name,
+				"NEATLEVEL": fmt.Sprintf("-l %d", 4),
+			}
+			if len(args) > 1 {
+				fmt.Printf("%s:\n", name)
+			}
+
+			if err == nil {
+				_ = helper.RunMake(params, "commit", true, false)
+				zip_path := fmt.Sprintf("%s/%s/intent_status.yaml", workDir, kind.Name)
+				snapshot_dir_name := fmt.Sprintf("%s/%s_snapshot.zip", workDir, name)
+				helper.ZipDirectory(zip_path, snapshot_dir_name)
+			}
+		}
+	},
+}
+
 var testCmd = &cobra.Command{
 	Use:     "test KIND",
 	Short:   "Test run a digi's driver",
@@ -356,6 +399,39 @@ var runCmd = &cobra.Command{
 			log.Fatalf("unable to find kind %s: %v\n", profile, err)
 		}
 
+		var names []string
+		names = args[1:]
+
+		//check if args[0] is a snapshot directory
+		var workDir string
+		if workDir = os.Getenv("WORKDIR"); workDir == "" {
+			workDir = "."
+		}
+		intent_status_yaml_path := fmt.Sprintf("%s/%s/intent_status.yaml", workDir, args[0])
+		_, err = os.Stat(intent_status_yaml_path)
+		isSnapshotDir := (err == nil)
+
+		//if args[0] is a snapshot directory, make sure none of the other arguments correspond to names of existing digis
+		if isSnapshotDir {
+			currAPIClient, err := api.NewClient()
+			if err != nil {
+				log.Fatalf("Error creating API Client\n")
+			}
+
+			for _, name := range names {
+				name = strings.TrimSpace(name)
+				fmt.Println(name)
+				currAuri, err := api.Resolve(name)
+
+				if err == nil && currAuri != nil {
+					json, _ := currAPIClient.GetModelJson(currAuri)
+					if len(json) > 0 {
+						log.Fatalf("Digi name conflict: %s already exists\n", name)
+					}
+				}
+			}
+		}
+
 		quiet, _ := cmd.Flags().GetBool("quiet")
 		noAlias, _ := cmd.Flags().GetBool("no-alias")
 		logLevel, _ := cmd.Flags().GetInt("log-level")
@@ -382,9 +458,6 @@ var runCmd = &cobra.Command{
 		if visual {
 			runFlag += " --set visual=true"
 		}
-
-		var names []string
-		names = args[1:]
 
 		var wg sync.WaitGroup
 		logger := log.New(os.Stdout, "", 0)
@@ -417,6 +490,26 @@ var runCmd = &cobra.Command{
 			}(name, quiet)
 		}
 		wg.Wait()
+
+		if isSnapshotDir {
+			for _, name := range names {
+				name = strings.TrimSpace(name)
+				params := map[string]string{
+					"GROUP":     kind.Group,
+					"VERSION":   kind.Version,
+					"KIND":      kind.Name,
+					"DIRNAME":   args[0],
+					"PLURAL":    kind.Plural(),
+					"NAME":      name,
+					"NEATLEVEL": fmt.Sprintf("-l %d", 4),
+				}
+				if len(args) > 2 {
+					fmt.Printf("%s:\n", name)
+				}
+
+				_ = helper.RunMake(params, "recreate-tail", true, false)
+			}
+		}
 	},
 }
 

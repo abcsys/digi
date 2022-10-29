@@ -31,6 +31,7 @@ func init() {
 
 	RootCmd.AddCommand(pullCmd)
 	RootCmd.AddCommand(pushCmd)
+	RootCmd.AddCommand(commitCmd)
 	RootCmd.AddCommand(kindCmd)
 	RootCmd.AddCommand(rmkCmd)
 	kindCmd.Flags().BoolP("local", "l", false, "Show local profiles")
