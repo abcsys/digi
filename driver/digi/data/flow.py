@@ -1,4 +1,4 @@
-"""Predefined dataflows."""
+"""A collection of predefined dataflows."""
 
 refresh_ts = """switch ( 
     case has(event_ts) => yield this | put ts := now()

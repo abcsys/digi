@@ -4,6 +4,11 @@ import digi.data.util as util
 from digi.data import logger, zed
 from digi.data import flow as flow_lib
 
+"""
+A router contains a collection of pipelets organized as ingresses and egresses.
+Each pipelet is implemented as a digi.data.sync.Sync object that copies and ETL
+data between a source data pool and a destination data pool. 
+"""
 
 class Router:
     def __init__(self):
