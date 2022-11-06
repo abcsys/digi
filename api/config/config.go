@@ -5,8 +5,11 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
+
+	"digi.dev/digi/api/helper"
 )
 
 var (
@@ -19,10 +22,12 @@ func init() {
 		panic(err)
 	}
 
-	configDir = filepath.Join(usr.HomeDir, ".dq")
-	if err := ensureDir(configDir); os.IsNotExist(err) {
+	configDir = filepath.Join(usr.HomeDir, ".digi")
+	if err := helper.EnsureDir(configDir); os.IsNotExist(err) {
 		panic(err)
 	}
+
+	Load()
 }
 
 func Load() {
@@ -34,25 +39,51 @@ func Load() {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			fileName := filepath.Join(configDir, "config")
 
-			touch(fileName)
-			fmt.Println("dq: new config file at: ", fileName)
-			fmt.Println("dq: try again")
+			helper.Touch(fileName)
+			fmt.Printf("digi: new config file at: %s; try again\n", fileName)
 		} else {
 			panic(fmt.Errorf("Fatal error config file: %s \n", err))
 		}
 	}
 }
 
-func touch(name string) {
-	_, err := os.OpenFile(name, os.O_RDONLY|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err)
+func Get(key string) (string, error) {
+	configs := make(map[string]string)
+	if err := viper.UnmarshalKey("config", &configs); err != nil {
+		return "", err
 	}
+	// XXX ToLower() a hack to get around the fact that viper doesn't
+	// support upper case keys
+	config, ok := configs[strings.ToLower(key)]
+	if !ok {
+		return "", fmt.Errorf("config %s not found", key)
+	}
+
+	return config, nil
 }
 
-func ensureDir(name string) error {
-	if _, err := os.Stat(name); os.IsNotExist(err) {
-		return os.MkdirAll(configDir, 0700)
+func Set(key, value string) error {
+	configs := make(map[string]string)
+	configs[key] = value
+
+	viper.Set("config", configs)
+	return viper.WriteConfig()
+}
+
+func ShowAll() error {
+	configs := make(map[string]string)
+	if err := viper.UnmarshalKey("config", &configs); err != nil {
+		return err
+	}
+
+	for k, v := range configs {
+		fmt.Println(k, ":", v)
 	}
 	return nil
+}
+
+func ClearConfig() error {
+	configs := make(map[string]string)
+	viper.Set("config", configs)
+	return viper.WriteConfig()
 }

@@ -1,5 +1,6 @@
-# update with your container repo
-# TBD digi config
+# used in digi build; update below or run
+# "digi config --driver-repo" to set the default
+# driver container repository (e.g. docker account)
 DRIVER_REPO = silveryfu
 
 # default to rootless docker; may set to
@@ -30,14 +31,15 @@ neat:
 ctx:
 	cd sidecar/ctx/cmd/ctx; go install .
 install: | digi neat ctx
-	mkdir $(HOMEDIR) >/dev/null 2>&1 || true
-	rm $(HOMEDIR)/lake $(HOMEDIR)/space $(HOMEDIR)/message $(HOMEDIR)/sidecar >/dev/null 2>&1 || true
-	ln -s $(SOURCE)/lake/ $(HOMEDIR)/lake
-	ln -s $(SOURCE)/space/ $(HOMEDIR)/space
-	ln -s $(SOURCE)/message/ $(HOMEDIR)/message
-	ln -s $(SOURCE)/sidecar/ $(HOMEDIR)/sidecar
-	sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
-	cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR) && cp ./model/helper.py $(HOMEDIR)
+	@mkdir $(HOMEDIR) >/dev/null 2>&1 || true
+	@rm $(HOMEDIR)/lake $(HOMEDIR)/space $(HOMEDIR)/message $(HOMEDIR)/sidecar >/dev/null 2>&1 || true
+	@touch $(HOMEDIR)/config $(HOMEDIR)/alias
+	@ln -s $(SOURCE)/lake/ $(HOMEDIR)/lake
+	@ln -s $(SOURCE)/space/ $(HOMEDIR)/space
+	@ln -s $(SOURCE)/message/ $(HOMEDIR)/message
+	@ln -s $(SOURCE)/sidecar/ $(HOMEDIR)/sidecar
+	@sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
+	@cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR) && cp ./model/helper.py $(HOMEDIR)
 
 .PHONY: python-digi
 python-digi:
@@ -64,7 +66,7 @@ docker-login:
 	docker login
 	kubectl delete secret generic regcred >/dev/null 2>&1 || true
 	kubectl create secret generic regcred \
-		--from-file=.dockerconfigjson=/Users/silv/.docker/config.json \
+		--from-file=.dockerconfigjson=~/.docker/config.json \
 		--type=kubernetes.io/dockerconfigjson
 
 create-release-assets:

@@ -8,10 +8,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/spf13/cobra"
+
 	"digi.dev/digi/api"
+	"digi.dev/digi/api/config"
 	"digi.dev/digi/cmd/digi/helper"
 	"digi.dev/digi/pkg/core"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -23,6 +25,37 @@ var (
     `,
 	}
 )
+
+var configCmd = &cobra.Command{
+	Use:     "config",
+	Short:   "Configure the default parameters for Digi CLI",
+	Aliases: []string{"configure"},
+	Args:    cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		var repo, driverRepo string
+
+		if clear, _ := cmd.Flags().GetBool("clear"); clear {
+			_ = config.ClearConfig()
+		}
+
+		if repo, _ := cmd.Flags().GetString("repo"); repo != "" {
+			if err := config.Set("REPO", repo); err != nil {
+				fmt.Printf("unable to set digi repo: %s", err)
+			}
+		}
+
+		if driverRepo, _ := cmd.Flags().GetString("driver-repo"); driverRepo != "" {
+			if err := config.Set("DRIVER_REPO", driverRepo); err != nil {
+				fmt.Printf("unable to set driver repo: %s", err)
+			}
+		}
+		// ...
+
+		if repo == "" && driverRepo == "" {
+			config.ShowAll()
+		}
+	},
+}
 
 var initCmd = &cobra.Command{
 	Use:     "init KIND",
@@ -71,10 +104,15 @@ var genCmd = &cobra.Command{
 			params["GENFLAG"] = "VISUAL=true"
 		}
 
+		driverRepo, _ := config.Get("DRIVER_REPO")
+
 		for _, profile := range args {
 			profile = strings.TrimSpace(profile)
 			params := map[string]string{
 				"PROFILE": profile,
+			}
+			if driverRepo != "" {
+				params["DRIVER_REPO"] = driverRepo
 			}
 			if _ = helper.RunMake(params, "gen", true, q); !q {
 				fmt.Println(profile)
@@ -102,6 +140,8 @@ var buildCmd = &cobra.Command{
 			platforms[platform] = true
 		}
 
+		driverRepo, _ := config.Get("DRIVER_REPO")
+
 		for _, profile := range args {
 			profile = strings.TrimSpace(profile)
 			kind, err := helper.GetKindFromProfile(profile)
@@ -115,6 +155,9 @@ var buildCmd = &cobra.Command{
 				"KIND":    kind.Name,
 				"PROFILE": profile,
 				"TAG":     tag,
+			}
+			if driverRepo != "" {
+				params["DRIVER_REPO"] = driverRepo
 			}
 			// clear manifest cache
 			_ = helper.RunMake(params, "clear-manifest", true, q)
@@ -409,7 +452,7 @@ var runCmd = &cobra.Command{
 		}
 		intent_status_yaml_path := fmt.Sprintf("%s/%s/intent_status.yaml", workDir, args[0])
 		_, err = os.Stat(intent_status_yaml_path)
-		isSnapshotDir := (err == nil)
+		isSnapshotDir := err == nil
 
 		//if args[0] is a snapshot directory, make sure none of the other arguments correspond to names of existing digis
 		if isSnapshotDir {
@@ -559,17 +602,6 @@ var stopCmd = &cobra.Command{
 		wg.Wait()
 	},
 }
-
-// TBD (rithvik)
-//var configCmd = &cobra.Command{
-//	Use:     "config [<options>]",
-//	Short:   "Configure repos etc.",
-//	Aliases: []string{"configure", ""},
-//	Args:    cobra.ExactArgs(0),
-//	Run: func(cmd *cobra.Command, args []string) {
-//		//q, _ := cmd.Flags().GetBool("quiet")
-//	},
-//}
 
 var rmkCmd = &cobra.Command{
 	Use:     "rmk KIND [KIND ...]",

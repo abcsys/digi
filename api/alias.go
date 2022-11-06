@@ -2,10 +2,10 @@ package api
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 
 	"digi.dev/digi/api/config"
 	"digi.dev/digi/pkg/core"
-	"github.com/spf13/viper"
 )
 
 type Alias struct {
@@ -22,7 +22,6 @@ func (a *Alias) Set() error {
 	if err := viper.UnmarshalKey("alias", &aliases); err != nil {
 		return err
 	}
-	// XXX validate from the apiserver; or keep it simple not to
 	aliases[a.Name] = a.Auri
 
 	viper.Set("alias", aliases)
@@ -65,7 +64,6 @@ func ShowAll() error {
 	return nil
 }
 
-// XXX alias in its own package
 func ClearAlias() error {
 	aliases := make(map[string]*core.Auri)
 	viper.Set("alias", aliases)

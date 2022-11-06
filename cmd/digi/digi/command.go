@@ -16,6 +16,11 @@ func init() {
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Hide output")
 
+	RootCmd.AddCommand(configCmd)
+	configCmd.Flags().StringP("repo", "r", "", "Digi kind repository")
+	configCmd.Flags().StringP("driver-repo", "d", "", "Driver container repository")
+	configCmd.Flags().BoolP("clear", "c", false, "Clear configurations")
+
 	RootCmd.AddCommand(initCmd)
 	RootCmd.AddCommand(genCmd)
 	RootCmd.AddCommand(buildCmd)
