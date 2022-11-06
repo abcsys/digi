@@ -413,7 +413,7 @@ def gen(name):
                 namespace=model.get("namespace", "default"),
                 mounter="true" if "mount" in model else "false",
                 image=f"{model['kind']}.{model['version']}.{model['group']}".lower(),
-                repo=os.environ.get("REPO", "local"),
+                repo=os.environ.get("DRIVER_REPO", "local"),
                 imagepull=os.environ.get("IMAGEPULL", "Always"),
             )
             values = yaml.load(values, Loader=yaml.FullLoader)
