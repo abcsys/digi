@@ -12,7 +12,7 @@ SOURCE = $(GOPATH)/src/digi.dev/digi
 
 VERSION = $(shell git describe --tags --dirty --always)
 
-PREREQUISITES = kubectl helm
+PREREQUISITES = docker kubectl helm
 K := $(foreach exec,$(PREREQUISITES),\
         $(if $(shell which $(exec)),,$(error "No $(exec) in PATH")))
 
