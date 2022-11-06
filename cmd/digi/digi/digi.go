@@ -779,16 +779,6 @@ var watchCmd = &cobra.Command{
 	},
 }
 
-var gcCmd = &cobra.Command{
-	Use:     "gc",
-	Short:   "Run garbage collection",
-	Aliases: []string{"clean"},
-	Args:    cobra.ExactArgs(0),
-	Run: func(cmd *cobra.Command, args []string) {
-		_ = helper.RunMake(map[string]string{}, "gc", true, false)
-	},
-}
-
 var vizCmd = &cobra.Command{
 	Use:     "visualize [NAME]",
 	Short:   "Visualize a digi",

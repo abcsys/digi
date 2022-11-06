@@ -217,6 +217,16 @@ var connectCmd = &cobra.Command{
 	},
 }
 
+var gcCmd = &cobra.Command{
+	Use:     "gc",
+	Short:   "Run garbage collection",
+	Aliases: []string{"clean"},
+	Args:    cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = helper.RunMake(map[string]string{}, "gc", true, false)
+	},
+}
+
 func init() {
 	log.SetFlags(0)
 	// TBD delete digi space removes all running digis and controllers
@@ -239,6 +249,7 @@ func init() {
 	RootCmd.AddCommand(aliasCmd)
 	// TBD promote connect to digi root
 	RootCmd.AddCommand(connectCmd)
+	RootCmd.AddCommand(gcCmd)
 	listCmd.Flags().BoolP("current", "c", false, "List current space")
 	connectCmd.Flags().BoolP("bash", "b", false, "Use bash in remote session")
 }

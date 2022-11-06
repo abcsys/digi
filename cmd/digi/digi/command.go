@@ -73,7 +73,6 @@ func init() {
 	aliasCmd.AddCommand(aliasClearCmd)
 	aliasCmd.AddCommand(aliasResolveCmd)
 
-	RootCmd.AddCommand(gcCmd)
 	RootCmd.AddCommand(vizCmd)
 	RootCmd.AddCommand(sidecar.RootCmd)
 
