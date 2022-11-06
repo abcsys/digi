@@ -20,8 +20,9 @@ K := $(foreach exec,$(PREREQUISITES),\
 dep:
 	cd /tmp; git clone https://github.com/silveryfu/zed.git && \
 	cd zed; make install; cd ..; rm -rf zed
+	pip install -r ./model/requirements.txt
 
-.PHONY: digi neat install
+.PHONY: digi neat ctx install
 digi:
 	cd cmd/; go install ./digi ./dq ./ds ./di ./dbox
 neat:
@@ -37,8 +38,10 @@ install: | digi neat ctx
 	ln -s $(SOURCE)/sidecar/ $(HOMEDIR)/sidecar
 	sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
 	cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR) && cp ./model/helper.py $(HOMEDIR)
-python:
-	cd driver; pip install -e .
+
+.PHONY: python-digi
+python-digi:
+	pip install -e ./driver
 
 ifndef ARCH
 override ARCH = $(shell uname -m)
