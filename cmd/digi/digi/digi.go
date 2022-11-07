@@ -431,7 +431,8 @@ var runCmd = &cobra.Command{
 	Use:   "run KIND NAME [NAME ...]",
 	Short: "Run a digi given kind and name",
 	Long: "Run a digi given kind and name; more than one name can be given. " +
-		"The kind should be accessible in current path",
+		"The kind should be accessible in current path.\n" +
+		"You can use bash range notation({a..b}) to run multiple digis at once. Ex. digi run lamp l{1..9}, will start l1-l9 lamps.",
 	Aliases: []string{"r"},
 	// TBD enable passing namespace
 	Args: cobra.MinimumNArgs(2),
@@ -557,9 +558,10 @@ var runCmd = &cobra.Command{
 }
 
 var stopCmd = &cobra.Command{
-	Use:     "stop NAME [NAME ...]",
-	Short:   "Stop a digi given the name",
-	Long:    "Stop a digi given the name",
+	Use:   "stop NAME [NAME ...]",
+	Short: "Stop a digi given the name",
+	Long: "Stop a digi given the name.\n" +
+		"You can use bash range notation({a..b}) to stop multiple digis at once. Ex. digi stop lamp l{1..9}, will stop l1-l9 lamps.",
 	Aliases: []string{"s"},
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {

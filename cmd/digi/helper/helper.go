@@ -11,6 +11,8 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -214,4 +216,44 @@ func ZipDirectory(source string, target string) error {
 		_, err = io.Copy(headerWriter, f)
 		return err
 	})
+}
+
+// checks if the string includes a range
+func isExpandSyntax(arg string) bool {
+	re := regexp.MustCompile(`\{\d{1,}..\d{1,}\}`)
+	return re.FindString(arg) != ""
+}
+
+func ExpandArgs(args []string) []string {
+	var res []string
+	re := regexp.MustCompile(`(.*)\{(\d{1,})..(\d{1,})\}(.*)`)
+	for _, arg := range args {
+		if isExpandSyntax(arg) {
+			matches := re.FindStringSubmatch(arg)
+			if len(matches) == 5 {
+				prefix, start_str, end_str, suffix := matches[1], matches[2], matches[3], matches[4]
+
+				start, e := strconv.Atoi(start_str)
+				if e != nil {
+					panic(e)
+				}
+				end, e := strconv.Atoi(end_str)
+				if e != nil {
+					panic(e)
+				}
+
+				expanded_prefixes := ExpandArgs([]string{prefix})
+				for _, expanded_prefix := range expanded_prefixes {
+					for i := start; i <= end; i++ {
+						res = append(res, fmt.Sprintf("%s%d%s", expanded_prefix, i, suffix))
+					}
+				}
+			} else {
+				res = append(res, arg)
+			}
+		} else {
+			res = append(res, arg)
+		}
+	}
+	return res
 }
