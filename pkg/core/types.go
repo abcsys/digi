@@ -72,14 +72,28 @@ func (k *Kind) EscapedGvrString() string {
 func KindFromString(s string) (*Kind, error) {
 	s = strings.Trim(s, "/")
 	segs := strings.Split(s, "/")
-	if len(segs) != 3 {
-		return nil, ErrInvalidKind
-	} else {
+	// TBD enforce singular on kind.Name
+	switch len(segs) {
+	case 1:
+		return &Kind{
+			Group:   "digi.dev",
+			Version: "v1",
+			Name:    segs[0],
+		}, nil
+	case 2:
+		return &Kind{
+			Group:   segs[0],
+			Version: "v1",
+			Name:    segs[1],
+		}, nil
+	case 3:
 		return &Kind{
 			Group:   segs[0],
 			Version: segs[1],
 			Name:    segs[2],
 		}, nil
+	default:
+		return nil, ErrInvalidKind
 	}
 }
 

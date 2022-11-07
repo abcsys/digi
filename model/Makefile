@@ -118,7 +118,7 @@ build: | gen prepare
 clear-manifest:
 	$(DOCKER_CMD) manifest rm $(DRIVER_REPO)/$(PROFILE_NAME):$(TAG) >/dev/null 2>&1 || true
 
-# digi profiles
+# manage local digi profiles
 .PHONY: push pull
 push:
 	mkdir $(DIGI_REPO) >/dev/null 2>&1 || true

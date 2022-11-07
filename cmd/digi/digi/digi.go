@@ -1,6 +1,7 @@
 package digi
 
 import (
+	"digi.dev/digi/api/repo"
 	"fmt"
 	"log"
 	"os"
@@ -216,28 +217,40 @@ var kindCmd = &cobra.Command{
 	},
 }
 
-// TBD pull and push to a remote repo
 var pullCmd = &cobra.Command{
 	Use:   "pull KIND [KIND ...]",
 	Short: "Pull a kind",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
+		local, _ := cmd.Flags().GetBool("local")
 
 		var wg sync.WaitGroup
 		for _, name := range args {
 			wg.Add(1)
 			go func(name string) {
 				defer wg.Done()
-				err := helper.RunMake(map[string]string{
-					"PROFILE_NAME": name,
-				}, "pull", false, q)
-				if err != nil {
-					log.Fatalf("unable to pull %s: %v\n", name, err)
-				} else if !q {
-					log.Println(name)
-				}
-
+				// TBD local repo
+				if local {
+					err := helper.RunMake(map[string]string{
+						"PROFILE_NAME": name,
+					}, "pull", false, q)
+					if err != nil {
+						log.Fatalf("unable to pull %s: %v\n", name, err)
+					} else if !q {
+						log.Println(name)
+					}
+				} else {
+					// GitHub
+					kind, err := core.KindFromString(name)
+					if err != nil {
+						log.Fatalf("unable to parse %s to kind: %v\n", name, err)
+					}
+					err = repo.Pull(kind)
+					if err != nil {
+						log.Fatalf("unable to pull %s: %v\n from remote", name, err)
+					}
+				} // ... other repo types
 			}(name)
 		}
 		wg.Wait()
