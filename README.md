@@ -11,7 +11,7 @@ Digi is an open source framework for building lightweight digital twins ("digi")
 ## Resources
 * [Quickstart](docs/quickstart.md)
 * [Development](docs/development.md)
-* [Digi Design](docs/design.md)
+* [Building Digis](docs/build-digi.md)
 * [Example Digis](https://github.com/digi-project/mocks)
 * [Use Cases and Demo](https://github.com/digi-project/demo)
 
