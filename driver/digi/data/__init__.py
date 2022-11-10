@@ -7,15 +7,14 @@ the digi's data router.
 """
 
 logger = logging.getLogger(__name__)
-os.environ["ZED_LAKE"] = os.environ.get("ZED_LAKE", "http://lake:6534")
-lake_url = os.environ["ZED_LAKE"]
+lake_url = os.environ.get("ZED_LAKE", "http://localhost:9867")
 
 from digi.data.pool import create_pool
 from digi.data.router import create_router
 from digi.data.zed import Client
 from digi.data.sync import Sync, Watch
 
-# A singleton used within the data module
+# singleton used by the digi driver; router creates its own client(s)
 lake = Client()
 
 __all__ = [

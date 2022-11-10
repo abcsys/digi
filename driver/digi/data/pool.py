@@ -38,9 +38,7 @@ class Pool(ABC):
 class ZedPool(Pool):
     def __init__(self, name):
         super().__init__(name)
-        self.client = zed.Client(
-            base_url=digi.data.lake_url
-        )
+        self.client = digi.data.lake
 
     def load(self, objects: List[dict], *,
              branch="main",

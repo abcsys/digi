@@ -9,6 +9,7 @@ class Client(zed.Client):
     """TBD patch upstream"""
 
     def __init__(self, *args, **kwargs):
+        # In zed.Client: self.base_url = os.environ.get("ZED_LAKE", "http://localhost:9867")
         super().__init__(*args, **kwargs)
 
     def load(self, pool_name_or_id, data, branch_name='main',

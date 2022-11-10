@@ -6,4 +6,5 @@ plural: digis
 mounter: true
 image: library/digi
 pool_provider: zed
+zed_lake: http://lake:6534
 mount_mode: permissive

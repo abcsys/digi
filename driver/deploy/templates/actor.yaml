@@ -39,7 +39,9 @@ spec:
             value: {{ .Values.log_level | default 20 | quote }}
           # pool
           - name: POOL_PROVIDER
-            value: {{ quote .Values.pool_provider }}
+            value: {{ .Values.pool_provider | default "zed" }}
+          - name: ZED_LAKE
+            value: {{ .Values.zed_lake | default "http://lake:6534" }}
           # composition
           - name: MOUNT_MODE
             value: {{ quote .Values.mount_mode }}
