@@ -40,6 +40,7 @@ func init() {
 	RootCmd.AddCommand(kindCmd)
 	RootCmd.AddCommand(rmkCmd)
 	pullCmd.Flags().BoolP("local", "l", false, "Pull from local profiles")
+	pullCmd.Flags().StringP("group", "g", "", "Specifying kind group.")
 	pushCmd.Flags().BoolP("local", "l", false, "Push to local profiles")
 	kindCmd.Flags().BoolP("local", "l", false, "Show local profiles")
 	rmkCmd.Flags().BoolP("all", "a", false, "Remove kind crd")

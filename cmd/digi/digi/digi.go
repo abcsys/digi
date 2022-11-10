@@ -224,6 +224,7 @@ var pullCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
 		local, _ := cmd.Flags().GetBool("local")
+		group, _ := cmd.Flags().GetString("group")
 
 		var wg sync.WaitGroup
 		for _, name := range args {
@@ -243,13 +244,19 @@ var pullCmd = &cobra.Command{
 				} else {
 					// GitHub
 					kind, err := core.KindFromString(name)
+					if group != "" {
+						kind.Group = group
+					}
 					if err != nil {
 						log.Fatalf("unable to parse %s to kind: %v\n", name, err)
+						return
 					}
 					err = repo.Pull(kind)
 					if err != nil {
 						log.Fatalf("unable to pull %s: %v\n from remote", name, err)
+						return
 					}
+					fmt.Println(name)
 				} // ... other repo types
 			}(name)
 		}
