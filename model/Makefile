@@ -131,7 +131,7 @@ pull:
 generation:
 	python $(DIGIHOME)/helper.py "generation" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL)
 # TBD improve and merge commands into the helper.py
-commit: | conn-lake-bg commit-inner conn-lake-stop
+commit: | conn-lake-bg commit-inner conn-lake-stop commit-recurse
 commit-inner:
 	mkdir -p $(WORKDIR)/$(TARGETDIR)
 	rm -rf $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)
@@ -143,6 +143,7 @@ commit-inner:
 	# save branches
 	mkdir -p $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)/records
 	python $(DIGIHOME)/helper.py "save-branches" $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN) $(NAME)
+commit-recurse:
 	# check for children
 	python $(DIGIHOME)/helper.py "comm-hier" $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN) $(NAME) $(TARGETDIR) $(GEN) $(ADDPATHS)
 checksum-digi:
@@ -218,7 +219,7 @@ conn-lake: | conn-lake-stop
 conn-lake-bg: | conn-lake-stop
 	kubectl port-forward service/$(LAKENAME) 9867:6534 >/dev/null &
 conn-lake-stop:
-	kill $(lsof -t -i:9867) >/dev/null 2>&1 || true
+	kill $$(lsof -t -i:9867) >/dev/null 2>&1 || true && wait $$(lsof -t -i:9867)
 start-lake:
 	WORKDIR=$(DIGIHOME) digi run lake lake --no-pool
 stop-lake:
