@@ -125,36 +125,36 @@ push:
 	cd $(WORKDIR) && tar czf $(PROFILE_NAME).gz $(PROFILE) && mv $(PROFILE_NAME).gz $(DIGI_REPO)/ >/dev/null || true
 pull:
 	cd $(WORKDIR) && rsync $(DIGI_REPO)/$(PROFILE_NAME)*.gz . && tar xzf $(PROFILE_NAME)*.gz && rm $(PROFILE_NAME)*.gz > /dev/null
+
+# commit
+.PHONY: generation commit commit-inner recreate recreate-inner checksum-digi checksum-snapshot
 generation:
 	python $(DIGIHOME)/helper.py "generation" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL)
-
-commit:
+# TBD improve and merge commands into the helper.py
+commit: | conn-lake-bg commit-inner conn-lake-stop
+commit-inner:
 	mkdir -p $(WORKDIR)/$(TARGETDIR)
 	rm -rf $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)
-#find the right kind and hande copying
+	# find the right kind and hande copying
 	python $(DIGIHOME)/helper.py "find-kind" $(KIND) $(GROUP) $(NAME) $(WORKDIR) $(TARGETDIR) $(GEN) $(ADDPATHS)
 	cp -r $(WORKDIR)/$(KIND) $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)
-#make a spec.yaml file in the snapshot directory to store the spec of the committed digi
+	# make a spec.yaml file in the snapshot directory to store the spec of the committed digi
 	python $(DIGIHOME)/helper.py "make-spec" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL) $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)
-#save branches
+	# save branches
 	mkdir -p $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)/records
 	python $(DIGIHOME)/helper.py "save-branches" $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN) $(NAME)
-#check for children
+	# check for children
 	python $(DIGIHOME)/helper.py "comm-hier" $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN) $(NAME) $(TARGETDIR) $(GEN) $(ADDPATHS)
-
-hier-checksum-digi:
-	python $(DIGIHOME)/helper.py "hier-checksum-digi" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL)
-
-hier-checksum-snapshot:
-	python $(DIGIHOME)/helper.py "hier-checksum-snapshot" $(WORKDIR) $(DIRNAME)
-
-recreate-tail:
+checksum-digi:
+	python $(DIGIHOME)/helper.py "checksum-digi" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL)
+checksum-snapshot:
+	python $(DIGIHOME)/helper.py "checksum-snapshot" $(WORKDIR) $(DIRNAME)
+recreate: | conn-lake-bg recreate-inner conn-lake-stop
+recreate-inner:
 	cp $(WORKDIR)/$(DIRNAME)/spec.yaml $(WORKDIR)/$(DIRNAME)/temp_spec.yaml
 	python $(DIGIHOME)/helper.py "remove-mount" $(WORKDIR) $(DIRNAME) $(NAME)
-
 	python $(DIGIHOME)/helper.py "apply-spec" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL) $(WORKDIR)/$(DIRNAME)/temp_spec.yaml
-
-	rm $(WORKDIR)/$(DIRNAME)/temp_spec.yaml	
+	rm $(WORKDIR)/$(DIRNAME)/temp_spec.yaml
 	python $(DIGIHOME)/helper.py "load-branches" $(WORKDIR) $(DIRNAME) $(NAME)
 	python $(DIGIHOME)/helper.py "rec-hier" $(WORKDIR) $(DIRNAME) $(SUFFIX) $(NAME)
 
@@ -208,13 +208,17 @@ connect:
 ifndef LAKENAME
 override LAKENAME = lake
 endif
-.PHONY: query connect-lake start-lake stop-lake load
+.PHONY: query conn-lake conn-lake-bg conn-lake-stop start-lake stop-lake load
 # TBD enforce single lake or use service to identify lake
 query:
 	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
         -- bash -c "$(FLAG) zed query $(ZEDFLAG) '$(QUERY)'"
-connect-lake:
+conn-lake: | conn-lake-stop
 	kubectl port-forward service/$(LAKENAME) 9867:6534 || true
+conn-lake-bg: | conn-lake-stop
+	kubectl port-forward service/$(LAKENAME) 9867:6534 >/dev/null &
+conn-lake-stop:
+	kill $(lsof -t -i:9867) >/dev/null 2>&1 || true
 start-lake:
 	WORKDIR=$(DIGIHOME) digi run lake lake --no-pool
 stop-lake:

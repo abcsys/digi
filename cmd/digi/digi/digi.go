@@ -9,12 +9,11 @@ import (
 	"strings"
 	"sync"
 
-	"digi.dev/digi/api/repo"
-
 	"github.com/spf13/cobra"
 
 	"digi.dev/digi/api"
 	"digi.dev/digi/api/config"
+	"digi.dev/digi/api/repo"
 	"digi.dev/digi/cmd/digi/helper"
 	"digi.dev/digi/pkg/core"
 )
@@ -292,7 +291,7 @@ var pushCmd = &cobra.Command{
 
 var commitCmd = &cobra.Command{
 	Use:   "commit NAME [NAME ...]",
-	Short: "Generate a snapshot file for a given digi",
+	Short: "Generate a snapshot for given digis",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -357,9 +356,9 @@ var commitCmd = &cobra.Command{
 	},
 }
 
-var checksumCmd = &cobra.Command{
-	Use:   "checksum NAME",
-	Short: "Generate a checksum for a given digi hierarchy or snapshot directory",
+var digestCmd = &cobra.Command{
+	Use:   "digest NAME",
+	Short: "Compute the digest for a digi or a kind",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -368,8 +367,8 @@ var checksumCmd = &cobra.Command{
 		if workDir = os.Getenv("WORKDIR"); workDir == "" {
 			workDir = "."
 		}
-		intent_status_yaml_path := fmt.Sprintf("%s/%s/spec.yaml", workDir, args[0])
-		_, err := os.Stat(intent_status_yaml_path)
+		intentStatusYamlPath := fmt.Sprintf("%s/%s/spec.yaml", workDir, args[0])
+		_, err := os.Stat(intentStatusYamlPath)
 		isSnapshotDir := err == nil
 
 		if isSnapshotDir {
@@ -377,7 +376,7 @@ var checksumCmd = &cobra.Command{
 				"DIRNAME": args[0],
 			}
 
-			_ = helper.RunMake(params, "hier-checksum-snapshot", true, false)
+			_ = helper.RunMake(params, "checksum-snapshot", true, false)
 		} else {
 			for _, name := range args {
 				duri, err := api.Resolve(name)
@@ -397,7 +396,7 @@ var checksumCmd = &cobra.Command{
 				}
 
 				if err == nil {
-					_ = helper.RunMake(params, "hier-checksum-digi", true, false)
+					_ = helper.RunMake(params, "checksum-digi", true, false)
 				}
 			}
 		}
@@ -652,7 +651,7 @@ var runCmd = &cobra.Command{
 					fmt.Printf("%s:\n", name)
 				}
 
-				_ = helper.RunMake(params, "recreate-tail", true, false)
+				_ = helper.RunMake(params, "recreate", true, false)
 			}
 		}
 	},

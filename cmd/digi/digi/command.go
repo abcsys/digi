@@ -37,7 +37,7 @@ func init() {
 	RootCmd.AddCommand(pullCmd)
 	RootCmd.AddCommand(pushCmd)
 	RootCmd.AddCommand(commitCmd)
-	RootCmd.AddCommand(checksumCmd)
+	RootCmd.AddCommand(digestCmd)
 	RootCmd.AddCommand(kindCmd)
 	RootCmd.AddCommand(rmkCmd)
 	pullCmd.Flags().BoolP("local", "l", false, "Pull from local profiles")
