@@ -1,13 +1,15 @@
 package digi
 
 import (
-	"digi.dev/digi/api/repo"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+
+	"digi.dev/digi/api/repo"
 
 	"github.com/spf13/cobra"
 
@@ -293,10 +295,21 @@ var commitCmd = &cobra.Command{
 	Short: "Generate a snapshot file for a given digi",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+
 		var workDir string
 		if workDir = os.Getenv("WORKDIR"); workDir == "" {
 			workDir = "."
 		}
+
+		var targetDir string
+		targetDir, _ = cmd.Flags().GetString("targetDir")
+		if targetDir == "" {
+			targetDir = workDir
+		}
+
+		paths, _ := cmd.Flags().GetStringSlice("paths")
+		addpaths := strings.Join(paths, ",")
+		pathlist := fmt.Sprintf("[%s]", addpaths)
 
 		for _, name := range args {
 			_, err := api.Resolve(name)
@@ -315,17 +328,77 @@ var commitCmd = &cobra.Command{
 				"KIND":      kind.Name,
 				"PLURAL":    kind.Plural(),
 				"NAME":      name,
+				"TARGETDIR": targetDir,
 				"NEATLEVEL": fmt.Sprintf("-l %d", 4),
+				"NAMESPACE": "default",
+				"ADDPATHS":  pathlist,
 			}
 			if len(args) > 1 {
 				fmt.Printf("%s:\n", name)
 			}
 
 			if err == nil {
+				currStdout := os.Stdout
+				r, w, _ := os.Pipe()
+				os.Stdout = w
+
+				_ = helper.RunMake(params, "generation", true, false)
+
+				w.Close()
+				captured, _ := ioutil.ReadAll(r)
+				os.Stdout = currStdout
+
+				params["GEN"] = strings.TrimSpace(string(captured))
+
+				fmt.Printf("%s_snapshot_gen%s\n", params["NAME"], params["GEN"])
 				_ = helper.RunMake(params, "commit", true, false)
-				zip_path := fmt.Sprintf("%s/%s/intent_status.yaml", workDir, kind.Name)
-				snapshot_dir_name := fmt.Sprintf("%s/%s_snapshot.zip", workDir, name)
-				helper.ZipDirectory(zip_path, snapshot_dir_name)
+			}
+		}
+	},
+}
+
+var checksumCmd = &cobra.Command{
+	Use:   "checksum NAME",
+	Short: "Generate a checksum for a given digi hierarchy or snapshot directory",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		//check if args[0] is a snapshot directory
+		var workDir string
+		if workDir = os.Getenv("WORKDIR"); workDir == "" {
+			workDir = "."
+		}
+		intent_status_yaml_path := fmt.Sprintf("%s/%s/spec.yaml", workDir, args[0])
+		_, err := os.Stat(intent_status_yaml_path)
+		isSnapshotDir := err == nil
+
+		if isSnapshotDir {
+			params := map[string]string{
+				"DIRNAME": args[0],
+			}
+
+			_ = helper.RunMake(params, "hier-checksum-snapshot", true, false)
+		} else {
+			for _, name := range args {
+				duri, err := api.Resolve(name)
+				kind := duri.Kind
+
+				params := map[string]string{
+					"GROUP":     kind.Group,
+					"VERSION":   kind.Version,
+					"KIND":      kind.Name,
+					"PLURAL":    kind.Plural(),
+					"NAME":      name,
+					"NEATLEVEL": fmt.Sprintf("-l %d", 4),
+					"NAMESPACE": "default",
+				}
+				if len(args) > 1 {
+					fmt.Printf("%s:\n", name)
+				}
+
+				if err == nil {
+					_ = helper.RunMake(params, "hier-checksum-digi", true, false)
+				}
 			}
 		}
 	},
@@ -471,9 +544,12 @@ var runCmd = &cobra.Command{
 		if workDir = os.Getenv("WORKDIR"); workDir == "" {
 			workDir = "."
 		}
-		intent_status_yaml_path := fmt.Sprintf("%s/%s/intent_status.yaml", workDir, args[0])
+		intent_status_yaml_path := fmt.Sprintf("%s/%s/spec.yaml", workDir, args[0])
 		_, err = os.Stat(intent_status_yaml_path)
 		isSnapshotDir := err == nil
+
+		var suffix string
+		suffix, _ = cmd.Flags().GetString("childSuffix")
 
 		//if args[0] is a snapshot directory, make sure none of the other arguments correspond to names of existing digis
 		if isSnapshotDir {
@@ -484,7 +560,6 @@ var runCmd = &cobra.Command{
 
 			for _, name := range names {
 				name = strings.TrimSpace(name)
-				fmt.Println(name)
 				currAuri, err := api.Resolve(name)
 
 				if err == nil && currAuri != nil {
@@ -557,6 +632,10 @@ var runCmd = &cobra.Command{
 
 		if isSnapshotDir {
 			for _, name := range names {
+				if suffix == "" {
+					suffix = "[]"
+				}
+
 				name = strings.TrimSpace(name)
 				params := map[string]string{
 					"GROUP":     kind.Group,
@@ -565,7 +644,9 @@ var runCmd = &cobra.Command{
 					"DIRNAME":   args[0],
 					"PLURAL":    kind.Plural(),
 					"NAME":      name,
+					"SUFFIX":    suffix,
 					"NEATLEVEL": fmt.Sprintf("-l %d", 4),
+					"NAMESPACE": "default",
 				}
 				if len(args) > 2 {
 					fmt.Printf("%s:\n", name)

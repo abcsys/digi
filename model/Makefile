@@ -125,25 +125,38 @@ push:
 	cd $(WORKDIR) && tar czf $(PROFILE_NAME).gz $(PROFILE) && mv $(PROFILE_NAME).gz $(DIGI_REPO)/ >/dev/null || true
 pull:
 	cd $(WORKDIR) && rsync $(DIGI_REPO)/$(PROFILE_NAME)*.gz . && tar xzf $(PROFILE_NAME)*.gz && rm $(PROFILE_NAME)*.gz > /dev/null
+generation:
+	python $(DIGIHOME)/helper.py "generation" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL)
 
-#commit and recreate helpers
 commit:
-	echo $(NAME)
-	rm -rf $(WORKDIR)/$(NAME)_snapshot
-	rm -f $(WORKDIR)/$(NAME)_snapshot.zip
-	cp -r $(WORKDIR)/$(KIND) $(WORKDIR)/$(NAME)_snapshot
-	digi check $(NAME) > curr_branches.yaml
-	mv curr_branches.yaml $(WORKDIR)/$(NAME)_snapshot
-	mkdir $(WORKDIR)/$(NAME)_snapshot/records
-	python $(DIGIHOME)/helper.py "save" $(WORKDIR)/$(NAME)_snapshot $(NAME)
-	kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml | kubectl neat -l 0 > intent_status.yaml
-	mv intent_status.yaml $(WORKDIR)/$(NAME)_snapshot
+	mkdir -p $(WORKDIR)/$(TARGETDIR)
+	rm -rf $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)
+#find the right kind and hande copying
+	python $(DIGIHOME)/helper.py "find-kind" $(KIND) $(GROUP) $(NAME) $(WORKDIR) $(TARGETDIR) $(GEN) $(ADDPATHS)
+	cp -r $(WORKDIR)/$(KIND) $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)
+#make a spec.yaml file in the snapshot directory to store the spec of the committed digi
+	python $(DIGIHOME)/helper.py "make-spec" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL) $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)
+#save branches
+	mkdir -p $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN)/records
+	python $(DIGIHOME)/helper.py "save-branches" $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN) $(NAME)
+#check for children
+	python $(DIGIHOME)/helper.py "comm-hier" $(WORKDIR)/$(TARGETDIR)/$(NAME)_snapshot_gen$(GEN) $(NAME) $(TARGETDIR) $(GEN) $(ADDPATHS)
+
+hier-checksum-digi:
+	python $(DIGIHOME)/helper.py "hier-checksum-digi" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL)
+
+hier-checksum-snapshot:
+	python $(DIGIHOME)/helper.py "hier-checksum-snapshot" $(WORKDIR) $(DIRNAME)
+
 recreate-tail:
-	cp $(WORKDIR)/$(DIRNAME)/intent_status.yaml $(WORKDIR)/$(DIRNAME)/temp.yaml
-	python $(DIGIHOME)/helper.py "edit" $(WORKDIR) $(DIRNAME) $(NAME)
-	kubectl apply -f $(WORKDIR)/$(DIRNAME)/temp.yaml
-	rm $(WORKDIR)/$(DIRNAME)/temp.yaml	
-	python $(DIGIHOME)/helper.py "load" $(WORKDIR) $(DIRNAME) $(NAME)
+	cp $(WORKDIR)/$(DIRNAME)/spec.yaml $(WORKDIR)/$(DIRNAME)/temp_spec.yaml
+	python $(DIGIHOME)/helper.py "remove-mount" $(WORKDIR) $(DIRNAME) $(NAME)
+
+	python $(DIGIHOME)/helper.py "apply-spec" $(GROUP) $(VERSION) $(NAMESPACE) $(NAME) $(PLURAL) $(WORKDIR)/$(DIRNAME)/temp_spec.yaml
+
+	rm $(WORKDIR)/$(DIRNAME)/temp_spec.yaml	
+	python $(DIGIHOME)/helper.py "load-branches" $(WORKDIR) $(DIRNAME) $(NAME)
+	python $(DIGIHOME)/helper.py "rec-hier" $(WORKDIR) $(DIRNAME) $(SUFFIX) $(NAME)
 
 # deploy
 .PHONY: run stop run-no-pool

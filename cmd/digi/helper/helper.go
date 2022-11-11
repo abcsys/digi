@@ -1,7 +1,6 @@
 package helper
 
 import (
-	"archive/zip"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -162,60 +161,6 @@ func GetPort() int {
 	}
 	_ = l.Close()
 	return l.Addr().(*net.TCPAddr).Port
-}
-
-/*
-* NOTE: This code comes from the following source: https://gosamples.dev/zip-file/
-* There is a similar approach used in the open Github issue at https://github.com/golang/go/issues/54898#issue-1363724548
- */
-func ZipDirectory(source string, target string) error {
-	zipFile, err := os.Create(target)
-	if err != nil {
-		return err
-	}
-	defer zipFile.Close()
-
-	writer := zip.NewWriter(zipFile)
-	defer writer.Close()
-
-	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		header, err := zip.FileInfoHeader(info)
-		if err != nil {
-			return err
-		}
-
-		header.Method = zip.Deflate
-
-		header.Name, err = filepath.Rel(filepath.Dir(source), path)
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			header.Name += "/"
-		}
-
-		headerWriter, err := writer.CreateHeader(header)
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		f, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-
-		_, err = io.Copy(headerWriter, f)
-		return err
-	})
 }
 
 // checks if the string includes a range
