@@ -3,17 +3,14 @@
 ## Installation
 
 Install Kubernetes via, e.g., Docker Desktop, Minikube, or Kind.
-
-* Required: Kubernetes CLI `[kubectl`](https://kubernetes.io/docs/tasks/tools/) and package manager `[helm 3](https://helm.sh/docs/intro/install/)` 
-
+* Required: Kubernetes CLI [kubectl](https://kubernetes.io/docs/tasks/tools/) and package manager [helm 3](https://helm.sh/docs/intro/install/) 
 To validate: run `kubectl get pods` 
 
 Set up the digi repo
 * Clone the repo [https://github.com/digi-project/digi](https://github.com/digi-project/digi)
-* In the repo, run `make dep` followed by `make install` .
+* In the repo, run `make dep` followed by `make install`.
 
 To validate: run `digi` and you should see the available commands.
-
 
 ## Examples
 
