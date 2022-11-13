@@ -27,7 +27,7 @@ var RootCmd = &cobra.Command{
 }
 
 var AttachCmd = &cobra.Command{
-	Use:     "Attach SRC [SRC..] TARGET",
+	Use:     "attach SRC [SRC..] TARGET",
 	Short:   "attach a mock to a scene",
 	Aliases: []string{},
 	Args:    cobra.MinimumNArgs(2),
