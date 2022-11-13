@@ -5,7 +5,7 @@ URLS = {
 
 setup(
     name="digi",
-    version="0.2.5",
+    version="0.2.6",
     description="Digi driver library",
     url=URLS,
     author="Team Digi",
