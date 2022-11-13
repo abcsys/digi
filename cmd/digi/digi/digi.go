@@ -825,7 +825,6 @@ var checkCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		v, _ := cmd.Flags().GetInt8("verbosity")
-
 		for _, name := range args {
 			duri, err := api.Resolve(name)
 			if err != nil {
@@ -851,30 +850,20 @@ var checkCmd = &cobra.Command{
 }
 
 var watchCmd = &cobra.Command{
-	Use:     "watch NAME",
+	Use:     "watch NAME [NAME ...]",
 	Short:   "Watch changes of a digi's model",
 	Aliases: []string{"w"},
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		i, _ := cmd.Flags().GetFloat32("interval")
 		v, _ := cmd.Flags().GetInt8("verbosity")
 
-		name := args[0]
-		duri, err := api.Resolve(name)
-		if err != nil {
-			log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
-		}
-		kind := duri.Kind
-
+		names := strings.Join(args, " ")
 		params := map[string]string{
-			"GROUP":    kind.Group,
-			"VERSION":  kind.Version,
-			"KIND":     kind.Name,
-			"PLURAL":   kind.Plural(),
-			"NAME":     name,
+			"NAME":     names,
 			"INTERVAL": fmt.Sprintf("%f", i),
-			// TBD get max neat level from kubectl-neat
-			"NEATLEVEL": fmt.Sprintf("-l %d", 4-v),
+			// XXX v is passed to check command as verbosity
+			"NEATLEVEL": fmt.Sprintf("%d", v),
 		}
 
 		_ = helper.RunMake(params, "watch", true, false)

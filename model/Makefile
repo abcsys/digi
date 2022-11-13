@@ -195,8 +195,7 @@ check:
 	(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
  	|| kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | neat $(NEATLEVEL)
 watch:
-	watch -n$(INTERVAL) -t "(kubectl get $(PLURAL) $(NAME) -oyaml 2>/dev/null \
- 	|| kubectl get $(PLURAL).$(VERSION).$(GROUP) $(NAME) -oyaml) | neat $(NEATLEVEL)"
+	watch -n$(INTERVAL) -t digi check $(NAME) -v $(NEATLEVEL)
 
 ifndef SHELL_BIN
 override SHELL_BIN = sh
