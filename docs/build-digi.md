@@ -25,10 +25,15 @@ def h(power):
     plug.set(power["intent"])
 ```
 
+Before you build the digi, you have to set docker repo:
+```bash
+digi config --driver-repo YOUR_DOCKER_REPO_NAME
+```
+
 Build and run the digi:
 
 ```bash
-digi build plug; digi run plug plut-test
+digi build plug; digi run plug plug-test
 ```
 
 Update the intent of the digi in the model's yaml file (e.g., cr.yaml)
