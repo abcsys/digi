@@ -75,13 +75,14 @@ edit-all:
 .PHONY: clean-test test
 clean-test: delete-pool conn-lake-stop
 	kubectl delete $(PLURAL).$(VERSION).$(GROUP) $(NAME) >/dev/null 2>&1 || true
-test: | all clean-test conn-lake-bg
+start-test: | all conn-lake-bg
 	kubectl apply -f $(WORKDIR)/$(KIND)/test/cr.yaml && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-    -- bash -c "zed create $(NAME)") >/dev/null && echo $(NAME) || echo "unable to create pool $(NAME); is lake running?"
+    -- bash -c "zed create $(NAME)") >/dev/null && echo $(NAME) || (echo "unable to create pool $(NAME); is lake running?"; exit 1) && \
 	cd $(WORKDIR) && GROUP=$(GROUP) VERSION=$(VERSION) KIND=$(KIND) \
     PLURAL=$(PLURAL) NAME=$(NAME) NAMESPACE=$(NAMESPACE) MOUNTER=$(MOUNTER) LAKE_PROVIDER=zed \
 	python $(PROFILE)/driver/handler.py
+test: | clean-test start-test clean-test
 
 # driver
 .PHONY: prepare-build-dir prepare-build prepare-deploy prepare
@@ -162,6 +163,7 @@ recreate-inner:
 # deploy
 .PHONY: run stop run-no-pool
 run: | prepare model delete-pool
+	# TBD preflight check whether the lake is running
 	cd $(build_dir)/deploy && mv $(CR) ./templates; \
 	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
@@ -214,7 +216,7 @@ conn-lake: | conn-lake-stop
 conn-lake-bg: | conn-lake-stop
 	kubectl port-forward service/$(LAKENAME) 9867:6534 >/dev/null &
 conn-lake-stop:
-	kill $$(lsof -t -i:9867) >/dev/null 2>&1 || true && wait $$(lsof -t -i:9867)
+	kill $$(lsof -t -i:9867) >/dev/null 2>&1 || true && wait $$(lsof -t -i:9867) >/dev/null 2>&1
 start-lake:
 	WORKDIR=$(DIGIHOME) digi run lake lake --no-pool
 stop-lake:
