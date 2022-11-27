@@ -7,7 +7,7 @@ from typing import List, Callable
 
 import digi
 from digi.data import logger, zjson
-from digi.data import zed, sync
+from digi.data import sync
 from digi.data import router
 
 
@@ -119,16 +119,16 @@ providers = {
 
 def create_pool():
     global providers
-    if digi.pool_provider == "":
-        digi.pool_provider = "zed"
+    if digi.lake_provider == "":
+        digi.lake_provider = "zed"
 
-    if digi.pool_provider in {"none", "false"}:
+    if digi.lake_provider in {"none", "false"}:
         return None
 
-    if digi.pool_provider not in providers:
-        logger.fatal(f"unknown pool provider {digi.pool_provider}")
+    if digi.lake_provider not in providers:
+        logger.fatal(f"unknown lake provider {digi.lake_provider}")
         sys.exit(1)
 
-    return providers[digi.pool_provider](
+    return providers[digi.lake_provider](
         pool_name(*digi.duri)
     )

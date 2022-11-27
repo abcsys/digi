@@ -15,7 +15,7 @@ n = name = os.environ.get("NAME", "t1")
 ns = namespace = os.environ.get("NAMESPACE", "default")
 duri = auri = (g, v, r, n, ns)
 
-pool_provider = os.environ.get("POOL_PROVIDER", "zed")
+lake_provider = os.environ.get("LAKE_PROVIDER", "zed")
 load_trim_mount = os.environ.get("TRIM_MOUNT_ON_LOAD", "") != "false"
 enable_mounter = os.environ.get("MOUNTER", "") == "true"
 enable_visual = os.environ.get("VISUAL", "") == "true"

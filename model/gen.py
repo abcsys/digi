@@ -397,7 +397,7 @@ def gen(name):
         _gen_cr("deploy", name_="'{{ .Values.name }}'")
 
         # testing cr
-        _gen_cr("test", name_=model["kind"].lower() + "-test")
+        _gen_cr("test", name_=model["kind"].lower())
 
         # generate a helm values.yaml if missing
         values_file = os.path.join(_dir_path, "deploy", "values.yaml")

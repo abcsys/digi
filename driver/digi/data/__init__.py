@@ -7,7 +7,12 @@ the digi's data router.
 """
 
 logger = logging.getLogger(__name__)
-lake_url = os.environ.get("ZED_LAKE", "http://localhost:9867")
+if "LAKE" in os.environ:
+    lake_url = os.environ["LAKE"]
+elif "ZED_LAKE" in os.environ:
+    lake_url = os.environ["ZED_LAKE"]
+else:
+    lake_url = "http://localhost:9867"
 
 from digi.data.pool import create_pool
 from digi.data.router import create_router

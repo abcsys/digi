@@ -73,15 +73,15 @@ edit-all:
 	kubectl edit $(PLURAL) $(NAME) 2>&1 || kubectl edit $(PLURAL).$(GROUP) $(NAME)
 
 .PHONY: clean-test test
-clean-test:
+clean-test: delete-pool conn-lake-stop
 	kubectl delete $(PLURAL).$(VERSION).$(GROUP) $(NAME) >/dev/null 2>&1 || true
-test: | all clean-test
-	kubectl apply -f $(WORKDIR)/$(KIND)/test/cr.yaml
+test: | all clean-test conn-lake-bg
+	kubectl apply -f $(WORKDIR)/$(KIND)/test/cr.yaml && \
+	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
+    -- bash -c "zed create $(NAME)") >/dev/null && echo $(NAME) || echo "unable to create pool $(NAME); is lake running?"
 	cd $(WORKDIR) && GROUP=$(GROUP) VERSION=$(VERSION) KIND=$(KIND) \
-    PLURAL=$(PLURAL) NAME=$(NAME) NAMESPACE=$(NAMESPACE) \
-    POOL_PROVIDER=none MOUNTER=$(MOUNTER) \
+    PLURAL=$(PLURAL) NAME=$(NAME) NAMESPACE=$(NAMESPACE) MOUNTER=$(MOUNTER) LAKE_PROVIDER=zed \
 	python $(PROFILE)/driver/handler.py
-	# TBD allow using pool
 
 # driver
 .PHONY: prepare-build-dir prepare-build prepare-deploy prepare
@@ -161,19 +161,15 @@ recreate-inner:
 
 # deploy
 .PHONY: run stop run-no-pool
-run: | prepare model
-	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-    -- bash -c "zed drop -f $(NAME) >/dev/null 2>&1" || true
+run: | prepare model delete-pool
 	cd $(build_dir)/deploy && mv $(CR) ./templates; \
 	helm template -f values.yaml --set name=$(NAME) $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
 	kubectl apply -f run.yaml >/dev/null || (echo "unable to run $(NAME), check $(CR)"; exit 1) && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-    -- bash -c "zed create $(NAME)") >/dev/null && echo $(NAME) || echo "unable to create pool $(NAME)"
+    -- bash -c "zed create $(NAME)") >/dev/null && echo $(NAME) || echo "unable to create pool $(NAME); is lake running?"
 	rm -rf $(build_dir)
-stop:
-	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
-    -- bash -c "zed drop -f $(NAME) >/dev/null" || true
+stop: | delete-pool
 	kubectl delete serviceaccount $(NAME) >/dev/null || true & \
 	kubectl delete clusterrole $(NAME) >/dev/null || true & \
 	kubectl delete clusterrolebinding $(NAME) >/dev/null || true & \
@@ -225,6 +221,9 @@ stop-lake:
 	digi stop lake
 load:
 	cd $(WORKDIR) && zed load -use $(NAME) $(FILE)
+delete-pool:
+	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
+    -- bash -c "zed drop -f $(NAME) >/dev/null 2>&1" || true
 
 # syncer
 .PHONY: start-syncer stop-syncer

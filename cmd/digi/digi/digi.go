@@ -417,7 +417,7 @@ var testCmd = &cobra.Command{
 			log.Fatalf("unable to find kind %s\n", profile)
 		}
 
-		name = kind.Name + "-test"
+		name = kind.Name
 
 		var useMounter, useStrictMounter string
 		if um, _ := cmd.Flags().GetBool("mounter"); um {
