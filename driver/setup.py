@@ -20,8 +20,9 @@ setup(
         "python-box",
         "kubernetes",
         'kopf',
-        "zed",
+        "zed @ git+https://github.com/silveryfu/zed#subdirectory=python/zed",
         "dash",
         "pandas",
+        "durationpy",
     ],
 )
