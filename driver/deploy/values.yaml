@@ -5,6 +5,6 @@ version: v1
 plural: digis
 mounter: true
 image: library/digi
-pool_provider: zed
+lake_provider: zed
 lake: http://lake:6534
 mount_mode: permissive

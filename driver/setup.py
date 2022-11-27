@@ -22,7 +22,6 @@ setup(
         'kopf',
         "dash",
         "pandas",
-        "durationpy",
         "pyzed",
     ],
 )

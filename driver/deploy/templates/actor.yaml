@@ -39,7 +39,7 @@ spec:
             value: {{ .Values.log_level | default 20 | quote }}
           # pool
           - name: LAKE_PROVIDER
-            value: {{ .Values.pool_provider | default "zed" }}
+            value: {{ .Values.lake_provider | default "zed" }}
           - name: LAKE
             value: {{ .Values.lake | default "http://lake:6534" }}
           - name: ZED_LAKE # for backward compatibility TBD deprecate in v0.3
