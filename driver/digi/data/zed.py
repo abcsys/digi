@@ -1,11 +1,11 @@
 import json
 import getpass
 import urllib
-import zed
+import pyzed
 from . import zjson
 
 
-class Client(zed.Client):
+class Client(pyzed.Client):
     """TBD patch upstream"""
 
     def __init__(self, *args, **kwargs):
@@ -36,4 +36,6 @@ class Client(zed.Client):
         return name in set(r["branch"]["name"] for r in records)
 
     def query(self, query):
-        return zjson.decode_raw(self.query_raw(query))
+        r = self.query_raw(query)
+        return zjson.decode_raw((json.loads(line)
+                                 for line in r.iter_lines() if line))

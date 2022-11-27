@@ -7,7 +7,7 @@ import decimal
 import ipaddress
 import json
 
-"""TBD patch upstream zed/zed.py"""
+"""TBD patch upstream pyzed"""
 
 _py_to_zed_primitive_type = {
     "<class 'int'>": "int64",

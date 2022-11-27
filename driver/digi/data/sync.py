@@ -8,7 +8,7 @@ import json
 import yaml
 from collections import defaultdict
 
-from . import zed, zjson  # TBD use upstream
+from . import zed, zjson
 
 default_lake_url = os.environ.get("ZED_LAKE", "http://localhost:9867")
 

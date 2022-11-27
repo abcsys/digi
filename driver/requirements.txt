@@ -1,9 +1,0 @@
-pyyaml
-inflection
-python-box
-kubernetes
-kopf
-git+https://github.com/silveryfu/zed#subdirectory=python/zed
-dash
-pandas
-durationpy
