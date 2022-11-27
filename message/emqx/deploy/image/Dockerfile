@@ -2,11 +2,7 @@ FROM python:3.8
 WORKDIR /src/
 
 RUN git clone https://github.com/silveryfu/kopf.git && \
-    cd kopf && git checkout digi && pip install -e .
-RUN git clone https://github.com/silveryfu/zed.git && \
-    mv zed/python/zed zed-cli && pip install -e ./zed-cli && rm -r zed/
-COPY driver/requirements.txt ./driver/requirements.txt
-RUN cd driver; pip install -r requirements.txt
+    cd kopf && git checkout digi && pip install -e . \
 
 # EMQX
 RUN curl -s https://assets.emqx.com/scripts/install-emqx-deb.sh | bash

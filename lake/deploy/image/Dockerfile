@@ -12,10 +12,6 @@ WORKDIR /src/
 
 RUN git clone https://github.com/silveryfu/kopf.git && \
     cd kopf && git checkout digi && pip install -e .
-RUN git clone https://github.com/silveryfu/zed.git && \
-    mv zed/python/zed zed-cli && pip install -e ./zed-cli && rm -r zed/
-COPY driver/requirements.txt ./driver/requirements.txt
-RUN cd driver; pip install -r requirements.txt
 
 COPY driver ./driver
 RUN pip install -e ./driver
