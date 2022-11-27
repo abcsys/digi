@@ -1,5 +1,5 @@
 apiVersion: digi.dev/v1
 kind: lake
 metadata:
-  name: lake-test
+  name: lake
 spec: {}

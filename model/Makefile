@@ -72,7 +72,7 @@ edit:
 edit-all:
 	kubectl edit $(PLURAL) $(NAME) 2>&1 || kubectl edit $(PLURAL).$(GROUP) $(NAME)
 
-.PHONY: clean-test test
+.PHONY: clean-test start-test test
 clean-test: delete-pool conn-lake-stop
 	kubectl delete $(PLURAL).$(VERSION).$(GROUP) $(NAME) >/dev/null 2>&1 || true
 start-test: | all conn-lake-bg
@@ -182,7 +182,7 @@ stop: | delete-pool
 	echo $(NAME) || echo "$(NAME) isn't running"
 run-no-pool: | prepare model
 	cd $(build_dir)/deploy && mv $(CR) ./templates; \
-	helm template -f values.yaml --set name=$(NAME) --set pool_provider=none $(RUNFLAG) $(NAME) . > run.yaml && \
+	helm template -f values.yaml --set name=$(NAME) --set lake_provider=none $(RUNFLAG) $(NAME) . > run.yaml && \
 	kubectl delete -f run.yaml >/dev/null 2>&1 || true && \
 	kubectl apply -f run.yaml >/dev/null && echo $(NAME) || \
     echo "unable to run $(NAME)"

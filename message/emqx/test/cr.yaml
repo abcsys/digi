@@ -1,5 +1,5 @@
 apiVersion: message.digi.dev/v1
 kind: Emqx
 metadata:
-  name: emqx-test
+  name: emqx
 spec: {}

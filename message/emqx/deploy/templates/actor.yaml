@@ -37,8 +37,8 @@ spec:
             value: {{ quote .Values.mounter }}
           - name: LOGLEVEL
             value: {{ .Values.log_level | default "20" | quote }}
-          - name: POOL_PROVIDER
-            value: {{ .Values.pool_provider }}
+          - name: LAKE_PROVIDER
+            value: {{ .Values.lake_provider }}
           ports: # https://www.emqx.io/docs/en/v3.0/guide.html#start-emq-x-broker
           - containerPort: 1883  # MQTT
           - containerPort: 8883  # MQTT SSL
