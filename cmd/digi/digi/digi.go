@@ -101,6 +101,7 @@ var genCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		q, _ := cmd.Flags().GetBool("quiet")
+		tag, _ := cmd.Flags().GetString("tag")
 		params := make(map[string]string)
 		if v, _ := cmd.Flags().GetBool("visual"); v {
 			params["GENFLAG"] = "VISUAL=true"
@@ -112,6 +113,7 @@ var genCmd = &cobra.Command{
 			profile = strings.TrimSpace(profile)
 			params := map[string]string{
 				"PROFILE": profile,
+				"DRIVER_TAG": tag,
 			}
 			if driverRepo != "" {
 				params["DRIVER_REPO"] = driverRepo
@@ -152,11 +154,11 @@ var buildCmd = &cobra.Command{
 			}
 
 			params := map[string]string{
-				"GROUP":   kind.Group,
-				"VERSION": kind.Version,
-				"KIND":    kind.Name,
-				"PROFILE": profile,
-				"TAG":     tag,
+				"GROUP":      kind.Group,
+				"VERSION":    kind.Version,
+				"KIND":       kind.Name,
+				"PROFILE":    profile,
+				"DRIVER_TAG": tag,
 			}
 			if driverRepo != "" {
 				params["DRIVER_REPO"] = driverRepo

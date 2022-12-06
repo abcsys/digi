@@ -18,6 +18,10 @@ ifndef DRIVER_REPO
 override DRIVER_REPO = REPO_TEMP
 endif
 
+ifndef DRIVER_TAG
+override DRIVER_TAG = latest
+endif
+
 ifndef DOCKER_CMD
 override DOCKER_CMD = CMD_TEMP
 endif
@@ -47,7 +51,7 @@ init:
 	cd $(WORKDIR) && mkdir $(PROFILE) >/dev/null 2>&1 || true && \
 	echo "$$model" > $(PROFILE)/model.yaml
 gen:
-	cd $(WORKDIR) && DRIVER_REPO=$(DRIVER_REPO) $(GENFLAG) python $(DIGIHOME)/gen.py $(PROFILE) \
+	cd $(WORKDIR) && DRIVER_TAG=$(DRIVER_TAG) DRIVER_REPO=$(DRIVER_REPO) $(GENFLAG) python $(DIGIHOME)/gen.py $(PROFILE) \
 	&& python $(DIGIHOME)/patch.py $(PROFILE)
 model:
 	cd $(WORKDIR)/$(PROFILE) && kubectl apply -f crd.yaml >/dev/null
@@ -103,9 +107,6 @@ prepare: | prepare-build-dir prepare-build prepare-deploy
 ifndef ARCH
 override ARCH = ARCH_TEMP
 endif
-ifndef TAG
-override TAG = latest
-endif
 build: | gen prepare
 	# use DOCKER_BUILDKIT=0 to enable more messages
 	rsync $(driver_handler) $(build_dir)/ || true
@@ -113,11 +114,11 @@ build: | gen prepare
 	$(DOCKER_CMD) push $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH) $(PUSHFLAG) || true
 	rm -r $(build_dir) || true
 
-	$(DOCKER_CMD) manifest create $(DRIVER_REPO)/$(PROFILE_NAME):$(TAG) \
+	$(DOCKER_CMD) manifest create $(DRIVER_REPO)/$(PROFILE_NAME):$(DRIVER_TAG) \
 	--amend $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH)
-	$(DOCKER_CMD) manifest push $(DRIVER_REPO)/$(PROFILE_NAME):$(TAG)
+	$(DOCKER_CMD) manifest push $(DRIVER_REPO)/$(PROFILE_NAME):$(DRIVER_TAG)
 clear-manifest:
-	$(DOCKER_CMD) manifest rm $(DRIVER_REPO)/$(PROFILE_NAME):$(TAG) >/dev/null 2>&1 || true
+	$(DOCKER_CMD) manifest rm $(DRIVER_REPO)/$(PROFILE_NAME):$(DRIVER_TAG) >/dev/null 2>&1 || true
 
 # manage local digi profiles
 .PHONY: push pull

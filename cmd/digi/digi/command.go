@@ -32,6 +32,7 @@ func init() {
 	// TBD multiple platforms with string array
 	buildCmd.Flags().StringP("platform", "p", "", "Specify build platform")
 	buildCmd.Flags().StringP("tag", "t", "latest", "Specify image tag")
+	genCmd.Flags().StringP("tag", "t", "latest", "Specify image tag")
 	genCmd.Flags().BoolP("visual", "v", false, "Generate template for visualization")
 
 	RootCmd.AddCommand(pullCmd)

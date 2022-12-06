@@ -213,7 +213,7 @@ kind: {kind}
 plural: {plural}
 mounter: {mounter}
 
-image: {repo}/{image}:latest
+image: {repo}/{image}:{tag}
 imagepull: {imagepull}
 """
 
@@ -403,6 +403,7 @@ def gen(name):
         values_file = os.path.join(_dir_path, "deploy", "values.yaml")
         # XXX enable safe gen option in command line
         # if not os.path.exists(values_file):
+
         if True:
             values = _helm_values.format(
                 group=model["group"],
@@ -414,6 +415,7 @@ def gen(name):
                 mounter="true" if "mount" in model else "false",
                 image=f"{model['kind']}.{model['version']}.{model['group']}".lower(),
                 repo=os.environ.get("DRIVER_REPO", "local"),
+                tag=os.environ.get("DRIVER_TAG", "latest"),
                 imagepull=os.environ.get("IMAGEPULL", "Always"),
             )
             values = yaml.load(values, Loader=yaml.FullLoader)
