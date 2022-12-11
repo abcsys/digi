@@ -13,17 +13,17 @@ Digi is designed and implemented as an extension to [Kubernetes](https://github.
 ----
 
 ## Getting started
-Install Digi with: `make dep` and `make install`. 
+To get started with Digi, run the following commands: `make dep` and `make install`. 
 
-See [quickstart page](docs/quickstart.md) for more information on installation and frequently used commands.
+For more information on installation and frequently used commands, see the [quickstart page](docs/quickstart.md).
 
 As a hello-world example, one can use Digi to build a control hierarchy and query the digis in a smart space:
 ![Alt Text](https://github.com/digi-project/recording/blob/main/control_query.gif)
 
 ## Resources
-Documentation:
-* [Quickstart](docs/quickstart.md)
-* [Development](docs/development.md)
+Here are some resources to help you learn more about Digi:
+* [Quickstart guide](docs/quickstart.md)
+* [Development guide](docs/development.md)
 * [Building digis](docs/build-digi.md)
 
 More information:
