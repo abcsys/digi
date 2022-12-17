@@ -34,7 +34,7 @@ class __Counter:
         return self.ctr
 
 
-def encode(objs: typing.List[dict]) -> str:
+def encode(objs: typing.List[dict]) -> typing.Generator[str, None, None]:
     id_ctr, types = __Counter(), dict()
     for obj in objs:
         yield json.dumps({
@@ -63,7 +63,7 @@ def _encode_type(id_ctr, value) -> dict:
     elif isinstance(value, set):
         return {
             "kind": "set",
-            "type": _encode_type(id_ctr, value[0] if len(value) > 0 else None),
+            "type": _encode_type(id_ctr, next(iter(value)) if len(value) > 0 else None),
             "id": id_ctr.get_and_inc()
         }
     else:  # primitive type

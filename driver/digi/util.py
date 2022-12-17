@@ -37,11 +37,10 @@ class DriverError:
 
 _api = kubernetes.client.CustomObjectsApi()
 
-
 def run_operator(registry: KopfRegistry,
                  log_level=logging.INFO,
                  skip_log_setup=False,
-                 ) -> (threading.Event, threading.Event):
+                 ) -> Tuple[threading.Event, threading.Event]:
     clusterwide = os.environ.get("CLUSTERWIDE", True)
     kopf_logging = os.environ.get("KOPFLOG", "true") == "true"
     if not kopf_logging:
@@ -206,7 +205,7 @@ def parse_model_id(s) -> Tuple[str, str, str, str, str]:
     return ps[0], ps[1], ps[2], ps[4], ps[3]
 
 
-def get_spec(g, v, r, n, ns) -> (dict, str, int):
+def get_spec(g, v, r, n, ns) -> Tuple[dict, str, int]:
     global _api
 
     try:

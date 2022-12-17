@@ -1,6 +1,6 @@
 import json
 import getpass
-import urllib
+import urllib.parse
 import pyzed
 from . import zjson
 
