@@ -15,8 +15,7 @@ import (
 
 var (
 	// local kube config used by kubectl
-	kubeConfigFile        string
-	kubeConfigManagedFile string
+	kubeConfigFile string
 )
 
 func init() {
@@ -28,23 +27,12 @@ func init() {
 	kubeConfigFile = filepath.Join(usr.HomeDir, ".kube", "config")
 }
 
-type ServiceState struct{}
-
 type KubeConfig = clientcmdapi.Config
-
-type ClientState struct {
-	kubeconfig *KubeConfig
-}
 
 func KubeConfigFile() string {
 	return kubeConfigFile
 }
 
-func KubeConfigManagedFile() string {
-	return kubeConfigManagedFile
-}
-
-// Returns the IDs of the clusters in the given kubeconfig
 func ClusterIDs(kc *KubeConfig) []string {
 	ids := make([]string, len(kc.Clusters))
 
@@ -87,6 +75,16 @@ func LoadKubeConfig(src ...string) (*KubeConfig, error) {
 	}
 
 	return config, nil
+}
+
+func ClusterExistsLocal(id string) (bool, error) {
+	localConfig, err := LoadKubeConfig(kubeConfigFile)
+	return clusterExists(id, localConfig), err
+}
+
+func clusterExists(id string, config *KubeConfig) bool {
+	_, ok := config.Clusters[id]
+	return ok
 }
 
 // MergeKubeConfigs merges a given set of kubeconfigs, assuming they are all valid, returns the merged kubeconfig
@@ -225,14 +223,4 @@ func FixMasterKubeConfig(file, clusterID, clusterAddr string, modifiers []string
 
 	// write back
 	return clientcmd.WriteToFile(*config, file)
-}
-
-func ClusterExistsLocal(id string) (bool, error) {
-	localConfig, err := LoadKubeConfig(kubeConfigFile)
-	return clusterExists(id, localConfig), err
-}
-
-func clusterExists(id string, config *KubeConfig) bool {
-	_, ok := config.Clusters[id]
-	return ok
 }
