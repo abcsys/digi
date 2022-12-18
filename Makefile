@@ -17,10 +17,13 @@ PREREQUISITES = git docker kubectl helm watch
 K := $(foreach exec,$(PREREQUISITES),\
         $(if $(shell which $(exec)),,$(error "No $(exec) in PATH")))
 
-.PHONY: dep
+.PHONY: dep install
 dep:
 	cd /tmp; git clone https://github.com/silveryfu/zed.git && \
 	cd zed; make install; cd ..; rm -rf zed
+	cd /tmp; git clone https://github.com/stedolan/jq.git; \
+	cd jq; autoreconf -i; ./configure --disable-maintainer-mode; \
+	make; sudo make install; cd ..; rm -rf jq
 	pip install -r ./model/requirements.txt
 
 .PHONY: digi neat ctx install
@@ -40,6 +43,7 @@ install: | digi neat ctx
 	@ln -s $(SOURCE)/sidecar/ $(HOMEDIR)/sidecar
 	@sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
 	@cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR) && cp ./model/helper.py $(HOMEDIR)
+	@cp -r ./scripts/ $(HOMEDIR)/scripts/ && chmod -R +x $(HOMEDIR)/scripts/
 
 .PHONY: python-digi
 python-digi:

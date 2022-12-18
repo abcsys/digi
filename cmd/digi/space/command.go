@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"digi.dev/digi/api"
+	"digi.dev/digi/api/k8s"
 	"digi.dev/digi/cmd/digi/helper"
 	"digi.dev/digi/space"
 )
@@ -133,6 +134,36 @@ func StopController(name string) error {
 	return helper.RunMake(nil, "stop-"+name, true, false)
 }
 
+var registerCmd = &cobra.Command{
+	Use:		"register REGISTRY USER",
+	Short:		"register the current dSpace on the given registry",
+	Aliases:	[]string{"register"},
+	Args:		cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		kc, err := k8s.LoadKubeConfig();
+		if err != nil {
+			log.Fatal("Failed to load config from Kube Config file.")
+		}
+		context := k8s.CurrentContext(kc);
+		if exists, err := k8s.ClusterExistsLocal(context); !exists || err != nil {
+			log.Fatal("Cluster for current context ", context, " not found.");
+		}
+		cluster := kc.Clusters[context];
+		user := kc.AuthInfos[context];
+		ca_crt := cluster.CertificateAuthority;
+		client_crt := user.ClientCertificate;
+		client_key := user.ClientKey;
+		_ = helper.RunMake(map[string]string{
+			"ADDR": args[0],
+			"USER": args[1],
+			"CONTEXT": context,
+			"CA.CRT": ca_crt,
+			"CLIENT.CRT": client_crt,
+			"CLIENT.KEY": client_key,
+		}, "register-space", true, false)
+	},
+}
+
 var listCmd = &cobra.Command{
 	Use:     "list",
 	Short:   "List available digi spaces",
@@ -243,6 +274,7 @@ func init() {
 	RootCmd.AddCommand(pipeCmd)
 	pipeCmd.Flags().BoolP("delete", "d", false, "Unpipe source from target")
 
+	RootCmd.AddCommand(registerCmd)
 	RootCmd.AddCommand(listCmd)
 	RootCmd.AddCommand(checkCmd)
 	RootCmd.AddCommand(switchCmd)
