@@ -13,17 +13,14 @@ SOURCE = $(GOPATH)/src/digi.dev/digi
 
 VERSION = $(shell git describe --tags --dirty --always)
 
-PREREQUISITES = git docker kubectl helm watch
+PREREQUISITES = git docker kubectl helm watch jq
 K := $(foreach exec,$(PREREQUISITES),\
         $(if $(shell which $(exec)),,$(error "No $(exec) in PATH")))
 
-.PHONY: dep install
+.PHONY: dep
 dep:
 	cd /tmp; git clone https://github.com/silveryfu/zed.git && \
 	cd zed; make install; cd ..; rm -rf zed
-	cd /tmp; git clone https://github.com/stedolan/jq.git; \
-	cd jq; autoreconf -i; ./configure --disable-maintainer-mode; \
-	make; sudo make install; cd ..; rm -rf jq
 	pip install -r ./model/requirements.txt
 
 .PHONY: digi neat ctx install
