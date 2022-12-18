@@ -112,7 +112,7 @@ var genCmd = &cobra.Command{
 		for _, profile := range args {
 			profile = strings.TrimSpace(profile)
 			params := map[string]string{
-				"PROFILE": profile,
+				"PROFILE":    profile,
 				"DRIVER_TAG": tag,
 			}
 			if driverRepo != "" {
