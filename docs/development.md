@@ -2,6 +2,14 @@
 
 The repo contains a single `main` branch. For contribution, please fork this repo and submit a PR. 
 
+## Prerequisites
+
+`Go`:  >= 1.15
+`Python`: >= 3.7
+`Docker`: >= 20.10
+
+Digi driver library: `make python-digi` 
+
 ## Workflow
 Set up the fork:
 

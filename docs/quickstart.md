@@ -1,7 +1,7 @@
 # QuickStart
 
 ## Prerequisites
-If you do not already have a running Kubernetes, start one with:
+If you do not already have a running Kubernetes, you can start one with (one of) the options:
 * Laptop: Docker Desktop (recommended), Minikube, Kind, k3s
 * Cluster: Kops (on EC2)
 * Managed service: EKS/AKS/GKE
@@ -14,7 +14,7 @@ Install Kubernetes CLI [kubectl](https://kubernetes.io/docs/tasks/tools/) and pa
 * Run `kubectl cluster-info` to confirm the Kubernetes is running.
 
 ## Installation
-Install Digi:
+Digi:
 * Clone the repo [https://github.com/digi-project/digi](https://github.com/digi-project/digi)
 
 * Run the follwing commands:
