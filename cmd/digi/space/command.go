@@ -135,29 +135,29 @@ func StopController(name string) error {
 }
 
 var registerCmd = &cobra.Command{
-	Use:		"register REGISTRY USER",
-	Short:		"register the current dSpace on the given registry",
-	Aliases:	[]string{"register"},
-	Args:		cobra.ExactArgs(2),
+	Use:     "register REGISTRY USER",
+	Short:   "register the current dSpace on the given registry",
+	Aliases: []string{"register"},
+	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		kc, err := k8s.LoadKubeConfig();
+		kc, err := k8s.LoadKubeConfig()
 		if err != nil {
 			log.Fatal("Failed to load config from Kube Config file.")
 		}
-		context := k8s.CurrentContext(kc);
+		context := k8s.CurrentContext(kc)
 		if exists, err := k8s.ClusterExistsLocal(context); !exists || err != nil {
-			log.Fatal("Cluster for current context ", context, " not found.");
+			log.Fatal("Cluster for current context ", context, " not found.")
 		}
-		cluster := kc.Clusters[context];
-		user := kc.AuthInfos[context];
-		ca_crt := cluster.CertificateAuthority;
-		client_crt := user.ClientCertificate;
-		client_key := user.ClientKey;
+		cluster := kc.Clusters[context]
+		user := kc.AuthInfos[context]
+		ca_crt := cluster.CertificateAuthority
+		client_crt := user.ClientCertificate
+		client_key := user.ClientKey
 		_ = helper.RunMake(map[string]string{
-			"ADDR": args[0],
-			"USER": args[1],
-			"CONTEXT": context,
-			"CA.CRT": ca_crt,
+			"ADDR":       args[0],
+			"USER":       args[1],
+			"CONTEXT":    context,
+			"CA.CRT":     ca_crt,
 			"CLIENT.CRT": client_crt,
 			"CLIENT.KEY": client_key,
 		}, "register-space", true, false)
