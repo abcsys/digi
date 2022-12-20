@@ -253,7 +253,9 @@ stop-emqx:
 .PHONY: start-space stop-space
 start-space: | start-lake # ...
 stop-space: | stop-lake
-.PHONY: list-space switch-space rename-space show-space
+.PHONY: register-space list-space switch-space rename-space show-space
+register-space:
+	./register-space.sh $(ADDR) $(USER) $(CONTEXT) $(CA.CRT) $(CLIENT.CRT) $(CLIENT.KEY)
 list-space:
 	ctx $(FLAG)
 switch-space:

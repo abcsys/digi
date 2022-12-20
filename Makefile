@@ -13,7 +13,7 @@ SOURCE = $(GOPATH)/src/digi.dev/digi
 
 VERSION = $(shell git describe --tags --dirty --always)
 
-PREREQUISITES = git docker kubectl helm watch
+PREREQUISITES = git docker kubectl helm watch jq
 K := $(foreach exec,$(PREREQUISITES),\
         $(if $(shell which $(exec)),,$(error "No $(exec) in PATH")))
 
@@ -40,6 +40,7 @@ install: | digi neat ctx
 	@ln -s $(SOURCE)/sidecar/ $(HOMEDIR)/sidecar
 	@sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
 	@cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR) && cp ./model/helper.py $(HOMEDIR)
+	@cp -r ./scripts/ $(HOMEDIR)/scripts/ && chmod -R +x $(HOMEDIR)/scripts/
 
 .PHONY: python-digi
 python-digi:
