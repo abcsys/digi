@@ -149,6 +149,7 @@ var registerCmd = &cobra.Command{
 			log.Fatal("Cluster for current context ", context, " not found.")
 		}
 		cluster := kc.Clusters[context]
+		apiserver := cluster.Server
 		user := kc.AuthInfos[context]
 		ca_crt := cluster.CertificateAuthority
 		client_crt := user.ClientCertificate
@@ -156,6 +157,7 @@ var registerCmd = &cobra.Command{
 		_ = helper.RunMake(map[string]string{
 			"ADDR":       args[0],
 			"USER":       args[1],
+			"APISERVER":  apiserver,
 			"CONTEXT":    context,
 			"CA.CRT":     ca_crt,
 			"CLIENT.CRT": client_crt,

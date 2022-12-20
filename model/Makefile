@@ -255,7 +255,7 @@ start-space: | start-lake # ...
 stop-space: | stop-lake
 .PHONY: register-space list-space switch-space rename-space show-space
 register-space:
-	./register-space.sh $(ADDR) $(USER) $(CONTEXT) $(CA.CRT) $(CLIENT.CRT) $(CLIENT.KEY)
+	./register-space.sh $(ADDR) $(USER) $(APISERVER) $(CONTEXT) $(CA.CRT) $(CLIENT.CRT) $(CLIENT.KEY)
 list-space:
 	ctx $(FLAG)
 switch-space:

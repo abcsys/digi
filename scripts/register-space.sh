@@ -1,11 +1,4 @@
 #!/bin/bash
-source ./.env
-
-# temporary: use cluster-ip address for apiserver
-# TODO: expose apiserver using load-balancer
-APISERVER_IP=$(kubectl -n kube-system get pod -l component=kube-apiserver -o=jsonpath="{.items[0].metadata.annotations.kubeadm\.kubernetes\.io/kube-apiserver\.advertise-address\.endpoint}")
-printf -v APISERVER "https://%s" $APISERVER_IP
-
 
 # Create a secret to hold a token for the default service account
 kubectl apply -f - <<EOF
@@ -29,10 +22,11 @@ TOKEN=$(kubectl get secret default-token -o jsonpath='{.data.token}' | base64 --
 
 # Format the curl request to register dspace
 USER=$2
-DSPACE=$3
-CA_CERT=$(cat $4)
-CLIENT_CERT=$(cat $5)
-CLIENT_KEY=$(cat $6)
+APISERVER=$3
+DSPACE=$4
+CA_CERT=$(cat $5)
+CLIENT_CERT=$(cat $6)
+CLIENT_KEY=$(cat $7)
 DATA=$( jq -n \
     --arg user "${USER}" \
     --arg dspace "${DSPACE}" \
