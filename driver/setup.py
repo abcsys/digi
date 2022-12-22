@@ -23,5 +23,6 @@ setup(
         "dash",
         "pandas",
         "pyzed",
+        "paho-mqtt",
     ],
 )

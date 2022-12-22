@@ -32,6 +32,7 @@ from digi import (
     data,
     control,
     dbox,
+    message,
 )
 from digi.main import run
 from digi.reconcile import rc
@@ -41,5 +42,5 @@ __all__ = [
     "on", "util", "view", "filter",
     "run", "logger", "mount", "rc",
     "model", "pool", "router", "dbox",
-    "data", "control"
+    "data", "control", "message"
 ]

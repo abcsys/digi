@@ -60,26 +60,32 @@ metadata:
     name: {{ .Values.name }}
     app: emqx
 spec:
+  type: NodePort # exposes nodePort to external network; must be in range 30000-32767
   ports: # emqx
   - name: mqtt
     port: 1883
     targetPort: 1883
+    nodePort: 30000
     protocol: TCP
   - name: mqtt-ssl
     port: 8883
     targetPort: 8883
+    nodePort: 30001
     protocol: TCP
   - name: mqtt-websocket
     port: 8083
     targetPort: 8083
+    nodePort: 30002
     protocol: TCP
   - name: http-api
     port: 8080
     targetPort: 8080
+    nodePort: 30003
     protocol: TCP
   - name: dashboard
     port: 18083
     targetPort: 18083
+    nodePort: 30004
     protocol: TCP
   selector:
     name: {{ .Values.name }}
