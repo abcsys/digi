@@ -29,51 +29,21 @@ def dicts_from_pool_query(dict_line):
     return dicts
 
 def make_branch_query(pool_name):
-    headers = {
-        "Accept": "application/x-zson",
-        "Content-Type": "application/json",
-    }
-
-    #branches_query_json_data = { "query": f"from {pool_name}:branches | yield branch.name" }
-    #branches_query_response = requests.post(f"{ZED_LAKE_URL}/query", headers=headers, json=branches_query_json_data)
-    
     branches = []
+    
     branch_query_pyzed = ZED_CLIENT.query(f"from {pool_name}:branches | yield branch.name")
     for branch_name in branch_query_pyzed:
         branches.append(branch_name)
-    
-    #branches = str(branches_query_response.content).split("\\n")
-    #branches = branches[:-1] #to avoid a trailing quotation mark
-    #for i in range(len(branches)):
-    #    first_quote_index = branches[i].index("\"")
-    #    last_quote_index = branches[i].rindex("\"")
-    #    branches[i] = branches[i][first_quote_index + 1 : last_quote_index]
+        
     return branches
 
 def get_branch_count_sum(pool_name, branches):
     count = 0
-    
-    headers = {
-        "Accept": "application/x-zson",
-        "Content-Type": "application/json",
-    }
 
     for branch in branches:
-        #count_query_json_data = { "query": f"from {pool_name}@{branch} | count()" }
-        #count_query_response = requests.post(f"{ZED_LAKE_URL}/query", headers=headers, json=count_query_json_data)
-        
         count_query_pyzed = ZED_CLIENT.query(f"from {pool_name}@{branch} | count()")
         for pool_count in count_query_pyzed:
             count += pool_count["count"]
-        
-        #try:
-        #    count_response_str = str(count_query_response.content)
-        #    start_index = count_response_str.index(":")
-        #    end_index = count_response_str.index("(uint64)")
-        #    count_response_str = count_response_str[start_index + 1 : end_index]
-        #    count += int(count_response_str)
-        #except:
-        #    count += 0
     
     return count
     
@@ -104,24 +74,11 @@ def poll_func():
     
     new_spec = {"pools" : {}}
     
-    #run :pools query to get name mapping and timestamps (and write timestamps/heads to API server)
-    headers = {
-        "Accept": "application/x-zson",
-        "Content-Type": "application/json",
-    }
-
-    pools_query_json_data = {
-        "query": "from :pools",
-    }
-
-    #pools_query_response = requests.post(f"{ZED_LAKE_URL}/query", headers=headers, json=pools_query_json_data)
-    
     pool_query_pyzed = ZED_CLIENT.query("from :pools")
     pool_dicts =[]
     for elem in pool_query_pyzed:
         pool_dicts.append(elem)
     
-    #pool_dicts = dicts_from_pool_query(pools_query_response.content)
     for pool_dict in pool_dicts:
         ts, name, pool_id = str(pool_dict["ts"]), pool_dict["name"], str(pool_dict["id"].hex())
         
