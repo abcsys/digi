@@ -345,7 +345,7 @@ def gen_crd(model: str) -> str:
     meta = make_attr("meta", None, _meta, src_attrs=model.get("meta", {}))
     control = make_attr("control", None, _control, src_attrs=model.get(
         "control", {}), use_intent_status=True)
-    data = make_data_attr()
+    data = make_data_attr(model)
     obs = make_attr("obs", None, _obs, src_attrs=model.get("obs", {}))
     mount = make_attr("mount", _mount_attr, _mount,
                       src_attrs=model.get("mount", {}))
@@ -457,8 +457,9 @@ def gen(name):
     crds = list()
     for model in models:
         # assemble the crd
-        crd = gen(model)
+        crd = gen_crd(model)
         crds.append(crd)
+
         # generate a CR if missing
         # only the first model's cr will be generated
 
