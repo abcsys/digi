@@ -23,11 +23,6 @@ spec:
             type: object
           spec:
             properties:
-              aggStats:
-                properties:
-                  num_pools:
-                    type: number
-                type: object
               pools:
                 additionalProperties:
                   properties:
@@ -38,6 +33,11 @@ spec:
                     size:
                       type: number
                   type: object
+                type: object
+              stats:
+                properties:
+                  num_pools:
+                    type: number
                 type: object
             type: object
         type: object

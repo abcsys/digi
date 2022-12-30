@@ -1,106 +1,18 @@
 import sys
 import subprocess
-from multiprocessing import Process
 import requests
-import threading
 from threading import Timer, Thread
-from enum import Enum
-import json
 import subprocess
-
 import digi
+import pyzed
+from event import dict_from_data_line, HEADS, POOL_NAME_MAP, PARSE_FUNCTION_MAP, NULL_COMMIT_ID
 
 ZED_LAKE_URL = "http://localhost:9867"
 POLL_INTERVAL_SECONDS = 10.0
 SPAWNED_THREADS = []
+ZED_CLIENT = pyzed.Client(base_url=ZED_LAKE_URL)
 
-POOL_NAME_MAP = {}
-HEADS = {}
 BRANCHES = {}
-
-def dict_from_data_line(data_line):
-    data_line_str = str(data_line)
-    
-    try:
-        contents = data_line_str[data_line_str.index("{") : data_line_str.rindex("}") + 1] #previous end was -1
-        contents = contents[1:-1]
-        #digi.logger.info("STUFF")
-        #digi.logger.info(contents)
-        
-        data_line_dict = {}
-        
-        pairs = contents.split(",")
-        for pair in pairs:
-            curr_pair = pair.split(":")
-            if curr_pair[1][0] == "\"":
-                curr_pair[1] = curr_pair[1][1:-1]
-            data_line_dict[curr_pair[0]] = curr_pair[1]
-        #digi.logger.info(data_line_dict)
-        return data_line_dict
-    except:
-        return None
-    
-def parse_delete_pool(data_line):
-    spec = digi.util.get_spec("digi.dev", "v1", "lakes", "lake", "default")[0]
-    new_spec = {}
-    
-    agg = spec.get("aggStats", None)
-    if agg is not None:
-        agg["num_pools"] -= 1
-        new_spec["aggStats"] = agg
-    
-    pools = spec.get("pools", None)
-    if pools is not None:
-        data_line_str = str(data_line)
-        
-        data_line_dict  = dict_from_data_line(data_line)
-        
-        pool_id = data_line_dict["pool_id"]
-        pools[pool_id] = None
-        new_spec["pools"] = pools
-        
-        HEADS.pop(pool_id)
-        POOL_NAME_MAP.pop(pool_id)
-        
-    #digi.logger.info(new_spec)
-    
-    res, err = digi.util.patch_spec("digi.dev", "v1", "lakes", "lake", "default", new_spec)
-    
-                
-def parse_new_pool(data_line):
-    spec = digi.util.get_spec("digi.dev", "v1", "lakes", "lake", "default")[0]
-    new_spec = {}
-    
-    agg = spec.get("aggStats", {"num_pools" : 0})
-    agg["num_pools"] += 1
-    new_spec["aggStats"] = agg
-    
-    pools = spec.get("pools", {})
-    data_line_str = str(data_line)
-    
-    data_line_dict  = dict_from_data_line(data_line)
-    
-    pool_id = data_line_dict["pool_id"]   
-    
-    pools[pool_id] = {} 
-    POOL_NAME_MAP[pool_id] = ""
-    HEADS[pool_id] = "0x0000000000000000000000000000000000000000"
-    new_spec["pools"] = pools
-    
-    res, err = digi.util.patch_spec("digi.dev", "v1", "lakes", "lake", "default", new_spec)
-    
-def parse_commit(data_line):
-    data_line_dict  = dict_from_data_line(data_line)
-    pool_id = data_line_dict["pool_id"] 
-    commit_id = data_line_dict["commit_id"]    
-    HEADS[pool_id] = commit_id
-            
-PARSE_FUNCTION_MAP = {
-    "pool-new" : parse_new_pool,
-    "pool-delete" : parse_delete_pool,
-    "pool-commit" : parse_commit,
-    "branch-commit" : parse_commit
-}
 
 @digi.on.model("pools")
 def h(pools):
@@ -114,8 +26,6 @@ def dicts_from_pool_query(dict_line):
         if line:
             curr_dict = dict_from_data_line(line)
             dicts.append(curr_dict)
-            #digi.logger.info(f"Parsing Dict from line {line}")
-            #digi.logger.info(curr_dict)
     return dicts
 
 def make_branch_query(pool_name):
@@ -124,16 +34,20 @@ def make_branch_query(pool_name):
         "Content-Type": "application/json",
     }
 
-    branches_query_json_data = { "query": f"from {pool_name}:branches | yield branch.name" }
-    branches_query_response = requests.post(f"{ZED_LAKE_URL}/query", headers=headers, json=branches_query_json_data)
+    #branches_query_json_data = { "query": f"from {pool_name}:branches | yield branch.name" }
+    #branches_query_response = requests.post(f"{ZED_LAKE_URL}/query", headers=headers, json=branches_query_json_data)
     
-    branches = str(branches_query_response.content).split("\\n")
-    branches = branches[:-1] #to avoid a trailing quotation mark
-    for i in range(len(branches)):
-        first_quote_index = branches[i].index("\"")
-        last_quote_index = branches[i].rindex("\"")
-        branches[i] = branches[i][first_quote_index + 1 : last_quote_index]
-    #digi.logger.info(f"BRANCHES: {branches}")
+    branches = []
+    branch_query_pyzed = ZED_CLIENT.query(f"from {pool_name}:branches | yield branch.name")
+    for branch_name in branch_query_pyzed:
+        branches.append(branch_name)
+    
+    #branches = str(branches_query_response.content).split("\\n")
+    #branches = branches[:-1] #to avoid a trailing quotation mark
+    #for i in range(len(branches)):
+    #    first_quote_index = branches[i].index("\"")
+    #    last_quote_index = branches[i].rindex("\"")
+    #    branches[i] = branches[i][first_quote_index + 1 : last_quote_index]
     return branches
 
 def get_branch_count_sum(pool_name, branches):
@@ -145,23 +59,25 @@ def get_branch_count_sum(pool_name, branches):
     }
 
     for branch in branches:
-        count_query_json_data = { "query": f"from {pool_name}@{branch} | count()" }
-        count_query_response = requests.post(f"{ZED_LAKE_URL}/query", headers=headers, json=count_query_json_data)
+        #count_query_json_data = { "query": f"from {pool_name}@{branch} | count()" }
+        #count_query_response = requests.post(f"{ZED_LAKE_URL}/query", headers=headers, json=count_query_json_data)
         
-        try:
-            count_response_str = str(count_query_response.content)
-            #digi.logger.info(count_response_str)
-            start_index = count_response_str.index(":")
-            end_index = count_response_str.index("(uint64)")
-            count_response_str = count_response_str[start_index + 1 : end_index]
-            count += int(count_response_str)
-        except:
-            count += 0
+        count_query_pyzed = ZED_CLIENT.query(f"from {pool_name}@{branch} | count()")
+        for pool_count in count_query_pyzed:
+            count += pool_count["count"]
+        
+        #try:
+        #    count_response_str = str(count_query_response.content)
+        #    start_index = count_response_str.index(":")
+        #    end_index = count_response_str.index("(uint64)")
+        #    count_response_str = count_response_str[start_index + 1 : end_index]
+        #    count += int(count_response_str)
+        #except:
+        #    count += 0
     
-    #digi.logger.info(f"found count: {count}")
     return count
     
-def check_attr_gen_patch_spec(new_spec):
+def patch_existing_pools(new_spec):
     new_spec_pools = new_spec.get("pools", {})
     while True:
         curr_spec, _, start_gen = digi.util.get_spec("digi.dev", "v1", "lakes", "lake", "default")
@@ -185,7 +101,6 @@ def check_attr_gen_patch_spec(new_spec):
 
 def poll_func():
     Timer(POLL_INTERVAL_SECONDS, poll_func).start()
-    digi.logger.info("size")
     
     new_spec = {"pools" : {}}
     
@@ -199,12 +114,16 @@ def poll_func():
         "query": "from :pools",
     }
 
-    pools_query_response = requests.post(f"{ZED_LAKE_URL}/query", headers=headers, json=pools_query_json_data)
+    #pools_query_response = requests.post(f"{ZED_LAKE_URL}/query", headers=headers, json=pools_query_json_data)
     
-    #digi.logger.info(f"RESPONSE: {pools_query_response.content}")
-    pool_dicts = dicts_from_pool_query(pools_query_response.content)
+    pool_query_pyzed = ZED_CLIENT.query("from :pools")
+    pool_dicts =[]
+    for elem in pool_query_pyzed:
+        pool_dicts.append(elem)
+    
+    #pool_dicts = dicts_from_pool_query(pools_query_response.content)
     for pool_dict in pool_dicts:
-        ts, name, pool_id = pool_dict["ts"], pool_dict["name"], pool_dict["id"]
+        ts, name, pool_id = str(pool_dict["ts"]), pool_dict["name"], str(pool_dict["id"].hex())
         
         #update POOL_NAME_MAP
         POOL_NAME_MAP[pool_id] = name
@@ -215,40 +134,36 @@ def poll_func():
         pool_count = get_branch_count_sum(name, curr_branches)
         
         #add count, HEADS, and timestamp to new spec
-        pool_id_clean = pool_id[:pool_id.index("(")] #gets rid of trailing (=ksuid.KSUID)
-        new_spec["pools"][pool_id_clean] = {"head": HEADS[pool_id_clean], "last_updated" : ts, "size": pool_count} #race on HEADS with event thread?
+        try: #use try-except in case we don't have values for head yet (generated from event parsing)
+            new_spec["pools"][pool_id] = {"head": HEADS[pool_id], "last_updated" : ts, "size": pool_count} #race on HEADS with event thread?
+        except:
+            new_spec["pools"][pool_id] = {"head": NULL_COMMIT_ID, "last_updated" : ts, "size": pool_count}
     
     #patch spec
-    check_attr_gen_patch_spec(new_spec)
+    patch_existing_pools(new_spec)
     
 def event_func():
-    digi.logger.info("events")
     s = requests.Session()
     with s.get(f"{ZED_LAKE_URL}/events", headers=None, stream=True) as resp:
         parse_line = False
         
         for line in resp.iter_lines():
             if line:
-                digi.logger.info(line)
                 if parse_line:
                     if event_parse_func:
-                        #digi.logger.info(f"LINE: {str(line)}")
                         event_parse_func(line)
                     parse_line = False  
                 else:
-                    #digi.logger.info(f"LINE: {str(line)}")
                     line_str = str(line)
                     event_type = line_str[line_str.index(":") + 2:-1]
                     event_parse_func = PARSE_FUNCTION_MAP.get(event_type, None)
                     
-                    #digi.logger.info(f"parsing {event_type} from line {line_str}")
                     parse_line = True  
                     continue
 
 @digi.on.model             
 def start_processes():
     if len(SPAWNED_THREADS) < 2:
-        digi.logger.info("spawning")
         poll_thread = Thread(target=poll_func)
         event_thread = Thread(target=event_func)
         SPAWNED_THREADS.append(poll_thread)

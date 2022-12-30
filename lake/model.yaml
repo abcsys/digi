@@ -1,7 +1,7 @@
 group: digi.dev
 version: v1
 kind: lake
-aggStats:
+stats:
   openapi:
     properties:
       num_pools:
