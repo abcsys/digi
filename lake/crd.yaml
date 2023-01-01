@@ -34,6 +34,11 @@ spec:
                       type: number
                   type: object
                 type: object
+              stats:
+                properties:
+                  num_pools:
+                    type: number
+                type: object
             type: object
         type: object
     served: true

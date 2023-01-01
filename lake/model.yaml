@@ -1,6 +1,12 @@
 group: digi.dev
 version: v1
 kind: lake
+stats:
+  openapi:
+    properties:
+      num_pools:
+        type: number
+    type: object
 pools:
   openapi:
     additionalProperties:
