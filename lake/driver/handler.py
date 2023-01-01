@@ -2,15 +2,14 @@ import sys
 import subprocess
 import requests
 from threading import Timer, Thread
-import subprocess
 import digi
 import pyzed
-from event import dict_from_data_line, HEADS, POOL_NAME_MAP, PARSE_FUNCTION_MAP, NULL_COMMIT_ID
+import event
 
 ZED_LAKE_URL = "http://localhost:9867"
 POLL_INTERVAL_SECONDS = 10.0
 SPAWNED_THREADS = []
-ZED_CLIENT = pyzed.Client(base_url=ZED_LAKE_URL)
+zed_client = pyzed.Client(base_url=ZED_LAKE_URL)
 
 BRANCHES = {}
 
@@ -24,14 +23,14 @@ def dicts_from_pool_query(dict_line):
     lines = dict_line_str.split("(=pools.Config)")
     for line in lines[:-1]: #there will be a \n at the end
         if line:
-            curr_dict = dict_from_data_line(line)
+            curr_dict = event.dict_from_data_line(line)
             dicts.append(curr_dict)
     return dicts
 
 def make_branch_query(pool_name):
     branches = []
     
-    branch_query_pyzed = ZED_CLIENT.query(f"from {pool_name}:branches | yield branch.name")
+    branch_query_pyzed = zed_client.query(f"from {pool_name}:branches | yield branch.name")
     for branch_name in branch_query_pyzed:
         branches.append(branch_name)
         
@@ -41,7 +40,7 @@ def get_branch_count_sum(pool_name, branches):
     count = 0
 
     for branch in branches:
-        count_query_pyzed = ZED_CLIENT.query(f"from {pool_name}@{branch} | count()")
+        count_query_pyzed = zed_client.query(f"from {pool_name}@{branch} | count()")
         for pool_count in count_query_pyzed:
             count += pool_count["count"]
     
@@ -74,7 +73,7 @@ def poll_func():
     
     new_spec = {"pools" : {}}
     
-    pool_query_pyzed = ZED_CLIENT.query("from :pools")
+    pool_query_pyzed = zed_client.query("from :pools")
     pool_dicts =[]
     for elem in pool_query_pyzed:
         pool_dicts.append(elem)
@@ -83,7 +82,7 @@ def poll_func():
         ts, name, pool_id = str(pool_dict["ts"]), pool_dict["name"], str(pool_dict["id"].hex())
         
         #update POOL_NAME_MAP
-        POOL_NAME_MAP[pool_id] = name
+        event.POOL_NAME_MAP[pool_id] = name
     
         #run count() on each pool branch to get numbers of records
         #get branch names
@@ -92,9 +91,9 @@ def poll_func():
         
         #add count, HEADS, and timestamp to new spec
         try: #use try-except in case we don't have values for head yet (generated from event parsing)
-            new_spec["pools"][pool_id] = {"head": HEADS[pool_id], "last_updated" : ts, "size": pool_count} #race on HEADS with event thread?
+            new_spec["pools"][pool_id] = {"head": event.HEADS[pool_id], "last_updated" : ts, "size": pool_count} #race on HEADS with event thread?
         except:
-            new_spec["pools"][pool_id] = {"head": NULL_COMMIT_ID, "last_updated" : ts, "size": pool_count}
+            new_spec["pools"][pool_id] = {"head": event.NULL_COMMIT_ID, "last_updated" : ts, "size": pool_count}
     
     #patch spec
     patch_existing_pools(new_spec)
@@ -113,7 +112,7 @@ def event_func():
                 else:
                     line_str = str(line)
                     event_type = line_str[line_str.index(":") + 2:-1]
-                    event_parse_func = PARSE_FUNCTION_MAP.get(event_type, None)
+                    event_parse_func = event.PARSE_FUNCTION_MAP.get(event_type, None)
                     
                     parse_line = True  
                     continue
