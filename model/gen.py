@@ -51,16 +51,26 @@ meta:
   properties:
   type: object
 """
-_meta_attr = """
-type: {datatype}
-"""
 
 _control = """
 control:
   properties:
   type: object
 """
-_control_attr = """
+_control_intent = """
+intent:
+  properties:
+  type: object
+"""
+_control_status = """
+status:
+  properties:
+  type: object
+"""
+_attr = """
+type: {datatype}
+"""
+_intent_status_attr = """
 properties:
   intent:
     type: {datatype}
@@ -68,6 +78,12 @@ properties:
     type: {datatype}
 type: object
 """
+_array_attr = """
+items:
+  type: {datatype}
+type: array
+"""
+
 
 _data = """
 data:
@@ -92,9 +108,6 @@ _obs = """
 obs:
   properties:
   type: object
-"""
-_obs_attr = """
-type: {datatype}
 """
 
 _mount = """
@@ -247,7 +260,195 @@ def pluralize_lower(s: str):
     }.get(s, inflection.pluralize(s))
 
 
+def make_attr(_name, _attr_tpl, _main_tpl, src_attrs, use_intent_status=False):
+    '''
+    Fill in attributes of a given template using src_attrs from the model.
+
+    _name: name of the attribute
+    _attr_tpl: template for the attribute. If None, use default attribute templates(_attr, _array_attr, _intent_status_attr).
+    _main_tpl: main template to fill in(i.e. control, data, etc.)
+    src_attrs: attributes from the model
+    use_intent_status: flag to use intent and status as the attribute template. May be used to create control attributes.
+    '''
+    attrs, result = dict(), dict()
+    default_tpls = _attr_tpl == None
+    # XXX currently this applies to reflex attr only
+    if isinstance(src_attrs, str):
+        return yaml.load(_main_tpl, Loader=yaml.FullLoader)
+
+    for _n, t in src_attrs.items():
+        if not isinstance(t, str):
+            assert isinstance(t, dict)
+            # TBD simplify the gen rules
+            if _n == "openapi":
+                attrs = t
+            elif "openapi" in t:
+                attrs[_n] = t.get("openapi", t)
+            else:
+                # if a nested attribute, recurse to make the attr
+                attrs[_n] = make_attr(_n, None, None, t)[_n]
+        else:
+            # if not a special attr, use the default attr templates
+            if default_tpls:
+                if use_intent_status:
+                    _attr_tpl = _intent_status_attr
+                else:
+                    if 'array' in t:
+                        _attr_tpl = _array_attr
+                        # remove array[] from type
+                        t = t.replace('array', '')[1:-1]
+                    else:
+                        _attr_tpl = _attr
+            attrs[_n] = yaml.load(_attr_tpl.format(name=_n, datatype=t),
+                                  Loader=yaml.FullLoader)
+    if len(attrs) > 0:
+        if _main_tpl:
+            result = yaml.load(_main_tpl, Loader=yaml.FullLoader)
+        else:
+            result = dict()
+        if _name in result and result[_name] is not None and "properties" in result[_name]:
+            result[_name]["properties"] = attrs
+        else:
+            result[_name] = attrs
+    return result
+
+
+def make_data_attr(model):
+    _input = make_attr("input", _data_attr, _data_input,
+                       src_attrs=model.get("data", {}).get("input", {}))
+    _output = make_attr("output", _data_attr, _data_output, src_attrs=model.get(
+        "data", {}).get("output", {}))
+    if len(_input) + len(_output) == 0:
+        return {}
+    result = yaml.load(_data, Loader=yaml.FullLoader)
+    result["data"]["properties"] = dict()
+    result["data"]["properties"].update(_input)
+    result["data"]["properties"].update(_output)
+    return result
+
+
+def gen_crd(model: str) -> str:
+    '''
+    Generate CRD yaml string from model string.
+
+    model: model string
+    '''
+
+    header = _header.format(name=pluralize_lower(model["kind"]) + "." + model["group"],
+                            group=model["group"],
+                            kind=model["kind"],
+                            plural=pluralize_lower(model["kind"]),
+                            singular=model["kind"].lower())
+    header = yaml.load(header, Loader=yaml.FullLoader)
+
+    # fill in attributes
+    meta = make_attr("meta", None, _meta, src_attrs=model.get("meta", {}))
+    control = make_attr("control", None, _control, src_attrs=model.get(
+        "control", {}), use_intent_status=True)
+    data = make_data_attr(model)
+    obs = make_attr("obs", None, _obs, src_attrs=model.get("obs", {}))
+    mount = make_attr("mount", _mount_attr, _mount,
+                      src_attrs=model.get("mount", {}))
+    ingress = make_attr("ingress", _ingress_attr, _ingress,
+                        src_attrs=model.get("ingress", {}))
+    egress = make_attr("egress", _egress_attr, _egress,
+                       src_attrs=model.get("egress", {}))
+    reflex = make_attr("reflex", _reflex_attr, _reflex,
+                       src_attrs=model.get("reflex", {}))
+
+    assert not (len(control) > 0 and len(data) >
+                0), "cannot have both control and data attrs!"
+
+    # version
+    version = _version_spec.format(version=model["version"])
+    version = yaml.load(version, Loader=yaml.FullLoader)
+    spec = version["schema"]["openAPIV3Schema"]["properties"]["spec"]
+    spec["properties"] = dict()
+    spec["properties"].update(meta)
+    spec["properties"].update(control)
+    spec["properties"].update(data)
+    spec["properties"].update(obs)
+    spec["properties"].update(mount)
+    spec["properties"].update(ingress)
+    spec["properties"].update(egress)
+    spec["properties"].update(reflex)
+
+    # custom attribute
+    for k, v in model.items():
+        # TBD clean the attribute generation by making the attribute templates a map
+        if k not in {"group", "version", "kind", "ingress", "egress",
+                     "meta", "control", "data", "obs", "mount", "reflex"}:
+            spec["properties"].update(
+                make_attr(k, _misc_attr, _misc.format(name=k), src_attrs=v))
+
+    # main TBD: multiple version or incremental versions
+    header["spec"]["versions"] = list()
+    header["spec"]["versions"].append(version)
+
+    return header
+
+
+def gen_cr(_dir_path, parent_dir, model, name_=None):
+    name_ = model["kind"].lower() if name_ is None else name_
+
+    if not os.path.exists(os.path.join(_dir_path, parent_dir)):
+        os.makedirs(os.path.join(_dir_path, parent_dir))
+    cr_file = os.path.join(_dir_path, parent_dir, "cr.yaml")
+    if not os.path.exists(cr_file):
+        cr = _cr.format(groupVersion=model["group"] + "/" + model["version"],
+                        kind=model["kind"],
+                        name=name_,
+                        )
+        cr = yaml.load(cr, Loader=yaml.FullLoader)
+        cr["spec"] = dict()
+
+        # XXX improve CR generation
+        for _name in ["meta", "control", "data"]:
+            attrs = model.get(_name, {})
+            if len(attrs) == 0:
+                continue
+            if _name not in cr["spec"]:
+                cr["spec"][_name] = dict()
+            for a, t in attrs.items():
+                # XXX nested attributes may lead to unuseful intents
+                if _name == "control":
+                    v = ""
+                    if isinstance(t, str):
+                        v = {
+                            "string": "",
+                            "number": 0,
+                        }.get(t, v)
+                    cr["spec"][_name].update({a: {
+                        "intent": v,
+                    }})
+                else:
+                    v = ""
+                    if isinstance(t, str):
+                        v = {
+                            "string": "",
+                            "number": 0,
+                        }.get(t, v)
+                    cr["spec"][_name].update({a: v})
+
+        with open(cr_file, "w") as f_:
+            # TBD add plain-write
+            yaml.dump(cr, f_, default_style=None)
+
+        # XXX
+        with open(cr_file, "r+") as f_:
+            _s = f_.read().replace("'{", "{").replace("}'", "}")
+            f_.seek(0)
+            f_.truncate()
+            f_.write(_s)
+
+
 def gen(name):
+    '''
+    Generate templates for a model in a given directory.
+
+    name: directory name
+    '''
+
     _dir_path = os.path.join(os.path.curdir, name)
 
     with open(os.path.join(_dir_path, "model.yaml")) as f:
@@ -256,148 +457,17 @@ def gen(name):
     crds = list()
     for model in models:
         # assemble the crd
-        header = _header.format(name=pluralize_lower(model["kind"]) + "." + model["group"],
-                                group=model["group"],
-                                kind=model["kind"],
-                                plural=pluralize_lower(model["kind"]),
-                                singular=model["kind"].lower())
-        header = yaml.load(header, Loader=yaml.FullLoader)
-
-        # fill in attributes
-        def make_attr(_name, _attr_tpl, _main_tpl, src_attrs):
-            attrs, result = dict(), dict()
-
-            # XXX currently this applies to reflex attr only
-            if isinstance(src_attrs, str):
-                return yaml.load(_main_tpl, Loader=yaml.FullLoader)
-
-            for _n, t in src_attrs.items():
-                if not isinstance(t, str):
-                    assert isinstance(t, dict)
-                    # TBD simplify the gen rules
-                    if _n == "openapi":
-                        attrs = t
-                    else:
-                        attrs[_n] = t.get("openapi", t)
-                else:
-                    attrs[_n] = yaml.load(_attr_tpl.format(name=_n, datatype=t),
-                                          Loader=yaml.FullLoader)
-            if len(attrs) > 0:
-                result = yaml.load(_main_tpl, Loader=yaml.FullLoader)
-                if result[_name] is not None and "properties" in result[_name]:
-                    result[_name]["properties"] = attrs
-                else:
-                    result[_name] = attrs
-            return result
-
-        def make_data_attr():
-            _input = make_attr("input", _data_attr, _data_input, src_attrs=model.get("data", {}).get("input", {}))
-            _output = make_attr("output", _data_attr, _data_output, src_attrs=model.get("data", {}).get("output", {}))
-            if len(_input) + len(_output) == 0:
-                return {}
-            result = yaml.load(_data, Loader=yaml.FullLoader)
-            result["data"]["properties"] = dict()
-            result["data"]["properties"].update(_input)
-            result["data"]["properties"].update(_output)
-            return result
-
-        meta = make_attr("meta", _meta_attr, _meta, src_attrs=model.get("meta", {}))
-        control = make_attr("control", _control_attr, _control, src_attrs=model.get("control", {}))
-        data = make_data_attr()
-        obs = make_attr("obs", _obs_attr, _obs, src_attrs=model.get("obs", {}))
-        mount = make_attr("mount", _mount_attr, _mount, src_attrs=model.get("mount", {}))
-        ingress = make_attr("ingress", _ingress_attr, _ingress, src_attrs=model.get("ingress", {}))
-        egress = make_attr("egress", _egress_attr, _egress, src_attrs=model.get("egress", {}))
-        reflex = make_attr("reflex", _reflex_attr, _reflex, src_attrs=model.get("reflex", {}))
-
-        assert not (len(control) > 0 and len(data) > 0), "cannot have both control and data attrs!"
-
-        # version
-        version = _version_spec.format(version=model["version"])
-        version = yaml.load(version, Loader=yaml.FullLoader)
-        spec = version["schema"]["openAPIV3Schema"]["properties"]["spec"]
-        spec["properties"] = dict()
-        spec["properties"].update(meta)
-        spec["properties"].update(control)
-        spec["properties"].update(data)
-        spec["properties"].update(obs)
-        spec["properties"].update(mount)
-        spec["properties"].update(ingress)
-        spec["properties"].update(egress)
-        spec["properties"].update(reflex)
-
-        # custom attribute
-        for k, v in model.items():
-            # TBD clean the attribute generation by making the attribute templates a map
-            if k not in {"group", "version", "kind", "ingress", "egress",
-                         "meta", "control", "data", "obs", "mount", "reflex"}:
-                spec["properties"].update(make_attr(k, _misc_attr, _misc.format(name=k), src_attrs=v))
-
-        # main TBD: multiple version or incremental versions
-        header["spec"]["versions"] = list()
-        header["spec"]["versions"].append(version)
-
-        crd = header
+        crd = gen_crd(model)
         crds.append(crd)
 
         # generate a CR if missing
         # only the first model's cr will be generated
-        def _gen_cr(parent_dir, name_=model["kind"].lower()):
-            if not os.path.exists(os.path.join(_dir_path, parent_dir)):
-                os.makedirs(os.path.join(_dir_path, parent_dir))
-            cr_file = os.path.join(_dir_path, parent_dir, "cr.yaml")
-            if not os.path.exists(cr_file):
-                cr = _cr.format(groupVersion=model["group"] + "/" + model["version"],
-                                kind=model["kind"],
-                                name=name_,
-                                )
-                cr = yaml.load(cr, Loader=yaml.FullLoader)
-                cr["spec"] = dict()
-
-                # XXX improve CR generation
-                for _name in ["meta", "control", "data"]:
-                    attrs = model.get(_name, {})
-                    if len(attrs) == 0:
-                        continue
-                    if _name not in cr["spec"]:
-                        cr["spec"][_name] = dict()
-                    for a, t in attrs.items():
-                        # XXX nested attributes may lead to unuseful intents
-                        if _name == "control":
-                            v = ""
-                            if isinstance(t, str):
-                                v = {
-                                    "string": "",
-                                    "number": 0,
-                                }.get(t, v)
-                            cr["spec"][_name].update({a: {
-                                "intent": v,
-                            }})
-                        else:
-                            v = ""
-                            if isinstance(t, str):
-                                v = {
-                                    "string": "",
-                                    "number": 0,
-                                }.get(t, v)
-                            cr["spec"][_name].update({a: v})
-
-                with open(cr_file, "w") as f_:
-                    # TBD add plain-write
-                    yaml.dump(cr, f_, default_style=None)
-
-                # XXX
-                with open(cr_file, "r+") as f_:
-                    _s = f_.read().replace("'{", "{").replace("}'", "}")
-                    f_.seek(0)
-                    f_.truncate()
-                    f_.write(_s)
 
         # deployment cr
-        _gen_cr("deploy", name_="'{{ .Values.name }}'")
+        gen_cr(_dir_path, "deploy", model, name_="'{{ .Values.name }}'")
 
         # testing cr
-        _gen_cr("test", name_=model["kind"].lower())
+        gen_cr(_dir_path, "test", model, name_=model["kind"].lower())
 
         # generate a helm values.yaml if missing
         values_file = os.path.join(_dir_path, "deploy", "values.yaml")
