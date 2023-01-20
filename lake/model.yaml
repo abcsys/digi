@@ -1,6 +1,8 @@
 group: digi.dev
 version: v1
 kind: lake
+control:
+  poll_interval: number
 stats:
   openapi:
     properties:
@@ -11,6 +13,8 @@ pools:
   openapi:
     additionalProperties:
       properties:
+        name:
+          type: string
         head:
           type: string
         last_updated:

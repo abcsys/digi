@@ -23,12 +23,24 @@ spec:
             type: object
           spec:
             properties:
+              control:
+                properties:
+                  poll_interval:
+                    properties:
+                      intent:
+                        type: number
+                      status:
+                        type: number
+                    type: object
+                type: object
               pools:
                 additionalProperties:
                   properties:
                     head:
                       type: string
                     last_updated:
+                      type: string
+                    name:
                       type: string
                     size:
                       type: number

@@ -7,7 +7,6 @@ import pyzed
 import event
 
 ZED_LAKE_URL = "http://localhost:9867"
-POLL_INTERVAL_SECONDS = 10.0
 SPAWNED_THREADS = []
 zed_client = pyzed.Client(base_url=ZED_LAKE_URL)
 
@@ -49,7 +48,7 @@ def get_branch_count_sum(pool_name, branches):
 def patch_existing_pools(new_spec):
     new_spec_pools = new_spec.get("pools", {})
     while True:
-        curr_spec, _, start_gen = digi.util.get_spec("digi.dev", "v1", "lakes", "lake", "default")
+        curr_spec, _, start_gen = digi.util.get_spec(digi.g, digi.v, digi.r, digi.n, digi.ns)
         curr_pools = curr_spec.get("pools", {})
         
         keys_to_remove = []
@@ -60,29 +59,27 @@ def patch_existing_pools(new_spec):
         for pop_key in keys_to_remove:
             new_spec_pools.pop(pop_key)
                 
-        _, rv, curr_gen = digi.util.get_spec("digi.dev", "v1", "lakes", "lake", "default")
+        _, rv, curr_gen = digi.util.get_spec(digi.g, digi.v, digi.r, digi.n, digi.ns)
         if start_gen < curr_gen:
             continue
         else:        
-            res, err = digi.util.patch_spec("digi.dev", "v1", "lakes", "lake", "default", new_spec, rv=rv)
+            res, err = digi.util.patch_spec(digi.g, digi.v, digi.r, digi.n, digi.ns, new_spec, rv=rv)
             return
         
 
 def poll_func():
-    Timer(POLL_INTERVAL_SECONDS, poll_func).start()
-    
+    curr_spec = digi.model.get()
+    Timer(curr_spec["control"]["poll_interval"]["intent"], poll_func).start()
+        
     new_spec = {"pools" : {}}
     
     pool_query_pyzed = zed_client.query("from :pools")
-    pool_dicts =[]
+    pool_dicts = []
     for elem in pool_query_pyzed:
         pool_dicts.append(elem)
     
     for pool_dict in pool_dicts:
         ts, name, pool_id = str(pool_dict["ts"]), pool_dict["name"], str(pool_dict["id"].hex())
-        
-        #update POOL_NAME_MAP
-        event.POOL_NAME_MAP[pool_id] = name
     
         #run count() on each pool branch to get numbers of records
         #get branch names
@@ -90,10 +87,11 @@ def poll_func():
         pool_count = get_branch_count_sum(name, curr_branches)
         
         #add count, HEADS, and timestamp to new spec
-        try: #use try-except in case we don't have values for head yet (generated from event parsing)
-            new_spec["pools"][pool_id] = {"head": event.HEADS[pool_id], "last_updated" : ts, "size": pool_count} #race on HEADS with event thread?
-        except:
-            new_spec["pools"][pool_id] = {"head": event.NULL_COMMIT_ID, "last_updated" : ts, "size": pool_count}
+        with event.HEADS_LOCK:
+            if pool_id in event.HEADS:
+                new_spec["pools"][pool_id] = {"head": event.HEADS[pool_id], "last_updated" : ts, "size": pool_count, "name" : name}
+            else: #do not update head if none is found
+                new_spec["pools"][pool_id] = {"last_updated" : ts, "size": pool_count, "name" : name}
     
     #patch spec
     patch_existing_pools(new_spec)

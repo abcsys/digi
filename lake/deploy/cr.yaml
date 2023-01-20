@@ -2,3 +2,9 @@ apiVersion: digi.dev/v1
 kind: lake
 metadata:
   name: {{ .Values.name }}
+spec:
+  control:
+    poll_interval:
+      intent: 2.0
+  stats:
+    num_pools: 0
