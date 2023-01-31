@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -136,6 +137,8 @@ var buildCmd = &cobra.Command{
 		platform, _ := cmd.Flags().GetString("platform")
 		all, _ := cmd.Flags().GetBool("all-platforms")
 		tag, _ := cmd.Flags().GetString("tag")
+		imageFile, _ := cmd.Flags().GetString("image")
+		digiliteFile, _ := cmd.Flags().GetString("digilite")
 
 		platforms := make(map[string]bool)
 		if all {
@@ -159,10 +162,53 @@ var buildCmd = &cobra.Command{
 				"KIND":       kind.Name,
 				"PROFILE":    profile,
 				"DRIVER_TAG": tag,
+				"DOCKERFILE": imageFile,
 			}
 			if driverRepo != "" {
 				params["DRIVER_REPO"] = driverRepo
 			}
+
+			if digiliteFile != "" {
+				if imageFile != "" {
+					log.Printf("WARNING: Digilite file is declared, \"%s\" will be overwritten with \"%s\"\n", imageFile, digiliteFile)
+				}
+				digilitePath := filepath.Join(os.Getenv("GOPATH"), "src/digi.dev/digilite", digiliteFile, "Dockerfile")
+				if fileInfo, err := os.Stat(digilitePath); !os.IsNotExist(err) && !fileInfo.IsDir() {
+					params["DOCKERFILE"] = digilitePath
+				} else {
+					log.Fatalf("error building %s: Digilite path of \"%s\" does not exist", kind.Name, digilitePath)
+					return
+				}
+			} else {
+				if imageFile != "" {
+					workDir, err := os.Getwd()
+					if err != nil {
+						log.Fatalf("error building %s: %v", kind.Name, err)
+						return
+					}
+
+					imagePaths := []string{
+						filepath.Join(workDir, imageFile, "Dockerfile"),
+						filepath.Join(workDir, imageFile),
+					}
+
+					pathFound := false
+
+					for _, imagePath := range imagePaths {
+						if fileInfo, err := os.Stat(imagePath); !os.IsNotExist(err) && !fileInfo.IsDir() {
+							params["DOCKERFILE"] = imagePath
+							pathFound = true
+							break
+						}
+					}
+
+					if !pathFound {
+						log.Fatalf("error building %s: Image path does not exist", kind.Name)
+						return
+					}
+				}
+			}
+
 			// clear manifest cache
 			_ = helper.RunMake(params, "clear-manifest", true, q)
 
@@ -577,6 +623,8 @@ var runCmd = &cobra.Command{
 		logLevel, _ := cmd.Flags().GetInt("log-level")
 		visual, _ := cmd.Flags().GetBool("enable-visual")
 		deployFile, _ := cmd.Flags().GetString("deploy-file")
+		persistentVolume, _ := cmd.Flags().GetBool("persistent-volume")
+
 		kopfLog := "false"
 		if k, _ := cmd.Flags().GetBool("kopf-log"); k {
 			kopfLog = "true"
@@ -597,6 +645,12 @@ var runCmd = &cobra.Command{
 		}
 		if visual {
 			runFlag += " --set visual=true"
+		}
+
+		if persistentVolume {
+			persistentVolumeSize, _ := cmd.Flags().GetString("pv-size")
+			persistentVolumePath, _ := cmd.Flags().GetString("pv-path")
+			runFlag += fmt.Sprintf(" --set persistent_volume.path=%s,persistent_volume.size=%s", persistentVolumePath, persistentVolumeSize)
 		}
 
 		var wg sync.WaitGroup

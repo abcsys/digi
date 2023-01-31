@@ -13,6 +13,12 @@ spec:
       labels:
         name: {{ .Values.name }}
     spec:
+      {{ if .Values.persistent_volume }}
+      volumes:
+        - name: {{ .Values.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.name }}
+      {{ end }}
       serviceAccountName: {{ .Values.name }}
       containers:
         - name: {{ .Values.name }}
@@ -58,6 +64,13 @@ spec:
             value: {{ .Values.visual_refresh_interval | default 1000 | quote }}
           ports:
           - containerPort: 7534
+            name: visual
+          - containerPort: 5540
+            protocol: UDP
+            name: matter
+          - containerPort: 5353
+            protocol: UDP
+            name: mdns
 
 ---
 
@@ -73,5 +86,14 @@ spec:
   - port: 7534
     targetPort: 7534
     protocol: TCP
+    name: visual
+  - port: 5540
+    targetPort: 5540
+    protocol: UDP
+    name: matter
+  - port: 5353
+    targetPort: 5353
+    protocol: UDP
+    name: mdns
   selector:
     name: {{ .Values.name }}

@@ -26,8 +26,10 @@ func init() {
 	RootCmd.AddCommand(buildCmd)
 	initCmd.Flags().StringP("group", "g", "", "Model group")
 	initCmd.Flags().StringP("version", "v", "", "Model version")
-	initCmd.Flags().StringP("directory", "d", "", "Image directory")
+	initCmd.Flags().StringP("directory", "d", "", "Profile directory")
 	buildCmd.Flags().BoolP("no-cache", "n", false, "Do not use build cache")
+	buildCmd.Flags().StringP("image", "i", "", "Base image file, overridden by --digilite")
+	buildCmd.Flags().StringP("digilite", "d", "", "Digilite library")
 	buildCmd.Flags().BoolP("all-platforms", "a", false, "Build for all platforms")
 	// TBD multiple platforms with string array
 	buildCmd.Flags().StringP("platform", "p", "", "Specify build platform")
@@ -58,6 +60,9 @@ func init() {
 	runCmd.Flags().BoolP("enable-visual", "v", false, "Enable default visualization")
 	runCmd.Flags().IntP("log-level", "l", -1, "Logging level")
 	runCmd.Flags().StringP("deploy-file", "d", "cr.yaml", "Deployment file.")
+	runCmd.Flags().BoolP("persistent-volume", "p", false, "Enable persistent volume")
+	runCmd.Flags().String("pv-size", "10 Mi", "Persistent volume size")
+	runCmd.Flags().String("pv-path", "/mnt", "Persistent volume path")
 	stopCmd.Flags().StringP("kind", "k", "", "Digi kind")
 
 	RootCmd.AddCommand(testCmd)

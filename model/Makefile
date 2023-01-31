@@ -30,6 +30,9 @@ ifndef CR
 override CR = cr.yaml
 endif
 
+ifndef DOCKERFILE
+override DOCKERFILE = deploy/image/Dockerfile
+endif
 
 digi_src := $(GOPATH)/src/digi.dev/digi
 driver_dir := $(digi_src)/driver
@@ -110,7 +113,7 @@ endif
 build: | gen prepare
 	# use DOCKER_BUILDKIT=0 to enable more messages
 	rsync $(driver_handler) $(build_dir)/ || true
-	cd $(build_dir) && $(DOCKER_CMD) buildx build -t $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH) $(BUILDFLAG) -f deploy/image/Dockerfile . || true
+	cd $(build_dir) && $(DOCKER_CMD) buildx build -t $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH) $(BUILDFLAG) -f $(DOCKERFILE) . || true
 	$(DOCKER_CMD) push $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH) $(PUSHFLAG) || true
 	rm -r $(build_dir) || true
 
@@ -173,6 +176,8 @@ run: | prepare model delete-pool
     -- bash -c "zed create $(NAME)") >/dev/null && echo $(NAME) || echo "unable to create pool $(NAME); is lake running?"
 	rm -rf $(build_dir)
 stop: | delete-pool
+	kubectl delete pvc $(NAME) >/dev/null || true & \
+	kubectl delete pv $(NAME) >/dev/null || true & \
 	kubectl delete serviceaccount $(NAME) >/dev/null || true & \
 	kubectl delete clusterrole $(NAME) >/dev/null || true & \
 	kubectl delete clusterrolebinding $(NAME) >/dev/null || true & \
