@@ -15,7 +15,7 @@ Install Kubernetes CLI [kubectl](https://kubernetes.io/docs/tasks/tools/) and pa
 
 ## Installation
 Digi:
-* Clone the repo [https://github.com/digi-project/digi](https://github.com/digi-project/digi)
+* Clone the repo [https://github.com/digi-project/digi](https://github.com/digi-project/digi) to `$GOPATH/src/digi.dev`.
 
 * Run the follwing commands:
     ```sh
