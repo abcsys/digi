@@ -182,6 +182,7 @@ stop: | delete-pool
 	kubectl delete clusterrole $(NAME) >/dev/null || true & \
 	kubectl delete clusterrolebinding $(NAME) >/dev/null || true & \
 	kubectl delete service $(NAME) >/dev/null || true & \
+	kubectl delete service $(NAME)-nodeport >/dev/null || true & \
 	((kubectl delete $(PLURAL) $(NAME) >/dev/null || \
 	kubectl delete $(PLURAL).$(VERSION).$(GROUP) $(NAME)) >/dev/null || true) & \
 	kubectl delete deployment $(NAME) >/dev/null && \
