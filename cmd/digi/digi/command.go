@@ -65,7 +65,7 @@ func init() {
 	runCmd.Flags().IntP("log-level", "l", -1, "Logging level")
 	runCmd.Flags().StringP("deploy-file", "d", "cr.yaml", "Deployment file.")
 	runCmd.Flags().BoolP("persistent-volume", "p", false, "Enable persistent volume")
-	runCmd.Flags().String("pv-size", "10 Mi", "Persistent volume size")
+	runCmd.Flags().String("pv-size", "10Mi", "Persistent volume size")
 	runCmd.Flags().String("pv-path", "/mnt", "Persistent volume path")
 	stopCmd.Flags().StringP("kind", "k", "", "Digi kind")
 
