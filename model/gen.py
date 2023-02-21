@@ -471,10 +471,7 @@ def gen(name):
 
         # generate a helm values.yaml if missing
         values_file = os.path.join(_dir_path, "deploy", "values.yaml")
-        # XXX enable safe gen option in command line
-        # if not os.path.exists(values_file):
-
-        if True:
+        if not os.path.exists(values_file):
             values = _helm_values.format(
                 group=model["group"],
                 version=model["version"],
