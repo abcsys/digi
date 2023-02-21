@@ -1,0 +1,4 @@
+apiVersion: net.digi.dev/v1
+kind: Headscale
+metadata:
+  name: {{ .Values.name }}

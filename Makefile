@@ -9,6 +9,7 @@ DOCKER_CMD = docker
 
 # default location for scripts and configs
 HOMEDIR = ~/.digi
+HOMEABS:=$(shell cd ~; pwd)
 SOURCE = $(GOPATH)/src/digi.dev/digi
 
 VERSION = $(shell git describe --tags --dirty --always)
@@ -32,7 +33,8 @@ ctx:
 	cd sidecar/ctx/cmd/ctx; go install .
 install: | digi neat ctx
 	@mkdir $(HOMEDIR) >/dev/null 2>&1 || true
-	@rm $(HOMEDIR)/lake $(HOMEDIR)/space $(HOMEDIR)/message $(HOMEDIR)/sidecar >/dev/null 2>&1 || true
+	@mkdir $(HOMEDIR)/headscale >/dev/null 2>&1 || true
+	@rm $(HOMEDIR)/lake $(HOMEDIR)/space $(HOMEDIR)/message $(HOMEDIR)/net $(HOMEDIR)/sidecar >/dev/null 2>&1 || true
 	@touch $(HOMEDIR)/config $(HOMEDIR)/alias
 	@ln -s $(SOURCE)/lake/ $(HOMEDIR)/lake
 	@ln -s $(SOURCE)/space/ $(HOMEDIR)/space
@@ -41,6 +43,7 @@ install: | digi neat ctx
 	@sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
 	@cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR) && cp ./model/helper.py $(HOMEDIR)
 	@cp -r ./scripts/ $(HOMEDIR)/scripts/ && chmod -R +x $(HOMEDIR)/scripts/
+	@cp -r $(SOURCE)/net/ $(HOMEDIR)/net && cat ./net/headscale/deploy/values.yaml | sed s+{{home}}+$(HOMEABS)+g > $(HOMEDIR)/net/headscale/deploy/values.yaml
 
 .PHONY: python-digi
 python-digi:

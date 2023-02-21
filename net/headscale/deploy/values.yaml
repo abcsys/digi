@@ -1,0 +1,12 @@
+group: net.digi.dev
+image: jamsheedmistri/headscale.v1.net.digi.dev:latest
+imagepull: Always
+kind: Headscale
+mounter: false
+name: headscale
+namespace: default
+plural: headscales
+version: v1
+persistent_volume:
+  path: {{home}}/.digi/headscale/
+  size: 50Mi

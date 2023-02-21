@@ -256,6 +256,13 @@ start-emqx:
 stop-emqx:
 	digi stop emqx
 
+# net/headscale
+.PHONY: start-net stop-net
+start-net:
+	WORKDIR=$(DIGIHOME) digi run net/headscale net
+stop-net:
+	digi stop net
+
 .PHONY: start-space stop-space
 start-space: | start-lake # ...
 stop-space: | stop-lake

@@ -20,6 +20,7 @@ var (
 		"syncer":  true,
 		"mounter": true,
 		"emqx":    true,
+		"net":    true,
 		// ...
 	}
 )
