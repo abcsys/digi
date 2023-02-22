@@ -141,6 +141,9 @@ var registerCmd = &cobra.Command{
 	Aliases: []string{"register"},
 	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
+		// TBD the register command should go through a proxy without
+		//	sharing the cluster's access credentials with the registry;
+		//	registry's commands such as /list should be run by the proxy.
 		kc, err := k8s.LoadKubeConfig()
 		if err != nil {
 			log.Fatal("Failed to load config from Kube Config file.")
@@ -152,17 +155,17 @@ var registerCmd = &cobra.Command{
 		cluster := kc.Clusters[context]
 		apiserver := cluster.Server
 		user := kc.AuthInfos[context]
-		ca_crt := cluster.CertificateAuthority
-		client_crt := user.ClientCertificate
-		client_key := user.ClientKey
+		caCrt := cluster.CertificateAuthority
+		clientCrt := user.ClientCertificate
+		clientKey := user.ClientKey
 		_ = helper.RunMake(map[string]string{
 			"ADDR":       args[0],
 			"USER":       args[1],
 			"APISERVER":  apiserver,
 			"CONTEXT":    context,
-			"CA.CRT":     ca_crt,
-			"CLIENT.CRT": client_crt,
-			"CLIENT.KEY": client_key,
+			"CA.CRT":     caCrt,
+			"CLIENT.CRT": clientCrt,
+			"CLIENT.KEY": clientKey,
 		}, "register-space", true, false)
 	},
 }
@@ -204,9 +207,9 @@ var checkCmd = &cobra.Command{
 }
 
 var switchCmd = &cobra.Command{
-	Use:     "checkout NAME",
+	Use:     "use NAME",
 	Short:   "Switch to a digi space",
-	Aliases: []string{"checkout", "c", "switch"},
+	Aliases: []string{"checkout", "u", "switch"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// TBD switch should take care of local alias cache, e.g., per
@@ -216,6 +219,66 @@ var switchCmd = &cobra.Command{
 			"NAME": args[0],
 		}, "switch-space", true, false)
 	},
+}
+
+var addCmd = &cobra.Command{
+	Use:   "add CONFIG",
+	Short: "add a digi space from given config file",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		root, err := k8s.LoadKubeConfig()
+		if err != nil {
+			log.Fatal("Failed to load config from root Kube Config file.")
+		}
+
+		given, err := k8s.LoadKubeConfig(args[0])
+		if err != nil {
+			log.Fatal("Failed to load config from the given Kube Config file.")
+		}
+
+		// check if the clusters in the give config already exist in the root config
+		rootClusters := k8s.Clusters(root)
+		for _, cluster := range k8s.Clusters(given) {
+			if contains(rootClusters, cluster) {
+				log.Fatal("Cluster ", cluster, " already exists in the root; please rename.")
+			}
+		}
+
+		// check if the contexts in the given config already exists in the root config
+		rootContexts := k8s.Contexts(root)
+		for _, context := range k8s.Contexts(given) {
+			if contains(rootContexts, context) {
+				log.Fatal("Context ", context, " already exists in the root; please rename.")
+			}
+		}
+
+		// check if the user in the given config already exists in the root config
+		rootUsers := k8s.Users(root)
+		for _, user := range k8s.Users(given) {
+			if contains(rootUsers, user) {
+				log.Fatal("User ", user, " already exists in the root; please rename.")
+			}
+		}
+
+		// merge the given config into the root config
+		merged, err := k8s.MergeKubeConfigs(root, given)
+		if err != nil {
+			log.Fatal("Failed to merge Kube Config files.")
+		}
+
+		if err = k8s.WriteKubeConfig(merged); err != nil {
+			log.Fatal("Failed to write merged Kube Config file.")
+		}
+	},
+}
+
+func contains(strs []string, str string) bool {
+	for _, s := range strs {
+		if s == str {
+			return true
+		}
+	}
+	return false
 }
 
 var aliasCmd = &cobra.Command{
@@ -264,6 +327,7 @@ func init() {
 	RootCmd.AddCommand(listCmd)
 	RootCmd.AddCommand(checkCmd)
 	RootCmd.AddCommand(switchCmd)
+	RootCmd.AddCommand(addCmd)
 	RootCmd.AddCommand(aliasCmd)
 	RootCmd.AddCommand(gcCmd)
 	listCmd.Flags().BoolP("current", "c", false, "List current space")
