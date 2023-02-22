@@ -20,7 +20,7 @@ var (
 		"syncer":  true,
 		"mounter": true,
 		"emqx":    true,
-		"net":    true,
+		"net":     true,
 		// ...
 	}
 )
@@ -234,23 +234,6 @@ var aliasCmd = &cobra.Command{
 	},
 }
 
-var connectCmd = &cobra.Command{
-	Use:     "connect NAME",
-	Short:   "Start a tty on the digi's driver",
-	Aliases: []string{"conn", "c"},
-	Args:    cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		useBash, _ := cmd.Flags().GetBool("bash")
-		params := map[string]string{
-			"NAME": args[0],
-		}
-		if useBash {
-			params["SHELL_BIN"] = "bash"
-		}
-		_ = helper.RunMake(params, "connect", true, false)
-	},
-}
-
 var gcCmd = &cobra.Command{
 	Use:     "gc",
 	Short:   "Run garbage collection",
@@ -282,9 +265,6 @@ func init() {
 	RootCmd.AddCommand(checkCmd)
 	RootCmd.AddCommand(switchCmd)
 	RootCmd.AddCommand(aliasCmd)
-	// TBD promote connect to digi root
-	RootCmd.AddCommand(connectCmd)
 	RootCmd.AddCommand(gcCmd)
 	listCmd.Flags().BoolP("current", "c", false, "List current space")
-	connectCmd.Flags().BoolP("bash", "b", false, "Use bash in remote session")
 }

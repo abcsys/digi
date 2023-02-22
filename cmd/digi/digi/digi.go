@@ -39,7 +39,7 @@ var (
 
 var configCmd = &cobra.Command{
 	Use:     "config",
-	Short:   "Configure the default parameters for Digi CLI",
+	Short:   "Configure the default parameters this cli",
 	Aliases: []string{"configure"},
 	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -1035,6 +1035,43 @@ var watchCmd = &cobra.Command{
 		}
 
 		_ = helper.RunMake(params, "watch", true, false)
+	},
+}
+
+var attachCmd = &cobra.Command{
+	Use:     "attach NAME",
+	Short:   "Start a tty on the digi's driver",
+	Aliases: []string{"at"},
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		useBash, _ := cmd.Flags().GetBool("bash")
+		params := map[string]string{
+			"NAME": args[0],
+		}
+		if useBash {
+			params["SHELL_BIN"] = "bash"
+		}
+		_ = helper.RunMake(params, "attach", true, false)
+	},
+}
+
+var connectCmd = &cobra.Command{
+	Use:     "connect NAME LOCAL [REMOTE]",
+	Short:   "Forward a local port to another of a digi",
+	Aliases: []string{"conn"},
+	Args:    cobra.MinimumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		var local, remote string
+		local = args[1]
+		if len(args) < 3 {
+			remote = local
+		}
+		params := map[string]string{
+			"NAME":   args[0],
+			"LOCAL":  local,
+			"REMOTE": remote,
+		}
+		_ = helper.RunMake(params, "connect", true, false)
 	},
 }
 

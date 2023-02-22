@@ -90,6 +90,11 @@ func init() {
 	aliasCmd.AddCommand(aliasClearCmd)
 	aliasCmd.AddCommand(aliasResolveCmd)
 
+	RootCmd.AddCommand(attachCmd)
+	attachCmd.Flags().BoolP("bash", "b", false, "Use bash in remote session")
+
+	RootCmd.AddCommand(connectCmd)
+
 	RootCmd.AddCommand(vizCmd)
 	RootCmd.AddCommand(sidecar.RootCmd)
 

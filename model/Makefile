@@ -205,9 +205,11 @@ watch:
 ifndef SHELL_BIN
 override SHELL_BIN = sh
 endif
-.PHONY: connect
-connect:
+.PHONY: attach connect
+attach:
 	kubectl exec -it `kubectl get pod --field-selector status.phase=Running -l name=$(NAME) -oname` -- /bin/$(SHELL_BIN)
+connect:
+	kubectl port-forward service/$(NAME) $(LOCAL):$(REMOTE)
 
 # lake
 ifndef LAKENAME
