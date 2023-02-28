@@ -1,4 +1,4 @@
-# Get headscale binary
+# Headscale
 FROM headscale/headscale:0.20.0 as headscale
 
 # Digi
@@ -20,6 +20,5 @@ RUN pip install -r thirdparty.txt > /dev/null 2>&1 || true
 
 RUN mkdir -p /var/lib/headscale/
 
-# TBD multi-stage build with slim base image
 COPY *.py .
 CMD python3 handler.py

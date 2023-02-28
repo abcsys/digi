@@ -1,5 +1,5 @@
 group: message.digi.dev
-image: silveryfu/emqx.v1.message.digi.dev:latest
+image: jamsheedmistri/emqx.v1.message.digi.dev:latest
 imagepull: Always
 kind: Emqx
 mounter: false
