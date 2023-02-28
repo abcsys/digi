@@ -107,6 +107,14 @@ func clusterExists(id string, config *KubeConfig) bool {
 	return ok
 }
 
+func DeleteKubeConfig(kc *KubeConfig, id string) error {
+	delete(kc.Clusters, id)
+	delete(kc.AuthInfos, id)
+	delete(kc.Contexts, id)
+
+	return nil
+}
+
 // MergeKubeConfigs merges a given set of kubeconfigs, assuming they are all valid, returns the merged kubeconfig
 // The precedence is taken as the argument order, e.g., MergeKubeConfigs(A, B) will merge A to B
 func MergeKubeConfigs(kcs ...*KubeConfig) (*KubeConfig, error) {
