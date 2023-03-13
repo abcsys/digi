@@ -5,17 +5,19 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app: {{ .Values.name }}
+    name: {{ .Values.name }}
+    digi.dev/type: kernel
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: {{ .Values.name }}
       app: {{ .Values.name }}
+      name: {{ .Values.name }}
   template:
     metadata:
       labels:
-        name: {{ .Values.name }}
         app: {{ .Values.name }}
+        name: {{ .Values.name }}
     spec:
       serviceAccountName: {{ .Values.name }}
       containers:
@@ -54,7 +56,7 @@ metadata:
   name: {{ .Values.name }}
   labels:
     name: {{ .Values.name }}
-    app: {{ .Values.name }}
+    digi.dev/type: kernel
 spec:
   ports:
   - port: 6534 # lake

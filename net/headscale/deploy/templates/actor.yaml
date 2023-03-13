@@ -4,18 +4,20 @@ metadata:
   name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
   labels:
-    app: headscale
+    app: {{ .Values.name }}
+    name: {{ .Values.name }}
+    digi.dev/type: kernel
 spec:
   replicas: 1
   selector:
     matchLabels:
+      app: {{ .Values.name }}
       name: {{ .Values.name }}
-      app: headscale
   template:
     metadata:
       labels:
+        app: {{ .Values.name }}
         name: {{ .Values.name }}
-        app: headscale
     spec:
       serviceAccountName: {{ .Values.name }}
       volumes:
@@ -62,7 +64,7 @@ metadata:
   name: {{ .Values.name }}
   labels:
     name: {{ .Values.name }}
-    app: headscale
+    digi.dev/type: kernel
 spec:
   type: NodePort
   ports: # headscale
@@ -85,6 +87,9 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: {{ .Values.name }}
+  labels:
+    name: {{ .Values.name }}
+    digi.dev/type: kernel
 spec:
   storageClassName: manual
   persistentVolumeReclaimPolicy: Delete
@@ -101,6 +106,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ .Values.name }}
+  labels:
+    name: {{ .Values.name }}
+    digi.dev/type: kernel
 spec:
   storageClassName: manual
   accessModes:

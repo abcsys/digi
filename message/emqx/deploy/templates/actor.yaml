@@ -4,18 +4,20 @@ metadata:
   name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
   labels:
-    app: emqx
+    app: {{ .Values.name }}
+    name: {{ .Values.name }}
+    digi.dev/type: kernel
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: {{ .Values.name }}
-      app: emqx
+      app: {{ .Values.name }}
+      name: {{ .Values.name } }
   template:
     metadata:
       labels:
+        app: {{ .Values.name }}
         name: {{ .Values.name }}
-        app: emqx
     spec:
       serviceAccountName: {{ .Values.name }}
       containers:
@@ -58,7 +60,7 @@ metadata:
   name: {{ .Values.name }}
   labels:
     name: {{ .Values.name }}
-    app: emqx
+    digi.dev/type: kernel
 spec:
   type: NodePort # exposes nodePort to external network; must be in range 30000-32767
   ports: # emqx
