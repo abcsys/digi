@@ -226,6 +226,7 @@ var addCmd = &cobra.Command{
 	Short: "Add a digi space from given config file",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		force, _ := cmd.Flags().GetBool("force")
 		root, err := k8s.LoadKubeConfig()
 		if err != nil {
 			log.Fatal("Failed to load config from root Kube Config file.")
@@ -236,32 +237,34 @@ var addCmd = &cobra.Command{
 			log.Fatal("Failed to load config from the given Kube Config file.")
 		}
 
-		// check if the clusters in the give config already exist in the root config
-		rootClusters := k8s.Clusters(root)
-		for _, cluster := range k8s.Clusters(given) {
-			if contains(rootClusters, cluster) {
-				log.Fatal("Cluster ", cluster, " already exists in the root; please rename.")
+		if !force {
+			// check if the clusters in the give config already exist in the root config
+			rootClusters := k8s.Clusters(root)
+			for _, cluster := range k8s.Clusters(given) {
+				if contains(rootClusters, cluster) {
+					log.Fatal("Cluster ", cluster, " already exists in the root; rename or use -f.")
+				}
+			}
+
+			// check if the contexts in the given config already exists in the root config
+			rootContexts := k8s.Contexts(root)
+			for _, context := range k8s.Contexts(given) {
+				if contains(rootContexts, context) {
+					log.Fatal("Context ", context, " already exists in the root; rename or use -f.")
+				}
+			}
+
+			// check if the user in the given config already exists in the root config
+			rootUsers := k8s.Users(root)
+			for _, user := range k8s.Users(given) {
+				if contains(rootUsers, user) {
+					log.Fatal("User ", user, " already exists in the root; rename or use -f.")
+				}
 			}
 		}
 
-		// check if the contexts in the given config already exists in the root config
-		rootContexts := k8s.Contexts(root)
-		for _, context := range k8s.Contexts(given) {
-			if contains(rootContexts, context) {
-				log.Fatal("Context ", context, " already exists in the root; please rename.")
-			}
-		}
-
-		// check if the user in the given config already exists in the root config
-		rootUsers := k8s.Users(root)
-		for _, user := range k8s.Users(given) {
-			if contains(rootUsers, user) {
-				log.Print("Warning: User ", user, " already exists in the root.")
-			}
-		}
-
-		// merge the given config into the root config
-		merged, err := k8s.MergeKubeConfigs(given, root)
+		// merge the given config into the root config; root takes precedence
+		merged, err := k8s.MergeKubeConfigs(root, given)
 		if err != nil {
 			log.Fatal("Failed to merge Kube Config files.")
 		}
@@ -357,6 +360,7 @@ func init() {
 	RootCmd.AddCommand(checkCmd)
 	RootCmd.AddCommand(switchCmd)
 	RootCmd.AddCommand(addCmd)
+	addCmd.Flags().BoolP("force", "f", false, "Force add space, ignoring conflicts")
 	RootCmd.AddCommand(deleteCmd)
 	RootCmd.AddCommand(aliasCmd)
 	RootCmd.AddCommand(gcCmd)
