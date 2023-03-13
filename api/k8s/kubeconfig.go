@@ -109,7 +109,7 @@ func clusterExists(id string, config *KubeConfig) bool {
 
 func DeleteKubeConfig(kc *KubeConfig, id string) error {
 	delete(kc.Clusters, id)
-	delete(kc.AuthInfos, id)
+	delete(kc.AuthInfos, id) //XXX id may not be the same as the user name
 	delete(kc.Contexts, id)
 
 	return nil

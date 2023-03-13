@@ -223,7 +223,7 @@ var switchCmd = &cobra.Command{
 
 var addCmd = &cobra.Command{
 	Use:   "add CONFIG",
-	Short: "add a digi space from given config file",
+	Short: "Add a digi space from given config file",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		root, err := k8s.LoadKubeConfig()
@@ -256,12 +256,12 @@ var addCmd = &cobra.Command{
 		rootUsers := k8s.Users(root)
 		for _, user := range k8s.Users(given) {
 			if contains(rootUsers, user) {
-				log.Fatal("User ", user, " already exists in the root; please rename.")
+				log.Print("Warning: User ", user, " already exists in the root.")
 			}
 		}
 
 		// merge the given config into the root config
-		merged, err := k8s.MergeKubeConfigs(root, given)
+		merged, err := k8s.MergeKubeConfigs(given, root)
 		if err != nil {
 			log.Fatal("Failed to merge Kube Config files.")
 		}
@@ -275,10 +275,9 @@ var addCmd = &cobra.Command{
 // delete a space from the root config
 var deleteCmd = &cobra.Command{
 	Use:     "delete NAME",
-	Short:   "Delete a digi space",
+	Short:   "Delete a digi space from local access",
 	Aliases: []string{"del", "remove"},
 	Args:    cobra.ExactArgs(1),
-	Hidden:  true,
 	Run: func(cmd *cobra.Command, args []string) {
 		root, err := k8s.LoadKubeConfig()
 		if err != nil {
