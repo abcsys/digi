@@ -974,7 +974,9 @@ alias cache.
 		}
 		flags := ""
 		if !showAll {
-			flags += " -l app!=lake,app!=syncer,app!=emqx,app!=net"
+			flags += " -l digi.dev/type=app"
+		} else {
+			flags += " -l digi.dev/type"
 		}
 		if len(args) == 0 {
 			_ = helper.RunMake(map[string]string{
