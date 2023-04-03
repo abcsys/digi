@@ -1,0 +1,9 @@
+group: message.digi.dev
+image: vakumar23/redpanda.v1.message.digi.dev:latest
+imagepull: Always
+kind: Redpanda
+mounter: false
+name: redpanda
+namespace: default
+plural: redpandas
+version: v1

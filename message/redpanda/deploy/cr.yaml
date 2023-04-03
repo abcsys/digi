@@ -1,0 +1,7 @@
+apiVersion: message.digi.dev/v1
+kind: Redpanda
+metadata:
+  name: {{ .Values.name }}
+spec:
+  meta:
+    advertised_broker: ''

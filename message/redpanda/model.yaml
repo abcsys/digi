@@ -1,0 +1,5 @@
+group: message.digi.dev
+version: v1
+kind: Redpanda
+meta:
+  advertised_broker: string

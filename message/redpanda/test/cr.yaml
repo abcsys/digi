@@ -1,0 +1,7 @@
+apiVersion: message.digi.dev/v1
+kind: Redpanda
+metadata:
+  name: redpanda
+spec:
+  meta:
+    advertised_broker: ''
