@@ -1,0 +1,5 @@
+apiVersion: digi.dev/v1
+kind: Sourcer
+metadata:
+  name: sourcer
+spec: {}

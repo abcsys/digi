@@ -166,6 +166,8 @@ properties:
     type: boolean
   pause:
     type: boolean
+  use_sourcer:
+    type: boolean
 type: object
 """
 

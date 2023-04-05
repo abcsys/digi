@@ -21,6 +21,7 @@ var (
 		"mounter": true,
 		"emqx":    true,
 		"net":     true,
+		"sourcer": true,
 		// ...
 	}
 )
@@ -97,14 +98,19 @@ var startCmd = &cobra.Command{
 	Short:   "Start space controllers",
 	Aliases: []string{"init"},
 	Run: func(cmd *cobra.Command, args []string) {
+		registryFile, _ := cmd.Flags().GetString("registry-file")
+		params := map[string]string{
+			"CR": registryFile,
+		}
+
 		if len(args) == 0 {
-			_ = helper.RunMake(nil, "start-space", true, false)
+			_ = helper.RunMake(params, "start-space", true, false)
 		} else {
 			for _, name := range args {
 				if ok, _ := controllers[name]; !ok {
 					log.Fatalf("unknown controller: %s\n", name)
 				}
-				_ = StartController(name)
+				_ = StartControllerWithParams(params, name)
 			}
 		}
 	},
@@ -129,6 +135,10 @@ var stopCmd = &cobra.Command{
 
 func StartController(name string) error {
 	return helper.RunMake(nil, "start-"+name, true, false)
+}
+
+func StartControllerWithParams(params map[string]string, name string) error {
+	return helper.RunMake(params, "start-"+name, true, false)
 }
 
 func StopController(name string) error {
@@ -343,6 +353,7 @@ func init() {
 	log.SetFlags(0)
 	// TBD delete digi space removes all running digis and controllers
 	RootCmd.AddCommand(startCmd)
+	startCmd.Flags().StringP("registry-file", "f", "cr.yaml", "Specify a file containing registry data")
 	RootCmd.AddCommand(stopCmd)
 
 	RootCmd.AddCommand(MountCmd)

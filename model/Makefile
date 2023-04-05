@@ -236,6 +236,12 @@ delete-pool:
 	kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- bash -c "zed drop -f $(NAME) >/dev/null 2>&1" || true
 
+.PHONY: start-sourcer stop-sourcer
+start-sourcer:
+	WORKDIR=$(DIGIHOME) digi run space/sourcer sourcer -d $(CR)
+stop-sourcer:
+	digi stop sourcer
+
 # syncer
 .PHONY: start-syncer stop-syncer
 start-syncer:

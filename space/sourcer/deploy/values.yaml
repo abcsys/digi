@@ -1,0 +1,9 @@
+group: example.digi.dev
+image: runey333/sourcer.v1.example.digi.dev:latest
+imagepull: Always
+kind: Sourcer
+mounter: false
+name: sourcer
+namespace: default
+plural: sourcers
+version: v1

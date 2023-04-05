@@ -1,0 +1,6 @@
+group: example.digi.dev
+version: v1
+kind: Sourcer
+meta:
+  registry: string
+  
