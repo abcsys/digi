@@ -5,8 +5,11 @@ WORKDIR /src/
 RUN git clone https://github.com/silveryfu/kopf.git && \
     cd kopf && git checkout digi && pip install -e .
 
-COPY driver ./driver
-RUN pip install -e ./driver
+COPY driver/requirements.txt driver/
+RUN pip install -r ./driver/requirements.txt
+
+COPY driver driver
+RUN pip install --no-dependencies -e ./driver
 
 COPY *.txt *.yml *.yaml ./
 RUN pip install -r thirdparty.txt > /dev/null 2>&1 || true
