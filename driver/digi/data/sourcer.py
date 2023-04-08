@@ -48,34 +48,39 @@ def resolve_by_mount(source: typing.Union[dict, str], *,
     Return the list of egress pool@branch given source attributes.
     """
     if isinstance(source, dict):
-        branch = source.get("egress", "main")
-        # XXX assume name is a unique id to digi and ignore namespace
+        egress = source.get("egress", "main")
         if "name" in source:
-            return [f"{source['name']}@{branch}"]
+            return [f"{source['name']}@{egress}"]
         else:
-            group = source.get("group", digi.group)
-            version = source.get("version", digi.version)
-            kind = source.get("kind", digi.kind)
+            g = source.get("group", digi.group)
+            v = source.get("version", digi.version)
+            k = source.get("kind", digi.kind)
 
     elif isinstance(source, str):
         parts = source.split("@")
-        branch = parts[1] if len(parts) > 1 else "main"
-        if "kind:" not in parts[0]:
-            return [f"{parts[0]}@{branch}"]
+        kind_or_name, egress = parts[0], parts[1] if len(parts) > 1 else "main"
+        if kind_or_name.startswith("kind:"):  # this is a direct reference
+            # format: kind:g/v/k@main or kind:k@main;
+            # k <-> r can be used interchangeably
+            kind = kind_or_name[5:]  # remove "kind:"
+            g, v, k = digi.util.parse_kind(kind)
         else:
-            # kind:g/v/k@main or kind:k@main; k <-> r
-            kind = parts[0].lstrip("kind:")
-            group, version, kind = digi.util.parse_kind(kind)
+            return [f"{kind_or_name}@{egress}"]
     else:
         raise NotImplementedError
 
-    if kind == "any":
+    if k == "any":
         mounts = digi.model.get_mount(any=True)
     else:
-        mounts = digi.model.get_mount(group, version, inflection.pluralize(kind))
-    pools = [digi.util.trim_default_namespace(name) for name in mounts.keys()] \
-        if mounts else []
+        mounts = digi.model.get_mount(g, v, inflection.pluralize(k))
 
-    return [f"{pool}@{branch}"
+    if mounts is None:
+        return []
+    digi.logger.info(f"sourcer: detect matching mounts {mounts} for {source}")
+
+    pools = [digi.util.trim_default_namespace(name) for name in mounts.keys()]
+    digi.logger.info(f"sourcer: resolve {source} to {pools} by mount")
+
+    return [f"{pool}@{egress}"
             for pool in pools if not exist_only
-            or digi.data.lake.branch_exist(pool, branch)]
+            or digi.data.lake.branch_exist(pool, egress)]

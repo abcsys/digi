@@ -29,6 +29,10 @@ class Ingress:
             logger.info(f"started ingress sync {name} "
                         f"with query: {_sync.query_str}")
 
+    def stop(self):
+        for _, _sync in self._syncs.items():
+            _sync.stop()
+
     def update(self, config: dict):
         self._syncs = dict()
 
@@ -36,23 +40,27 @@ class Ingress:
             if ig.get("pause", False):
                 continue
 
+            # resolve sources
             sources = list()
-            flow, flow_agg = ig.get("flow", ""), \
-                             ig.get("flow_agg", "")
             use_sourcer = ig.get("use_sourcer", False)
 
             # concat and dedup sources
             for s in set(ig.get("source", []) + ig.get("sources", [])):
                 sources += sourcer.resolve(s, use_sourcer)
 
+            logger.info(f"router: resolved {sources} given {name}")
             if len(sources) == 0:
                 continue
 
+            # compile dataflow
+            flow, flow_agg = ig.get("flow", ""), \
+                             ig.get("flow_agg", "")
             if flow_agg == "":
                 _out_flow = flow_lib.refresh_ts
             else:
                 _out_flow = f"{flow_agg} | {flow_lib.refresh_ts}"
 
+            # TBD add support for external pipelet
             _sync = sync.Sync(
                 sources=sources,
                 in_flow=flow,
@@ -64,10 +72,6 @@ class Ingress:
                 owner=digi.name,
             )
             self._syncs[name] = _sync
-
-    def stop(self):
-        for _, _sync in self._syncs.items():
-            _sync.stop()
 
     def restart(self, config: dict):
         self.stop()
@@ -87,6 +91,10 @@ class Egress:
             logger.info(f"started egress sync {name} "
                         f"with query:\n{_sync.query_str}")
 
+    def stop(self):
+        for _, _sync in self._syncs.items():
+            _sync.stop()
+
     def update(self, config: dict):
         self._syncs = dict()
 
@@ -96,6 +104,8 @@ class Egress:
                 continue
 
             flow = ig.get("flow", "")
+
+            # TBD add support for external pipelet
             _sync = sync.Sync(
                 sources=[digi.pool.name],
                 in_flow=flow,
@@ -108,10 +118,6 @@ class Egress:
             self._syncs[name] = _sync
             # TBD garbage collect unused branches
             digi.pool.create_branch_if_not_exist(name)
-
-    def stop(self):
-        for _, _sync in self._syncs.items():
-            _sync.stop()
 
     def restart(self, config: dict):
         self.stop()
