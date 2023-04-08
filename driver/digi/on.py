@@ -330,7 +330,7 @@ def pool(*args, **kwargs):
     if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
         digi.rc.add_data_watch(
             name=watch_name(args[0]),
-            watch=DelayedWatch(args[0], *args, **kwargs),
+            watch=DelayedWatch(args[0]),
         )
         return args[0]
 

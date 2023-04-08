@@ -25,15 +25,6 @@ class Pool(ABC):
     def query(self, query: str):
         raise NotImplementedError
 
-    @abstractmethod
-    def watch(self, once: Callable, *,
-              branch: str = "main"):
-        raise NotImplementedError
-
-    @abstractmethod
-    def create_branch_if_not_exist(self, query: str):
-        raise NotImplementedError
-
 
 class ZedPool(Pool):
     def __init__(self, name):
@@ -85,12 +76,14 @@ class ZedPool(Pool):
         query = f"from {self.name} {query}"
         return self.client.query(query)
 
-    def watch(self, fn: Callable, *,
+    def watch(self, fn: Callable,
+              branch: str = "main",
+              *,
               in_flow: str = "",
               eoio: bool = True,
               ):
         """Watch changes of the main pool and run UDF."""
-        source = f"{self.name}@main"
+        source = f"{self.name}@{branch}"
         return sync.Watch(fn,
                           sources=[source],
                           eoio=eoio,
