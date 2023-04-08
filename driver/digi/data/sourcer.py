@@ -1,6 +1,31 @@
 import typing
 import inflection
+import requests
+
 import digi
+
+default_sourcer_url = "http://sourcer:7534/resolve"
+
+
+def resolve(source, use_sourcer=False):
+    if use_sourcer:
+        return resolve_by_sourcer(source, url=default_sourcer_url)
+    else:
+        return resolve_by_mount(source)
+
+
+def resolve_by_sourcer(source, url):
+    try:
+        # {source_lake_url, sources, success}
+        resp = requests.get(url,
+                            json={"source_quantifier": source},
+                            headers={"Content-Type": "application/json"}).json()
+
+        if resp["success"]:
+            digi.logger.info(f"Resolved {source}")
+            return resp["sources"]
+    except:
+        raise Exception(f"Sourcer unable to resolve {source}")
 
 
 # Each digi can be a data source that has egress attributes.
@@ -17,8 +42,8 @@ import digi
 #   - XXX self-reference is allowed with ingress pointing to the
 #     destination itself
 # TBD add tests
-def parse_source(source: typing.Union[dict, str], *,
-                 exist_only: bool = True) -> typing.List[str]:
+def resolve_by_mount(source: typing.Union[dict, str], *,
+                     exist_only: bool = True) -> typing.List[str]:
     """
     Return the list of egress pool@branch given source attributes.
     """
@@ -31,6 +56,7 @@ def parse_source(source: typing.Union[dict, str], *,
             group = source.get("group", digi.group)
             version = source.get("version", digi.version)
             kind = source.get("kind", digi.kind)
+
     elif isinstance(source, str):
         parts = source.split("@")
         branch = parts[1] if len(parts) > 1 else "main"

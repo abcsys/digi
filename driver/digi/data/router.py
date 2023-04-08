@@ -1,6 +1,6 @@
 import digi
 import digi.data.sync as sync
-import digi.data.util as util
+import digi.data.sourcer as sourcer
 from digi.data import logger, zed
 from digi.data import flow as flow_lib
 
@@ -11,6 +11,7 @@ A router contains a collection of pipelets organized as ingresses and egresses.
 Each pipelet is implemented as a digi.data.sync.Sync object that copies and ETL
 data between a source data pool and a destination data pool. 
 """
+
 
 class Router:
     def __init__(self):
@@ -27,29 +28,10 @@ class Ingress:
             _sync.start()
             logger.info(f"started ingress sync {name} "
                         f"with query: {_sync.query_str}")
-            
-    #TODO:
-    #Router: move registry to a config file with an env var for its location
-    
-    def resolve_source(self, source_quantifier):
-        try:
-            sourcer_response = requests.get("http://sourcer:7534/resolve", 
-                                            json={"source_quantifier" : source_quantifier}, 
-                                            headers={"Content-Type": "application/json"})
-            sourcer_response_json = sourcer_response.json() #dict containing {source_lake_url, sources, success}
-            
-            if sourcer_response_json["success"]:
-                digi.logger.info(f"Used sourcer for source {source_quantifier}")
-                return sourcer_response_json["sources"]
-        except:
-            pass
-        
-        digi.logger.info(f"Used parse_source for source {source_quantifier}")
-        return util.parse_source(source_quantifier)
 
     def update(self, config: dict):
         self._syncs = dict()
-        
+
         for name, ig in config.items():
             if ig.get("pause", False):
                 continue
@@ -58,12 +40,10 @@ class Ingress:
             flow, flow_agg = ig.get("flow", ""), \
                              ig.get("flow_agg", "")
             use_sourcer = ig.get("use_sourcer", False)
-            
+
+            # concat and dedup sources
             for s in set(ig.get("source", []) + ig.get("sources", [])):
-                if use_sourcer:
-                    sources += self.resolve_source(s)
-                else:
-                    sources += util.parse_source(s)
+                sources += sourcer.resolve(s, use_sourcer)
 
             if len(sources) == 0:
                 continue
@@ -93,12 +73,6 @@ class Ingress:
         self.stop()
         self.update(config=config)
         self.start()
-
-    @staticmethod
-    def _any_source():
-        # TBD fetch all sources - digi and egresses
-        # for digis that are mounted
-        raise NotImplementedError
 
 
 class Egress:
