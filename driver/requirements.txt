@@ -1,0 +1,9 @@
+pyyaml
+inflection
+python-box
+kubernetes
+kopf
+dash
+pandas
+pyzed
+paho-mqtt
