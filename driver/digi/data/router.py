@@ -42,15 +42,20 @@ class Ingress:
 
             # resolve sources
             sources = list()
+            source_quantifiers = set(ig.get("source", []) + ig.get("sources", []))
             use_sourcer = ig.get("use_sourcer", False)
 
             # concat and dedup sources
-            for s in set(ig.get("source", []) + ig.get("sources", [])):
+            for s in source_quantifiers:
                 sources += sourcer.resolve(s, use_sourcer)
 
-            logger.info(f"router: resolved {sources} given {name}")
+            logger.info(f"router: resolved {source_quantifiers} to {sources} "
+                        f"for ingress {name}")
             if len(sources) == 0:
                 continue
+
+            # TBD add support for expressing ingress and egress type on the model
+            # and the optional ingress-egress compatibility check in type.py
 
             # compile dataflow
             flow, flow_agg = ig.get("flow", ""), \
@@ -105,7 +110,7 @@ class Egress:
 
             flow = ig.get("flow", "")
 
-            # TBD add support for external pipelet
+            # TBD support external sources including external lakes
             _sync = sync.Sync(
                 sources=[digi.pool.name],
                 in_flow=flow,

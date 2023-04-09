@@ -65,8 +65,8 @@ class ZedPool(Pool):
                              meta=meta)
             # TBD load from digi also commits source ts in meta
         except Exception as e:
-            digi.logger.warning(f"unable to load "
-                                f"{data} to {self.name}: {e}")
+            logger.warning(f"unable to load "
+                           f"{data} to {self.name}: {e}")
         finally:
             self.lock.release()
 
@@ -93,6 +93,7 @@ class ZedPool(Pool):
         if not self.client.branch_exist(self.name, branch):
             self.client.create_branch(self.name, branch)
             self.load([router.Egress.INIT], branch=branch)
+            logger.info(f"load {router.Egress.INIT} to {self.name}@{branch}")
 
 
 def pool_name(g, v, r, n, ns):
