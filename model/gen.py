@@ -168,6 +168,8 @@ properties:
     type: boolean
   use_sourcer:
     type: boolean
+  skip_history:
+    type: boolean
 type: object
 """
 

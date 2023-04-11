@@ -30,6 +30,7 @@ class Sync(threading.Thread):
                  owner: str = "sync",  # commit author
                  lake_url: str = default_lake_url,
                  client: zed.Client = None,
+                 min_ts: datetime.datetime = datetime.datetime.min,
                  ):
         assert len(sources) > 0 and dest != ""
         self.sources = self._normalize(sources)
@@ -46,6 +47,7 @@ class Sync(threading.Thread):
         self.client = zed.Client(base_url=lake_url) if client is None else client
         self.source_ts = self._fetch_source_ts()  # track {source: max(ts)}
         self.source_pool_ids = self._fetch_source_pool_ids()
+        self.min_ts = min_ts  # min ts to sync
         self.source_set = set(self.sources)
         self.query_str = self._make_query()
 
@@ -123,7 +125,7 @@ class Sync(threading.Thread):
     def _make_query(self) -> str:
         in_str = "from (\n"
         for source in self.sources:
-            cur_ts = self.source_ts.get(source, datetime.datetime.min)
+            cur_ts = self.source_ts.get(source, self.min_ts)
             filter_flow = f"ts > {zjson.encode_datetime(cur_ts)} |" \
                 if self.eoio else ""
             patch_source_flow = f"put from := '{source}' |" \
