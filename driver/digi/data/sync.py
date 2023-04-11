@@ -1,6 +1,6 @@
 import os
 import time
-import datetime
+from datetime import datetime, timedelta, timezone
 import threading
 import typing
 import requests
@@ -30,7 +30,7 @@ class Sync(threading.Thread):
                  owner: str = "sync",  # commit author
                  lake_url: str = default_lake_url,
                  client: zed.Client = None,
-                 min_ts: datetime.datetime = datetime.datetime.min,
+                 min_ts: datetime = datetime.min,
                  ):
         assert len(sources) > 0 and dest != ""
         self.sources = self._normalize(sources)
@@ -125,7 +125,8 @@ class Sync(threading.Thread):
     def _make_query(self) -> str:
         in_str = "from (\n"
         for source in self.sources:
-            cur_ts = max(self.source_ts.get(source, self.min_ts), self.min_ts)
+            cur_ts = max(self.source_ts.get(source, self.min_ts).replace(tzinfo=timezone(offset=timedelta())),
+                         self.min_ts)
             filter_flow = f"ts > {zjson.encode_datetime(cur_ts)} |" \
                 if self.eoio else ""
             patch_source_flow = f"put from := '{source}' |" \
@@ -213,7 +214,7 @@ class Watch(Sync):
 
     def __init__(self, fn: typing.Callable,
                  source_ts=None,
-                 min_ts=datetime.datetime.min,
+                 min_ts=datetime.min,
                  *args, **kwargs):
         self.fn = fn
         self.source_ts = source_ts

@@ -1,11 +1,10 @@
 import digi
 import digi.data.sync as sync
 import digi.data.sourcer as sourcer
-from digi.data import logger, zed
+from digi.data import logger, zed, util
 from digi.data import flow as flow_lib
 
-import requests
-import datetime
+from datetime import datetime
 
 """
 A router contains a collection of pipelets organized as ingresses and egresses.
@@ -79,7 +78,7 @@ class Ingress:
                 patch_source=ig.get("patch_source", False),
                 client=zed.Client(),
                 owner=digi.name,
-                min_ts=datetime.datetime.now() if ig.get("skip_history", False) else datetime.datetime.min
+                min_ts=util.now() if ig.get("skip_history", False) else datetime.min
             )
             self._syncs[name] = _sync
 

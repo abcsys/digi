@@ -1,7 +1,6 @@
 import sys
 import json
 import threading
-import datetime
 from abc import ABC, abstractmethod
 from typing import List, Callable
 
@@ -9,6 +8,7 @@ import digi
 from digi.data import logger, zjson
 from digi.data import sync
 from digi.data import router
+from digi.data import util
 
 
 class Pool(ABC):
@@ -36,7 +36,7 @@ class ZedPool(Pool):
              encoding="zjson",
              same_type=False):
         # update event and processing time
-        now = datetime.datetime.now()
+        now = util.now()
         if encoding == "zjson":
             for o in objects:
                 # event_ts will be attached at the first
