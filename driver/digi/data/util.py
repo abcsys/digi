@@ -1,8 +1,14 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 
-def now(no_zone=True):
-    if no_zone:
-        return datetime.now().replace(tzinfo=timezone(offset=timedelta()))
+def now(aware=True):
+    if aware:
+        return datetime.now().replace(tzinfo=timezone.utc)
     else:
         return datetime.now()
+
+def min_time(aware=True):
+    if aware:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    else:
+        return datetime.min

@@ -4,8 +4,6 @@ import digi.data.sourcer as sourcer
 from digi.data import logger, zed, util
 from digi.data import flow as flow_lib
 
-from datetime import datetime
-
 """
 A router contains a collection of pipelets organized as ingresses and egresses.
 Each pipelet is implemented as a digi.data.sync.Sync object that copies and ETL
@@ -78,7 +76,7 @@ class Ingress:
                 patch_source=ig.get("patch_source", False),
                 client=zed.Client(),
                 owner=digi.name,
-                min_ts=util.now() if ig.get("skip_history", False) else datetime.min
+                min_ts=util.now() if ig.get("skip_history", False) else util.min_time()
             )
             self._syncs[name] = _sync
 
