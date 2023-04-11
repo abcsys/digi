@@ -67,6 +67,9 @@ class Ingress:
                 _out_flow = f"{flow_agg} | {flow_lib.refresh_ts}"
 
             # TBD add support for external pipelet
+            # TBD disambiguate sync updates at fine-grained level
+            # so that skip_history won't skip upon the config changes
+            # or mount changes that don't affect this sync
             _sync = sync.Sync(
                 sources=sources,
                 in_flow=flow,
@@ -105,12 +108,12 @@ class Egress:
     def update(self, config: dict):
         self._syncs = dict()
 
-        for name, ig in config.items():
-            if ig.get("driver_managed", False) \
-                    or ig.get("pause", False):
+        for name, eg in config.items():
+            if eg.get("driver_managed", False) \
+                    or eg.get("pause", False):
                 continue
 
-            flow = ig.get("flow", "")
+            flow = eg.get("flow", "")
 
             # TBD support external sources including external lakes
             _sync = sync.Sync(
@@ -118,7 +121,7 @@ class Egress:
                 in_flow=flow,
                 out_flow=f"{flow_lib.drop_meta} | {flow_lib.refresh_ts}",
                 dest=f"{digi.pool.name}@{name}",
-                eoio=ig.get("eoio", True),
+                eoio=eg.get("eoio", True),
                 client=zed.Client(),
                 owner=digi.name,
             )

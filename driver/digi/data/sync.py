@@ -88,7 +88,7 @@ class Sync(threading.Thread):
                 else:
                     self.source_ts[source] = max(max_ts, self.source_ts[source])
             else:
-                self.source_ts[source] = datetime.datetime.min
+                self.source_ts[source] = self.min_ts
         return records
 
     def load(self, records: list):
@@ -125,7 +125,7 @@ class Sync(threading.Thread):
     def _make_query(self) -> str:
         in_str = "from (\n"
         for source in self.sources:
-            cur_ts = self.source_ts.get(source, self.min_ts)
+            cur_ts = max(self.source_ts.get(source, self.min_ts), self.min_ts)
             filter_flow = f"ts > {zjson.encode_datetime(cur_ts)} |" \
                 if self.eoio else ""
             patch_source_flow = f"put from := '{source}' |" \
@@ -158,6 +158,8 @@ class Sync(threading.Thread):
                 r["branch"] for r in self.client.query(branch_flow)
         ):
             return source_ts
+        # XXX if there are multiple writers to the destination
+        # pool, we need to find the latest commit for each source
         meta_flow = f"from {self.dest}:log | " \
                     f"typeof(this)==<Commit> | " \
                     f"over meta | " \
@@ -210,9 +212,12 @@ class Watch(Sync):
     """A destination-less sync that runs a UDF in once()."""
 
     def __init__(self, fn: typing.Callable,
-                 source_ts=None, *args, **kwargs):
+                 source_ts=None,
+                 min_ts=datetime.datetime.min,
+                 *args, **kwargs):
         self.fn = fn
         self.source_ts = source_ts
+        self.min_ts = min_ts
 
         super().__init__(dest="none", *args, **kwargs)
 
@@ -221,7 +226,7 @@ class Watch(Sync):
 
     def _fetch_source_ts(self) -> dict:
         if self.source_ts is None:
-            return defaultdict(lambda: datetime.datetime.min)
+            return defaultdict(lambda: self.min_ts)
         else:
             return self.source_ts
 
