@@ -158,8 +158,7 @@ class Sync(threading.Thread):
                 r["branch"] for r in self.client.query(branch_flow)
         ):
             return source_ts
-        # XXX if there are multiple writers to the destination
-        # pool, we need to find the latest commit for each source
+
         meta_flow = f"from {self.dest}:log | " \
                     f"typeof(this)==<Commit> | " \
                     f"over meta | " \
