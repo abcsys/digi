@@ -38,7 +38,8 @@ digi_src := $(GOPATH)/src/digi.dev/digi
 driver_dir := $(digi_src)/driver
 driver_handler := $(WORKDIR)/$(PROFILE)/driver/*
 digi_config := $(WORKDIR)/$(PROFILE)/deploy/*
-build_dir := /tmp/digi-build-$(PROFILE_NAME)-$(NAME)
+build_dir := /tmp/digi-build-$(PROFILE_NAME)
+test_dir := /tmp/digi-test-$(PROFILE_NAME)
 
 # model
 .PHONY: init gen model all delete delete-all profile proflie-local list
@@ -82,13 +83,16 @@ edit-all:
 .PHONY: clean-test start-test test
 clean-test: delete-pool conn-lake-stop
 	kubectl delete $(PLURAL).$(VERSION).$(GROUP) $(NAME) >/dev/null 2>&1 || true
+	rm -r $(test_dir) >/dev/null 2>&1 || true
 start-test: | all conn-lake-bg
-	kubectl apply -f $(WORKDIR)/$(KIND)/test/cr.yaml && \
+	mkdir -p $(test_dir) && \
+	rsync -r $(WORKDIR)/$(KIND)/ $(test_dir)/ || true && \
+	kubectl apply -f $(test_dir)/test/cr.yaml && \
 	(kubectl exec `kubectl get pod --field-selector status.phase=Running -l app=lake -oname` \
     -- bash -c "zed create $(NAME)") >/dev/null && echo $(NAME) || (echo "unable to create pool $(NAME); is lake running?"; exit 1) && \
-	cd $(WORKDIR) && GROUP=$(GROUP) VERSION=$(VERSION) KIND=$(KIND) \
+	cd $(test_dir) && GROUP=$(GROUP) VERSION=$(VERSION) KIND=$(KIND) \
     PLURAL=$(PLURAL) NAME=$(NAME) NAMESPACE=$(NAMESPACE) MOUNTER=$(MOUNTER) LAKE_PROVIDER=zed \
-	python $(PROFILE)/driver/handler.py
+	python ./driver/handler.py
 test: | clean-test start-test clean-test
 
 # driver
