@@ -1,5 +1,7 @@
 """A collection of predefined dataflows."""
 
+from digi.data.de_id import hippa
+
 refresh_ts = """switch ( 
     case has(event_ts) => yield this | put ts := now()
     case has(ts) => put event_ts := ts | put ts := now() 
@@ -10,3 +12,5 @@ patch_ts = "switch ( case has(ts) => yield this " \
            "default => put ts := now() )"
 
 drop_meta = "not __meta"
+
+anonymize = hippa()
