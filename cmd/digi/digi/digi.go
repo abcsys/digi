@@ -13,6 +13,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"digi.dev/digi/api"
 	"digi.dev/digi/api/config"
@@ -20,11 +24,6 @@ import (
 	"digi.dev/digi/api/repo"
 	"digi.dev/digi/cmd/digi/helper"
 	"digi.dev/digi/pkg/core"
-
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 var (
@@ -907,7 +906,7 @@ var (
 		Args:  cobra.MaximumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				if err := api.ShowAll(); err != nil {
+				if err := api.ShowLocal(); err != nil {
 					log.Fatalln(err)
 				}
 				return
@@ -924,12 +923,31 @@ var (
 			}
 
 			a := &api.Alias{
-				Auri: &duri,
+				Duri: &duri,
 				Name: args[1],
 			}
 
 			if err := a.Set(); err != nil {
 				log.Fatalln("unable to set alias: ", err)
+			}
+		},
+	}
+	aliasDiscoverCmd = &cobra.Command{
+		Use:   "discover",
+		Short: "Discover aliases from the dSpace",
+		Run: func(cmd *cobra.Command, args []string) {
+			s, _ := cmd.Flags().GetBool("set")
+			if s {
+				if err := api.DiscoverAliasAndSet(); err != nil {
+					log.Fatalln("unable to discover and set alias: ", err)
+				}
+				return
+			}
+
+			if aliases, err := api.DiscoverAlias(); err != nil {
+				log.Fatalln("unable to discover aliases: ", err)
+			} else {
+				api.Show(aliases)
 			}
 		},
 	}

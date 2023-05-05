@@ -140,7 +140,7 @@ func CreateAlias(kind *core.Kind, name, namespace string) error {
 	}
 	alias := api.Alias{
 		Name: name,
-		Auri: auri,
+		Duri: auri,
 	}
 
 	if err := alias.Set(); err != nil {

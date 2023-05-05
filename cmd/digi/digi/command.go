@@ -87,8 +87,10 @@ func init() {
 	editCmd.Flags().BoolP("all", "a", false, "Edit all attributes")
 
 	RootCmd.AddCommand(aliasCmd)
+	aliasCmd.AddCommand(aliasDiscoverCmd)
 	aliasCmd.AddCommand(aliasClearCmd)
 	aliasCmd.AddCommand(aliasResolveCmd)
+	aliasDiscoverCmd.Flags().BoolP("set", "s", false, "Set the aliases")
 
 	RootCmd.AddCommand(attachCmd)
 	attachCmd.Flags().BoolP("bash", "b", false, "Use bash in remote session")
