@@ -1,4 +1,4 @@
-from util import PII_Fields, drop, truncate, replace
+from digi.data.de_id.util import PII_Fields, drop, truncate, replace
 
 """
 Defines the PII Fields relevant to the HIPAA Privacy Rule mapped to Zed functions to de-identify them.

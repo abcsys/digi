@@ -1,6 +1,7 @@
 """A collection of predefined dataflows."""
 
-from digi.data.de_id import hippa
+from digi.data.de_id import hipaa
+from digi.data.link import link
 
 refresh_ts = """switch ( 
     case has(event_ts) => yield this | put ts := now()
@@ -13,4 +14,6 @@ patch_ts = "switch ( case has(ts) => yield this " \
 
 drop_meta = "not __meta"
 
-anonymize = hippa()
+de_id = ""
+
+link = link.link_flow()

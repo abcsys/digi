@@ -5,7 +5,6 @@ import digi.data.sourcer as sourcer
 from digi.data import logger, zed, util
 from digi.data import flow as flow_lib
 
-
 """
 A router contains a collection of pipelets organized as ingresses and egresses.
 Each pipelet is implemented as a digi.data.sync.Sync object that copies and ETL
@@ -113,12 +112,17 @@ class Egress:
                 continue
 
             flow = eg.get("flow", "")
+            out_flow = f"{flow_lib.drop_meta} | {flow_lib.refresh_ts}"
+            if eg.get("de_id", False):
+                out_flow += f"| {flow_lib.de_id}"
+            if eg.get("link", False):
+                out_flow += f"| {flow_lib.link}"
 
             # TBD support external sources including external lakes
             _sync = sync.Sync(
                 sources=[digi.pool.name],
                 in_flow=flow,
-                out_flow=f"{flow_lib.drop_meta} | {flow_lib.refresh_ts} | {flow_lib.anonymize}",
+                out_flow=out_flow,
                 dest=f"{digi.pool.name}@{name}",
                 eoio=eg.get("eoio", True),
                 client=zed.Client(),

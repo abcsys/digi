@@ -188,6 +188,8 @@ properties:
     type: boolean
   pause:
     type: boolean
+  link:
+    type: boolean
 type: object
 """
 
