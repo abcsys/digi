@@ -1,0 +1,5 @@
+apiVersion: space.digi.dev/v1
+kind: Proxy
+metadata:
+  name: proxy
+spec: {}

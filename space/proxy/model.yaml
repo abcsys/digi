@@ -1,0 +1,7 @@
+group: space.digi.dev
+version: v1
+kind: Proxy
+meta:
+  registry_endpoint: string
+  user_name: string
+  dspace_name: string

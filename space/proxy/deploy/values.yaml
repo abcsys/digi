@@ -1,0 +1,9 @@
+group: space.digi.dev
+image: vakumar23/proxy.v1.space.digi.dev:latest
+imagepull: Always
+kind: Proxy
+mounter: false
+name: proxy
+namespace: default
+plural: proxies
+version: v1

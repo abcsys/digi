@@ -1,10 +1,16 @@
 package space
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/spf13/cobra"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"digi.dev/digi/api"
 	"digi.dev/digi/api/k8s"
@@ -151,32 +157,45 @@ var registerCmd = &cobra.Command{
 	Aliases: []string{"register"},
 	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		// TBD the register command should go through a proxy without
-		//	sharing the cluster's access credentials with the registry;
-		//	registry's commands such as /list should be run by the proxy.
+		// run a local proxy
+		_ = helper.RunMake(map[string]string{}, "register-space", true, false)
+
+		// Get current context
 		kc, err := k8s.LoadKubeConfig()
 		if err != nil {
 			log.Fatal("Failed to load config from Kube Config file.")
 		}
-		context := k8s.CurrentContext(kc)
-		if exists, err := k8s.ClusterExistsLocal(context); !exists || err != nil {
-			log.Fatal("Cluster for current context ", context, " not found.")
+		dspace := k8s.CurrentContext(kc)
+		if exists, err := k8s.ClusterExistsLocal(dspace); !exists || err != nil {
+			log.Fatal("Cluster for current context ", dspace, " not found.")
 		}
-		cluster := kc.Clusters[context]
-		apiserver := cluster.Server
-		user := kc.AuthInfos[context]
-		caCrt := cluster.CertificateAuthority
-		clientCrt := user.ClientCertificate
-		clientKey := user.ClientKey
-		_ = helper.RunMake(map[string]string{
-			"ADDR":       args[0],
-			"USER":       args[1],
-			"APISERVER":  apiserver,
-			"CONTEXT":    context,
-			"CA.CRT":     caCrt,
-			"CLIENT.CRT": clientCrt,
-			"CLIENT.KEY": clientKey,
-		}, "register-space", true, false)
+
+		// Create Kubernetes clientset
+		clientset, err := k8s.NewClientSet()
+		if err != nil {
+			log.Fatal("Error creating Kubernetes clientset: %s\n", err.Error())
+			os.Exit(1)
+		}
+		res := clientset.DynamicClient.Resource(
+			schema.GroupVersionResource{
+				Group:    "message.digi.dev",
+				Version:  "v1",
+				Resource: "proxies",
+			},
+		).Namespace("default")
+
+		// get proxy model and update registry parameters
+		cr, err := res.Get(context.TODO(), "proxy", metav1.GetOptions{})
+		if err != nil {
+			log.Fatal("Proxy digi is not currently running\n", err.Error())
+		}
+		unstructured.SetNestedField(cr.Object, dspace, "spec", "meta", "dspace_name")
+		unstructured.SetNestedField(cr.Object, args[0], "spec", "meta", "registry_endpoint")
+		unstructured.SetNestedField(cr.Object, args[1], "spec", "meta", "user_name")
+		_, err = res.Update(context.TODO(), cr, metav1.UpdateOptions{})
+		if err != nil {
+			log.Fatal("Failed to update proxy digi\n", err.Error())
+		}
 	},
 }
 

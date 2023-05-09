@@ -1,0 +1,9 @@
+apiVersion: space.digi.dev/v1
+kind: Proxy
+metadata:
+  name: {{ .Values.name }}
+spec:
+  meta:
+    dspace_name: ''
+    registry_endpoint: ''
+    user_name: ''

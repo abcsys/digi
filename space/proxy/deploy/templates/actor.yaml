@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: {{ .Values.name }}
+      app: proxy
+  template:
+    metadata:
+      labels:
+        name: {{ .Values.name }}
+        app: proxy
+    spec:
+      serviceAccountName: {{ .Values.name }}
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.image }}
+          imagePullPolicy: {{ .Values.imagepull }}
+          env:
+          - name: GROUP
+            value: {{ .Values.group }}
+          - name: VERSION
+            value: {{ .Values.version }}
+          - name: PLURAL
+            value: {{ .Values.plural }}
+          - name: NAME
+            value: {{ .Values.name }}
+          - name: NAMESPACE
+            value: {{ .Values.namespace }}
+          - name: MOUNTER
+            value: {{ quote .Values.mounter }}
+          - name: LOGLEVEL
+            value: {{ .Values.log_level | default "20" | quote }}
+          - name: LAKE_PROVIDER
+            value: {{ .Values.lake_provider | default "zed" }}
+          - name: LAKE
+            value: {{ .Values.lake | default "http://lake:6534" }}
+          - name: ZED_LAKE # for backward compatibility TBD deprecate in v0.3
+            value: {{ .Values.zed_lake | default "http://lake:6534" }}
+          ports:
+          - containerPort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    name: {{ .Values.name }}
+    app: proxy
+spec:
+  type: NodePort
+  ports:
+  - name: proxy
+    port: 8080
+    targetPort: 8080
+    nodePort: 30005
+    protocol: TCP
+  selector:
+    name: {{ .Values.name }}
