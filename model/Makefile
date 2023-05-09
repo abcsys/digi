@@ -116,7 +116,7 @@ override ARCH = ARCH_TEMP
 endif
 build: | gen prepare
 	# use DOCKER_BUILDKIT=0 to enable more messages
-	rsync $(driver_handler) $(build_dir)/ || true
+	rsync -r $(driver_handler) $(build_dir)/ || true
 	cd $(build_dir) && $(DOCKER_CMD) buildx build -t $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH) $(BUILDFLAG) -f $(DOCKERFILE) . || true
 	$(DOCKER_CMD) push $(DRIVER_REPO)/$(PROFILE_NAME):$(ARCH) $(PUSHFLAG) || true
 	rm -r $(build_dir) || true
