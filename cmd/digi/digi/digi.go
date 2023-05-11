@@ -197,6 +197,7 @@ var buildCmd = &cobra.Command{
 					imagePaths := []string{
 						filepath.Join(workDir, imageFile, "Dockerfile"),
 						filepath.Join(workDir, imageFile),
+						imageFile,
 					}
 
 					pathFound := false
@@ -735,6 +736,7 @@ var runCmd = &cobra.Command{
 		visual, _ := cmd.Flags().GetBool("enable-visual")
 		deployFile, _ := cmd.Flags().GetString("deploy-file")
 		persistentVolume, _ := cmd.Flags().GetBool("persistent-volume")
+		sidecars, _ := cmd.Flags().GetStringSlice("sidecar")
 
 		kopfLog := "false"
 		if k, _ := cmd.Flags().GetBool("kopf-log"); k {
@@ -762,6 +764,10 @@ var runCmd = &cobra.Command{
 			persistentVolumeSize, _ := cmd.Flags().GetString("pv-size")
 			persistentVolumePath, _ := cmd.Flags().GetString("pv-path")
 			runFlag += fmt.Sprintf(" --set persistent_volume.path=%s,persistent_volume.size=%s", persistentVolumePath, persistentVolumeSize)
+		}
+
+		for _, sidecar := range sidecars {
+			runFlag += fmt.Sprintf(" --set sidecar.%s=1", sidecar)
 		}
 
 		var wg sync.WaitGroup

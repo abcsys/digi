@@ -68,6 +68,7 @@ func init() {
 	runCmd.Flags().BoolP("persistent-volume", "p", false, "Enable persistent volume")
 	runCmd.Flags().String("pv-size", "10Mi", "Persistent volume size")
 	runCmd.Flags().String("pv-path", "/mnt", "Persistent volume path")
+	runCmd.Flags().StringSlice("sidecar", []string{}, "List of sidecars to attach")
 	stopCmd.Flags().StringP("kind", "k", "", "Digi kind")
 
 	RootCmd.AddCommand(testCmd)

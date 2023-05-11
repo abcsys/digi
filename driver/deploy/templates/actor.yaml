@@ -71,12 +71,23 @@ spec:
           ports:
           - containerPort: 7534
             name: visual
+        {{ if .Values.sidecar }}
+        {{ if .Values.sidecar.matter }}
+        - name: matter
+          image: potatoparser/matter:latest
+          imagePullPolicy: Always
+          ports:
           - containerPort: 5540
             protocol: UDP
             name: matter
           - containerPort: 5353
             protocol: UDP
             name: mdns
+          - containerPort: 9002
+            protocol: TCP
+            name: controller
+        {{ end }}
+        {{ end }}
         - name: probe
           image: dylanreimer/dnet.probe
           ports:
