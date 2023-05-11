@@ -77,6 +77,11 @@ spec:
           - containerPort: 5353
             protocol: UDP
             name: mdns
+        - name: probe
+          image: dylanreimer/dnet.probe
+          ports:
+          - containerPort: 8534
+            name: probe
 
 ---
 
@@ -101,5 +106,9 @@ spec:
     targetPort: 5353
     protocol: UDP
     name: mdns
+  - port: 8534
+    targetPort: 8534
+    protocol: TCP
+    name: probe
   selector:
     name: {{ .Values.name }}

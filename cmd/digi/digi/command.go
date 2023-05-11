@@ -5,6 +5,7 @@ import (
 
 	"digi.dev/digi/cmd/digi/box"
 	"digi.dev/digi/cmd/digi/lake"
+	"digi.dev/digi/cmd/digi/net"
 	"digi.dev/digi/cmd/digi/sidecar"
 	"digi.dev/digi/cmd/digi/space"
 )
@@ -105,4 +106,6 @@ func init() {
 	RootCmd.AddCommand(lake.QueryCmd)
 
 	RootCmd.AddCommand(box.RootCmd)
+
+	RootCmd.AddCommand(net.RootCmd)
 }
