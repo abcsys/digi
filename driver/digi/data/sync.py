@@ -65,6 +65,7 @@ class Sync(threading.Thread):
 
     def stop(self):
         self._stop_flag.set()
+        self.join()
 
     def once(self):
         records = self.read()

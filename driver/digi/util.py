@@ -490,6 +490,7 @@ class Loop(threading.Thread):
 
     def stop(self):
         self._stop_flag.set()
+        self.join()
 
     def reset(self, loop_interval: float = None,
               loop_interval_fn: Callable = None) -> None:
