@@ -27,6 +27,8 @@ spec:
                 properties:
                   dspace_name:
                     type: string
+                  proxy_endpoint:
+                    type: string
                   registry_endpoint:
                     type: string
                   user_name:

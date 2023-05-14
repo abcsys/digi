@@ -22,10 +22,11 @@ app.register_blueprint(proxy_blueprint)
 def register_proxy(meta):
     # registry proxy with an Anysource Registry
     registry_endpoint = meta.get("registry_endpoint")
+    proxy_endpoint = meta.get("proxy_endpoint")
     user_name = meta.get("user_name")
     dspace_name = meta.get("dspace_name")
 
-    registry.register_dspace(registry_endpoint, user_name, dspace_name)
+    registry.register_dspace(registry_endpoint, proxy_endpoint, user_name, dspace_name)
 
 if __name__ == '__main__':
     digi.run()

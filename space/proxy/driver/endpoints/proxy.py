@@ -2,6 +2,8 @@ from flask import Blueprint, request
 from kubernetes import client
 from kubernetes.stream import stream
 
+import digi
+
 proxy = Blueprint("proxy", __name__, url_prefix="/proxy")
 
 @proxy.route("/list", methods=["GET"])
@@ -17,19 +19,19 @@ def list_digis():
             digis.append(item.metadata.name)
     return digis, 200
     
-@proxy.route("/query", methods=["GET"])
+@proxy.route("/query", methods=["PUT"])
 def query():
     """
     Query digi
     """
-    digi = request.json.get("digi")
+    digi_name = request.json.get("digi")
     egress = request.json.get("egress")
     query = request.json.get("query")
     v1 = client.CoreV1Api()
     pod_ret = v1.list_pod_for_all_namespaces()
 
     # find lake pod
-    print("Searching for lake pod...")
+    digi.logger.info("Searching for lake pod...")
     lake_found = False
     for item in pod_ret.items:
         if item.metadata.namespace == "default" and \
@@ -45,11 +47,11 @@ def query():
     
     # submit zed query to lake pod
     zed_query = ""
-    if digi:
+    if digi_name:
         if egress:
-            zed_query += f"from {digi}@{egress}"
+            zed_query += f"from {digi_name}@{egress}"
         else:
-            zed_query += f"from {digi}"
+            zed_query += f"from {digi_name}"
     zed_query += " | not __meta"
     if query:
         zed_query += f" | {query}"

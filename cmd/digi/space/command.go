@@ -3,7 +3,10 @@ package space
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -152,10 +155,10 @@ func StopController(name string) error {
 }
 
 var registerCmd = &cobra.Command{
-	Use:     "register REGISTRY USER",
+	Use:     "register ANYSOURCE_ENDPOINT PROXY_ENDPOINT USER",
 	Short:   "register the current dSpace on the given registry",
 	Aliases: []string{"register"},
-	Args:    cobra.ExactArgs(2),
+	Args:    cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		// run a local proxy
 		_ = helper.RunMake(map[string]string{}, "register-space", true, false)
@@ -189,13 +192,105 @@ var registerCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal("Proxy digi is not currently running\n", err.Error())
 		}
+		anysource := args[0]
+		proxy := args[1]
+		user := args[2]
+		registryURL := fmt.Sprintf("http://%s:30201/registry/registerDspace", anysource)
+		proxyURL := fmt.Sprintf("http://%s:30005/proxy", proxy)
 		unstructured.SetNestedField(cr.Object, dspace, "spec", "meta", "dspace_name")
-		unstructured.SetNestedField(cr.Object, args[0], "spec", "meta", "registry_endpoint")
-		unstructured.SetNestedField(cr.Object, args[1], "spec", "meta", "user_name")
+		unstructured.SetNestedField(cr.Object, proxyURL, "spec", "meta", "proxy_endpoint")
+		unstructured.SetNestedField(cr.Object, registryURL, "spec", "meta", "registry_endpoint")
+		unstructured.SetNestedField(cr.Object, user, "spec", "meta", "user_name")
 		_, err = res.Update(context.TODO(), cr, metav1.UpdateOptions{})
 		if err != nil {
 			log.Fatal("Failed to update proxy digi\n", err.Error())
 		}
+	},
+}
+
+var queryCmd = &cobra.Command{
+	Use:     "query ANYSOURCE_ENDPOINT USER_NAME/DSPACE/DIGI [EGRESS] [QUERY]",
+	Short:   "Query sourcer for a digi in a remote dspace",
+	Aliases: []string{"q"},
+	Args:    cobra.MinimumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		anysource := args[0]
+		digi_path := args[1]
+		egress := ""
+		query := ""
+		if len(args) >= 3 {
+			egress = args[2]
+		}
+		if len(args) >= 4 {
+			query = args[3]
+		}
+
+		baseURL := fmt.Sprintf("http://%s:30202/sourcer/%s/query", anysource, digi_path)
+		u, _ := url.ParseRequestURI(baseURL)
+		params := url.Values{}
+		if egress != "" {
+			params.Add("egress", egress)
+		}
+		if query != "" {
+			params.Add("query", query)
+		}
+		u.RawQuery = params.Encode()
+		uStr := fmt.Sprintf("%v", u)
+		resp, err := http.Get(uStr)
+		if err != nil {
+			log.Fatal("Failed to access sourcer at endpoint: \n", uStr, "\n", err.Error())
+		}
+
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal("Failed to read response from sourcer: \n", body)
+		}
+		if resp.StatusCode != 200 {
+			log.Fatal("Request to sourcer failed with code", resp.StatusCode, "\n", string(body))
+		}
+
+		// print query results to stdout
+		fmt.Println(string(body))
+	},
+}
+
+var searchCmd = &cobra.Command{
+	Use:     "search ANYSOURCE_ENDPOINT [SEARCH_QUERY]",
+	Short:   "Search anysource for digis",
+	Aliases: []string{"search"},
+	Args:    cobra.MinimumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		anysource := args[0]
+		query := ""
+		if len(args) >= 2 {
+			query = args[1]
+		}
+
+		baseURL := fmt.Sprintf("http://%s:30202/sourcer/queryDigi", anysource)
+		u, _ := url.ParseRequestURI(baseURL)
+		params := url.Values{}
+		if query != "" {
+			params.Add("query", query)
+		}
+		u.RawQuery = params.Encode()
+		uStr := fmt.Sprintf("%v", u)
+		resp, err := http.Get(uStr)
+		if err != nil {
+			log.Fatal("Failed to access sourcer at endpoint: \n", uStr, "\n", err.Error())
+		}
+
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal("Failed to read response from sourcer: \n", body)
+		}
+		if resp.StatusCode != 200 {
+			log.Fatal("Request to sourcer failed with code", resp.StatusCode, "\n", string(body))
+		}
+
+		// print query results to stdout
+		fmt.Println(string(body))
 	},
 }
 
@@ -386,6 +481,8 @@ func init() {
 	pipeCmd.Flags().BoolP("delete", "d", false, "Unpipe source from target")
 
 	RootCmd.AddCommand(registerCmd)
+	RootCmd.AddCommand(queryCmd)
+	RootCmd.AddCommand(searchCmd)
 	RootCmd.AddCommand(listCmd)
 	RootCmd.AddCommand(checkCmd)
 	RootCmd.AddCommand(switchCmd)

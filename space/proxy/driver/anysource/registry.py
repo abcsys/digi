@@ -1,19 +1,12 @@
 from anysource import datahub
 import digi
 
-from kubernetes import client
+from kubernetes import client, config
 import requests
 import json
 import threading
 
-def register_dspace(registry_endpoint, user_name, dspace_name):
-    kube_client = client.CoreV1Api()
-
-    proxy_service = kube_client.read_namespaced_service(digi.name, "default")
-    proxy_endpoint = proxy_service.spec.cluster_ip
-
-    # TODO: use external endpoint
-    # external_endpoints = proxy_service.spec.external_i_ps
+def register_dspace(registry_endpoint, proxy_endpoint, user_name, dspace_name):
     digi.logger.info(f"Registering {user_name}/{dspace_name} at {registry_endpoint}.")
     res = requests.put(registry_endpoint, 
         headers={
@@ -29,7 +22,7 @@ def register_dspace(registry_endpoint, user_name, dspace_name):
         data = json.loads(res.text)
         datahub_endpoint = data.get("datahub_endpoint")
         datahub_group = data.get("datahub_group")
-        digi.logger.info(f"Datahub-proxy comms: endpoint={datahub_endpoint} id={datahub_group}")
+        digi.logger.info(f"Datahub-proxy comms: endpoint={datahub_endpoint} dspace={datahub_group}")
         datahub_thread = threading.Thread(target=datahub.emit_digi_data_forever,
                                           args=(datahub_endpoint, datahub_group))
         datahub_thread.start()

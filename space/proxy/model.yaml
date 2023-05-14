@@ -3,5 +3,6 @@ version: v1
 kind: Proxy
 meta:
   registry_endpoint: string
+  proxy_endpoint: string
   user_name: string
   dspace_name: string

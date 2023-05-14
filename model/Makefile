@@ -280,7 +280,7 @@ start-space: | start-lake # ...
 stop-space: | stop-lake
 .PHONY: register-space list-space switch-space rename-space show-space
 register-space:
-	digi run message/proxy proxy
+	WORKDIR=$(DIGIHOME) digi run space/proxy proxy
 list-space:
 	ctx $(FLAG)
 switch-space:
