@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="digi",
-    version="0.2.8",
+    version="0.2.9",
     description="Digi driver library",
-    author="Team Digi",
+    author="Digi Team",
     author_email="silveryfu@gmail.com",
     license="BSD-3-Clause License",
     packages=find_packages(exclude=("tests",)),

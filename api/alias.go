@@ -58,28 +58,30 @@ func ResolveFromLocal(name string) error {
 	return ResolveAndPrint(name)
 }
 
-func ShowLocal() error {
+func LocalAlias() ([]*Alias, error) {
 	duris := make(map[string]*core.Duri)
-	var aliases []Alias
+	var aliases []*Alias
 	if err := viper.UnmarshalKey("alias", &duris); err == nil {
 		for k, v := range duris {
-			aliases = append(aliases, Alias{
+			aliases = append(aliases, &Alias{
 				Name: k,
 				Duri: v,
 			})
 		}
-		Show(aliases)
-		return nil
+		return aliases, nil
 	} else {
-		return err
+		return nil, err
 	}
 }
 
-func Show(aliases []Alias) {
+func PrintAlias(aliases []*Alias) {
+	// TODO print in sorted order
 	for _, alias := range aliases {
 		fmt.Println(alias.Name, ":", alias.Duri)
 	}
 }
+
+// TODO compact the aliases
 
 func ClearAlias() error {
 	aliases := make(map[string]*core.Auri)
@@ -89,15 +91,15 @@ func ClearAlias() error {
 
 // DiscoverAlias search the apiserver for all custom resources and
 // generate aliases for them and set the local aliases.
-func DiscoverAlias() ([]Alias, error) {
+func DiscoverAlias() ([]*Alias, error) {
 	duris, err := Discover()
 	if err != nil {
 		return nil, err
 	}
 
-	aliases := make([]Alias, len(duris))
+	aliases := make([]*Alias, len(duris))
 	for i, duri := range duris {
-		aliases[i] = Alias{
+		aliases[i] = &Alias{
 			Name: duri.Name,
 			Duri: duri,
 		}

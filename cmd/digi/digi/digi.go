@@ -912,7 +912,10 @@ var (
 		Args:  cobra.MaximumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				if err := api.ShowLocal(); err != nil {
+
+				if aliases, err := api.LocalAlias(); err == nil {
+					api.PrintAlias(aliases)
+				} else {
 					log.Fatalln(err)
 				}
 				return
@@ -953,7 +956,7 @@ var (
 			if aliases, err := api.DiscoverAlias(); err != nil {
 				log.Fatalln("unable to discover aliases: ", err)
 			} else {
-				api.Show(aliases)
+				api.PrintAlias(aliases)
 			}
 		},
 	}
