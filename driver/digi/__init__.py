@@ -42,5 +42,5 @@ __all__ = [
     "on", "util", "view", "filter",
     "run", "logger", "mount", "rc",
     "model", "pool", "router", "dbox",
-    "data", "control", "message"
+    "data", "control", "message", "digilite"
 ]

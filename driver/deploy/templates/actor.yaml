@@ -74,7 +74,7 @@ spec:
         {{ if .Values.sidecar }}
         {{ if .Values.sidecar.matter }}
         - name: matter
-          image: potatoparser/matter:latest
+          image: docker.io/potatoparser/matter:latest
           imagePullPolicy: Always
           ports:
           - containerPort: 5540
@@ -87,12 +87,14 @@ spec:
             protocol: TCP
             name: controller
         {{ end }}
-        {{ end }}
+        {{ if .Values.sidecar.probe }}
         - name: probe
           image: dylanreimer/dnet.probe
           ports:
           - containerPort: 8534
             name: probe
+        {{ end }}
+        {{ end }}
 
 ---
 
