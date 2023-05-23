@@ -116,7 +116,8 @@ class Egress:
             if eg.get("de_id", False):
                 out_flow += f"| {flow_lib.de_id}"
             if eg.get("link", False):
-                out_flow += f"| {flow_lib.link}"
+                id = f"{digi.name}/{self.name}"
+                out_flow += f"| {flow_lib.link(id)}"
 
             # TBD support external sources including external lakes
             _sync = sync.Sync(

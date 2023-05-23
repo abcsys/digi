@@ -190,6 +190,10 @@ properties:
     type: boolean
   desc:
     type: string
+  de_id:
+    type: boolean
+  link:
+    type: boolean
 type: object
 """
 
