@@ -49,12 +49,12 @@ def query():
     zed_query = ""
     if digi_name:
         if egress:
-            zed_query += f"from {digi_name}@{egress}"
+            zed_query += f"from {digi_name}@{egress} | "
         else:
-            zed_query += f"from {digi_name}"
-    zed_query += " | not __meta"
+            zed_query += f"from {digi_name} | "
     if query:
-        zed_query += f" | {query}"
+        zed_query += f"{query} | "
+    zed_query += "not __meta"
     query_cmd = [
         "/bin/sh",
         "-c",

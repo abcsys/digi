@@ -4,18 +4,20 @@ metadata:
   name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
   labels:
-    app: proxy
+    app: {{ .Values.name }}
+    name: {{ .Values.name }}
+    digi.dev/type: app
 spec:
   replicas: 1
   selector:
     matchLabels:
+      app: {{ .Values.name }}
       name: {{ .Values.name }}
-      app: proxy
   template:
     metadata:
       labels:
+        app: {{ .Values.name }}
         name: {{ .Values.name }}
-        app: proxy
     spec:
       serviceAccountName: {{ .Values.name }}
       containers:
@@ -54,7 +56,7 @@ metadata:
   name: {{ .Values.name }}
   labels:
     name: {{ .Values.name }}
-    app: proxy
+    digi.dev/type: app
 spec:
   type: NodePort
   ports:

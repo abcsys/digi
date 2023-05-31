@@ -64,7 +64,10 @@ func Get(key string) (string, error) {
 
 func Set(key, value string) error {
 	configs := make(map[string]string)
-	configs[key] = value
+	if err := viper.UnmarshalKey("config", &configs); err != nil {
+		return err
+	}
+	configs[strings.ToLower(key)] = value
 
 	viper.Set("config", configs)
 	return viper.WriteConfig()

@@ -59,6 +59,18 @@ var configCmd = &cobra.Command{
 				fmt.Printf("unable to set driver repo: %s", err)
 			}
 		}
+
+		if anysource_address, _ := cmd.Flags().GetString("anysource-address"); anysource_address != "" {
+			if err := config.Set("ANYSOURCE_ADDRESS", anysource_address); err != nil {
+				fmt.Printf("unable to set anysource address: %s", err)
+			}
+		}
+
+		if proxy_address, _ := cmd.Flags().GetString("proxy-address"); proxy_address != "" {
+			if err := config.Set("PROXY_ADDRESS", proxy_address); err != nil {
+				fmt.Printf("unable to set proxy address: %s", err)
+			}
+		}
 		// ...
 
 		if repo == "" && driverRepo == "" {

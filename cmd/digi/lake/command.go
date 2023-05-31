@@ -2,34 +2,90 @@ package lake
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"digi.dev/digi/api/config"
 	"digi.dev/digi/cmd/digi/helper"
 	"digi.dev/digi/cmd/digi/space"
 )
 
 var (
 	QueryCmd = &cobra.Command{
-		Use:     "query [OPTIONS] [NAME] QUERY",
+		Use:     "query [OPTIONS] [NAME(local)] USER_NAME/DSPACE/DIGI(remote) [QUERY] [EGRESS(remote)] [SOURCER_ADDRESS(remote)]",
 		Short:   "Query a digi or the digi lake",
 		Aliases: []string{"q"},
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			var name, query string
-			if len(args) > 1 {
-				name, query = args[0], args[1]
-			} else {
-				if isQuery(args[0]) {
-					name, query = "", args[0]
-				} else {
-					name, query = args[0], ""
+			if r, _ := cmd.Flags().GetBool("remote"); r {
+				// query remotely through anysource
+				digi_path := args[0]
+				query := ""
+				if len(args) > 1 {
+					query = args[1]
 				}
+				egress := ""
+				if len(args) > 2 {
+					egress = args[2]
+				}
+				anysource := ""
+				if len(args) > 3 {
+					anysource = args[3]
+				} else {
+					config_ret, err := config.Get("ANYSOURCE_ADDRESS")
+					if err != nil {
+						log.Fatal("Provide a sourcer address or set an anysource address in the digi config\n")
+					}
+					anysource = config_ret
+				}
+
+				baseURL := fmt.Sprintf("http://%s:30202/sourcer/%s/query", anysource, digi_path)
+				u, _ := url.ParseRequestURI(baseURL)
+				params := url.Values{}
+				if egress != "" {
+					params.Add("egress", egress)
+				}
+				if query != "" {
+					params.Add("query", query)
+				}
+				u.RawQuery = params.Encode()
+				uStr := fmt.Sprintf("%v", u)
+				resp, err := http.Get(uStr)
+				if err != nil {
+					log.Fatal("Failed to access sourcer at address: \n", uStr, "\n", err.Error())
+				}
+
+				defer resp.Body.Close()
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					log.Fatal("Failed to read response from sourcer: \n", body)
+				}
+				if resp.StatusCode != 200 {
+					log.Fatal("Request to sourcer failed with code", resp.StatusCode, "\n", string(body))
+				}
+
+				// print query results to stdout
+				fmt.Println(string(body))
+			} else {
+				// query local dspace through Zed lake
+				var name, query string
+				if len(args) > 1 {
+					name, query = args[0], args[1]
+				} else {
+					if isQuery(args[0]) {
+						name, query = "", args[0]
+					} else {
+						name, query = args[0], ""
+					}
+				}
+				_ = Query(name, query, cmd.Flags())
 			}
-			_ = Query(name, query, cmd.Flags())
 		},
 	}
 

@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"digi.dev/digi/api"
+	"digi.dev/digi/api/config"
 	"digi.dev/digi/api/k8s"
 	"digi.dev/digi/cmd/digi/helper"
 	"digi.dev/digi/space"
@@ -155,11 +156,33 @@ func StopController(name string) error {
 }
 
 var registerCmd = &cobra.Command{
-	Use:     "register ANYSOURCE_ENDPOINT PROXY_ENDPOINT USER",
+	Use:     "register USER [REGISTRY_ADDRESS] [PROXY_ADDRESS]",
 	Short:   "register the current dSpace on the given registry",
 	Aliases: []string{"register"},
-	Args:    cobra.ExactArgs(3),
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		user := args[0]
+		anysource := ""
+		if len(args) > 1 {
+			anysource = args[1]
+		} else {
+			config_ret, err := config.Get("ANYSOURCE_ADDRESS")
+			if err != nil {
+				log.Fatal("Provide a registry address or set an anysource address in the digi config\n")
+			}
+			anysource = config_ret
+		}
+		proxy := ""
+		if len(args) > 2 {
+			proxy = args[2]
+		} else {
+			config_ret, err := config.Get("PROXY_ADDRESS")
+			if err != nil {
+				log.Fatal("Provide a proxy address or set a proxy address in the digi config\n")
+			}
+			proxy = config_ret
+		}
+
 		// run a local proxy
 		_ = helper.RunMake(map[string]string{}, "register-space", true, false)
 
@@ -181,7 +204,7 @@ var registerCmd = &cobra.Command{
 		}
 		res := clientset.DynamicClient.Resource(
 			schema.GroupVersionResource{
-				Group:    "message.digi.dev",
+				Group:    "space.digi.dev",
 				Version:  "v1",
 				Resource: "proxies",
 			},
@@ -192,9 +215,7 @@ var registerCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal("Proxy digi is not currently running\n", err.Error())
 		}
-		anysource := args[0]
-		proxy := args[1]
-		user := args[2]
+
 		registryURL := fmt.Sprintf("http://%s:30201/registry/registerDspace", anysource)
 		proxyURL := fmt.Sprintf("http://%s:30005/proxy", proxy)
 		unstructured.SetNestedField(cr.Object, dspace, "spec", "meta", "dspace_name")
@@ -209,20 +230,29 @@ var registerCmd = &cobra.Command{
 }
 
 var queryCmd = &cobra.Command{
-	Use:     "query ANYSOURCE_ENDPOINT USER_NAME/DSPACE/DIGI [EGRESS] [QUERY]",
+	Use:     "query USER_NAME/DSPACE/DIGI [EGRESS] [QUERY] [SOURCER_ADDRESS]",
 	Short:   "Query sourcer for a digi in a remote dspace",
 	Aliases: []string{"q"},
-	Args:    cobra.MinimumNArgs(2),
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		anysource := args[0]
-		digi_path := args[1]
+		digi_path := args[0]
 		egress := ""
-		query := ""
-		if len(args) >= 3 {
-			egress = args[2]
+		if len(args) > 1 {
+			egress = args[1]
 		}
-		if len(args) >= 4 {
-			query = args[3]
+		query := ""
+		if len(args) > 2 {
+			query = args[2]
+		}
+		anysource := ""
+		if len(args) > 3 {
+			anysource = args[3]
+		} else {
+			config_ret, err := config.Get("ANYSOURCE_ADDRESS")
+			if err != nil {
+				log.Fatal("Provide a sourcer address or set an anysource address in the digi config\n")
+			}
+			anysource = config_ret
 		}
 
 		baseURL := fmt.Sprintf("http://%s:30202/sourcer/%s/query", anysource, digi_path)
@@ -238,7 +268,7 @@ var queryCmd = &cobra.Command{
 		uStr := fmt.Sprintf("%v", u)
 		resp, err := http.Get(uStr)
 		if err != nil {
-			log.Fatal("Failed to access sourcer at endpoint: \n", uStr, "\n", err.Error())
+			log.Fatal("Failed to access sourcer at address: \n", uStr, "\n", err.Error())
 		}
 
 		defer resp.Body.Close()
@@ -256,15 +286,24 @@ var queryCmd = &cobra.Command{
 }
 
 var searchCmd = &cobra.Command{
-	Use:     "search ANYSOURCE_ENDPOINT [SEARCH_QUERY]",
+	Use:     "search [SEARCH_QUERY] [SOURCER_ADDRESS]",
 	Short:   "Search anysource for digis",
 	Aliases: []string{"search"},
-	Args:    cobra.MinimumNArgs(2),
+	Args:    cobra.MinimumNArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		anysource := args[0]
 		query := ""
-		if len(args) >= 2 {
-			query = args[1]
+		if len(args) > 0 {
+			query = args[0]
+		}
+		anysource := ""
+		if len(args) > 1 {
+			anysource = args[1]
+		} else {
+			config_ret, err := config.Get("ANYSOURCE_ADDRESS")
+			if err != nil {
+				log.Fatal("Provide a sourcer address or set an anysource address in the digi config\n")
+			}
+			anysource = config_ret
 		}
 
 		baseURL := fmt.Sprintf("http://%s:30202/sourcer/queryDigi", anysource)
@@ -277,7 +316,7 @@ var searchCmd = &cobra.Command{
 		uStr := fmt.Sprintf("%v", u)
 		resp, err := http.Get(uStr)
 		if err != nil {
-			log.Fatal("Failed to access sourcer at endpoint: \n", uStr, "\n", err.Error())
+			log.Fatal("Failed to access sourcer at address: \n", uStr, "\n", err.Error())
 		}
 
 		defer resp.Body.Close()

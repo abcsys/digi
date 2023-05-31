@@ -20,6 +20,8 @@ func init() {
 	RootCmd.AddCommand(configCmd)
 	configCmd.Flags().StringP("repo", "r", "", "Digi kind repository")
 	configCmd.Flags().StringP("driver-repo", "d", "", "Driver container repository")
+	configCmd.Flags().StringP("anysource-address", "a", "", "IP address for anysource")
+	configCmd.Flags().StringP("proxy-address", "p", "", "IP address for (local) proxy")
 	configCmd.Flags().BoolP("clear", "c", false, "Clear configurations")
 
 	RootCmd.AddCommand(initCmd)
@@ -105,6 +107,7 @@ func init() {
 	RootCmd.AddCommand(space.RootCmd)
 	RootCmd.AddCommand(lake.RootCmd)
 	RootCmd.AddCommand(lake.QueryCmd)
+	lake.QueryCmd.Flags().BoolP("remote", "r", false, "Query remote dspace through anysource")
 
 	RootCmd.AddCommand(box.RootCmd)
 
