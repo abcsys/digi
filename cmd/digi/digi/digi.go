@@ -215,7 +215,7 @@ var buildCmd = &cobra.Command{
 					pathFound := false
 
 					for _, imagePath := range imagePaths {
-						if fileInfo, err := os.Stat(imagePath); !os.IsNotExist(err) && !fileInfo.IsDir() {
+						if fileInfo, err := os.Stat(imagePath); err == nil && !fileInfo.IsDir() {
 							params["DOCKERFILE"] = imagePath
 							pathFound = true
 							break
