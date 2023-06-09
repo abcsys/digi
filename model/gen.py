@@ -168,6 +168,8 @@ properties:
     type: boolean
   use_sourcer:
     type: boolean
+  offload:
+    type: boolean
   skip_history:
     type: boolean
 type: object
@@ -191,6 +193,8 @@ properties:
   desc:
     type: string
   de_id:
+    type: boolean
+  offload:
     type: boolean
   link:
     type: boolean

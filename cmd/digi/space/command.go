@@ -32,6 +32,7 @@ var (
 		"emqx":    true,
 		"net":     true,
 		"sourcer": true,
+		"pipelet": true,
 		// ...
 	}
 )

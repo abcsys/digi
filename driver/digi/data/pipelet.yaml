@@ -1,0 +1,16 @@
+apiVersion: knactor.io/v1
+kind: Pipelet
+metadata:
+  name: ""
+spec:
+  control:
+    intent:
+      src: []
+      dst: []
+      flow: ""
+      interval: 0
+      eoio: false
+      action: "create"
+    status:
+      assigned: ""
+      active: false                                                                                                                                                                                                              

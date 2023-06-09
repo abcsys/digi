@@ -246,6 +246,12 @@ start-sourcer:
 stop-sourcer:
 	digi stop sourcer
 
+.PHONY: start-pipelet stop-pipelet
+start-pipelet:
+	WORKDIR=$(DIGIHOME) digi run space/pipelet pipelet -d $(CR)
+stop-pipelet:
+	digi stop pipelet
+
 # syncer
 .PHONY: start-syncer stop-syncer
 start-syncer:
