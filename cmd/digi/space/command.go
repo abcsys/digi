@@ -30,6 +30,7 @@ var (
 		"syncer":  true,
 		"mounter": true,
 		"emqx":    true,
+		"emqx-auth":    true,
 		"net":     true,
 		"sourcer": true,
 		"pipelet": true,
@@ -110,8 +111,10 @@ var startCmd = &cobra.Command{
 	Aliases: []string{"init"},
 	Run: func(cmd *cobra.Command, args []string) {
 		registryFile, _ := cmd.Flags().GetString("registry-file")
+		secretsFile, _ := cmd.Flags().GetString("secrets-file")
 		params := map[string]string{
 			"CR": registryFile,
+			"SECRETS": secretsFile,
 		}
 
 		if len(args) == 0 {
@@ -508,6 +511,7 @@ func init() {
 	// TBD delete digi space removes all running digis and controllers
 	RootCmd.AddCommand(startCmd)
 	startCmd.Flags().StringP("registry-file", "f", "cr.yaml", "Specify a file containing registry data")
+	startCmd.Flags().StringP("secrets-file", "s", "", "Secrets file")
 	RootCmd.AddCommand(stopCmd)
 
 	RootCmd.AddCommand(MountCmd)

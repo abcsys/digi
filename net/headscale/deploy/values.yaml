@@ -8,5 +8,5 @@ namespace: default
 plural: headscales
 version: v1
 persistent_volume:
-  path: {{home}}/.digi/headscale/
+  path: {{home}}/.digi/pv/headscale/
   size: 50Mi

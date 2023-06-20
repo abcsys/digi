@@ -108,6 +108,7 @@ prepare-deploy:
 	rsync -r $(driver_dir)/deploy $(build_dir) || true
 	# app specific configs overwrite the generic ones
 	rsync -r $(digi_config) $(build_dir)/deploy || true
+	rsync $(SECRETS) $(build_dir)/deploy/templates || true
 prepare: | prepare-build-dir prepare-build prepare-deploy
 
 .PHONY: build clear-manifest
@@ -190,6 +191,7 @@ stop: | delete-pool
 	((kubectl delete $(PLURAL) $(NAME) >/dev/null || \
 	kubectl delete $(PLURAL).$(VERSION).$(GROUP) $(NAME)) >/dev/null || true) & \
 	kubectl delete deployment $(NAME) >/dev/null && \
+	kubectl delete secret $(NAME) >/dev/null && \
 	echo $(NAME) || echo "$(NAME) isn't running"
 run-no-pool: | prepare model
 	cd $(build_dir)/deploy && mv $(CR) ./templates; \
@@ -270,7 +272,11 @@ stop-syncer:
 # message/emqx
 .PHONY: start-emqx stop-emqx
 start-emqx:
-	WORKDIR=$(DIGIHOME) digi run message/emqx emqx
+ifeq ($(SECRETS),)
+	@WORKDIR=$(DIGIHOME) digi run message/emqx emqx
+else
+	@WORKDIR=$(DIGIHOME) digi run message/emqx emqx -s $(SECRETS)
+endif
 stop-emqx:
 	digi stop emqx
 

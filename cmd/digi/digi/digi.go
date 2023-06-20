@@ -749,6 +749,7 @@ var runCmd = &cobra.Command{
 		deployFile, _ := cmd.Flags().GetString("deploy-file")
 		persistentVolume, _ := cmd.Flags().GetBool("persistent-volume")
 		sidecars, _ := cmd.Flags().GetStringSlice("sidecar")
+		secretsFile, _ := cmd.Flags().GetString("secrets-file")
 
 		kopfLog := "false"
 		if k, _ := cmd.Flags().GetBool("kopf-log"); k {
@@ -801,6 +802,7 @@ var runCmd = &cobra.Command{
 					"KOPFLOG": kopfLog,
 					"RUNFLAG": runFlag,
 					"CR":      deployFile,
+					"SECRETS": secretsFile,
 				}, cmdStr, false, quiet); err == nil {
 					if !noAlias {
 						// TBD check potential race

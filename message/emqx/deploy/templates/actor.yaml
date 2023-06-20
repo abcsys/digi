@@ -20,6 +20,10 @@ spec:
         name: {{ .Values.name }}
     spec:
       serviceAccountName: {{ .Values.name }}
+      volumes:
+        - name: {{ .Values.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.name }}
       containers:
         - name: {{ .Values.name }}
           image: {{ .Values.image }}
@@ -45,12 +49,27 @@ spec:
             value: {{ .Values.lake | default "http://lake:6534" }}
           - name: ZED_LAKE # for backward compatibility TBD deprecate in v0.3
             value: {{ .Values.zed_lake | default "http://lake:6534" }}
+          - name: EMQX_DASH_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: emqx
+                key: username
+                optional: true
+          - name: EMQX_DASH_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: emqx
+                key: password
+                optional: true
           ports: # https://www.emqx.io/docs/en/v3.0/guide.html#start-emq-x-broker
           - containerPort: 1883  # MQTT
           - containerPort: 8883  # MQTT SSL
           - containerPort: 8083  # MQTT WebSocket
           - containerPort: 8080  # HTTP API
           - containerPort: 18083 # Dashboard console
+          volumeMounts:
+          - mountPath: /var/lib/emqx/
+            name: {{ .Values.name }}
 
 ---
 
@@ -91,3 +110,33 @@ spec:
     protocol: TCP
   selector:
     name: {{ .Values.name }}
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.name }}
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: {{ .Values.persistent_volume.size }}
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ .Values.persistent_volume.path }}
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.name }}
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistent_volume.size }}

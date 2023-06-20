@@ -33,17 +33,20 @@ ctx:
 	cd sidecar/ctx/cmd/ctx; go install .
 install: | digi neat ctx
 	@mkdir $(HOMEDIR) >/dev/null 2>&1 || true
-	@mkdir $(HOMEDIR)/headscale >/dev/null 2>&1 || true
+	@mkdir $(HOMEDIR)/pv >/dev/null 2>&1 || true
+	@mkdir $(HOMEDIR)/pv/headscale >/dev/null 2>&1 || true
+	@mkdir $(HOMEDIR)/pv/emqx >/dev/null 2>&1 || true
+	@mkdir $(HOMEDIR)/secrets >/dev/null 2>&1 || true
 	@rm $(HOMEDIR)/lake $(HOMEDIR)/space $(HOMEDIR)/message $(HOMEDIR)/net $(HOMEDIR)/sidecar >/dev/null 2>&1 || true
 	@touch $(HOMEDIR)/config $(HOMEDIR)/alias
 	@ln -s $(SOURCE)/lake/ $(HOMEDIR)/lake
 	@ln -s $(SOURCE)/space/ $(HOMEDIR)/space
-	@ln -s $(SOURCE)/message/ $(HOMEDIR)/message
 	@ln -s $(SOURCE)/sidecar/ $(HOMEDIR)/sidecar
 	@sed $(SED_EXPR) ./model/Makefile > $(HOMEDIR)/Makefile
 	@cp ./model/gen.py $(HOMEDIR) && cp ./model/patch.py $(HOMEDIR) && cp ./model/helper.py $(HOMEDIR)
 	@cp -r ./scripts/ $(HOMEDIR)/scripts/ && chmod -R +x $(HOMEDIR)/scripts/
 	@cp -r $(SOURCE)/net/ $(HOMEDIR)/net && cat ./net/headscale/deploy/values.yaml | sed s+{{home}}+$(HOMEABS)+g > $(HOMEDIR)/net/headscale/deploy/values.yaml
+	@cp -r $(SOURCE)/message/ $(HOMEDIR)/message && cat ./message/emqx/deploy/values.yaml | sed s+{{home}}+$(HOMEABS)+g > $(HOMEDIR)/message/emqx/deploy/values.yaml
 
 .PHONY: python-digi
 python-digi:

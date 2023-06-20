@@ -1,5 +1,5 @@
 # Digi
-FROM python:3.8
+FROM python:3.8-bullseye
 WORKDIR /src/
 
 RUN git clone https://github.com/silveryfu/kopf.git && \

@@ -10,7 +10,7 @@ DEBUG = False
 broker = 'emqx'
 port = 1883
 
-def connect_mqtt() -> mqtt_client:
+def connect_mqtt(username, password) -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             digi.logger.info("Connected to digi MQTT broker")
@@ -19,6 +19,7 @@ def connect_mqtt() -> mqtt_client:
 
     # Client ID - used for tracking subscriptions; must be unique
     client = mqtt_client.Client(digi.name + '-ingest')
+    client.username_pw_set(username, password)
     client.on_connect = on_connect
     client.connect(broker, port)
     return client
@@ -42,7 +43,7 @@ def subscribe(client: mqtt_client):
 
     digi.logger.info(f"Listening for messages on topic {digi.name}")
 
-def start_listening():
-    client = connect_mqtt()
+def start_listening(username="admin", password="digi_password"):
+    client = connect_mqtt(username, password)
     subscribe(client)
     client.loop_forever()

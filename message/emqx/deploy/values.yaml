@@ -7,3 +7,6 @@ name: emqx
 namespace: default
 plural: emqxes
 version: v1
+persistent_volume:
+  path: {{home}}/.digi/pv/emqx/
+  size: 100Mi
