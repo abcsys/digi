@@ -18,8 +18,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"digi.dev/digi/api"
+	"digi.dev/digi/api/alias"
+	"digi.dev/digi/api/build"
+	"digi.dev/digi/api/client"
 	"digi.dev/digi/api/config"
+	apicore "digi.dev/digi/api/core"
 	"digi.dev/digi/api/k8s"
 	"digi.dev/digi/api/repo"
 	"digi.dev/digi/cmd/digi/helper"
@@ -161,7 +164,7 @@ var buildCmd = &cobra.Command{
 
 		platforms := make(map[string]bool)
 		if all {
-			platforms = api.Platforms
+			platforms = build.Platforms
 		} else {
 			platforms[platform] = true
 		}
@@ -379,14 +382,14 @@ var commitCmd = &cobra.Command{
 		pathlist := fmt.Sprintf("[%s]", addpaths)
 
 		for _, name := range args {
-			_, err := api.Resolve(name)
+			_, err := alias.Resolve(name)
 			if err != nil {
 				log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
 			}
 		}
 
 		for _, name := range args {
-			duri, err := api.Resolve(name)
+			duri, err := alias.Resolve(name)
 			kind := duri.Kind
 
 			params := map[string]string{
@@ -447,7 +450,7 @@ var digestCmd = &cobra.Command{
 			_ = helper.RunMake(params, "checksum-snapshot", true, false)
 		} else {
 			for _, name := range args {
-				duri, err := api.Resolve(name)
+				duri, err := alias.Resolve(name)
 				kind := duri.Kind
 
 				params := map[string]string{
@@ -558,7 +561,7 @@ var editCmd = &cobra.Command{
 		var name string
 
 		name = args[0]
-		duri, err := api.Resolve(name)
+		duri, err := alias.Resolve(name)
 		if err != nil {
 			log.Fatalf("unable to resolve digi name %s: %v\n", name, err)
 		}
@@ -603,13 +606,13 @@ var exposeCmd = &cobra.Command{
 
 		namespace := "default"
 
-		currAPIClient, err := api.NewClient()
+		currAPIClient, err := client.NewClient()
 		if err != nil {
 			log.Fatalf("Error creating API Client\n")
 		}
 
 		//check if digi exists
-		currAuri, err := api.Resolve(name)
+		currAuri, err := alias.Resolve(name)
 
 		if err == nil && currAuri != nil {
 			json, _ := currAPIClient.GetModelJson(currAuri)
@@ -724,14 +727,14 @@ var runCmd = &cobra.Command{
 
 		//if args[0] is a snapshot directory, make sure none of the other arguments correspond to names of existing digis
 		if isSnapshotDir {
-			currAPIClient, err := api.NewClient()
+			currAPIClient, err := client.NewClient()
 			if err != nil {
 				log.Fatalf("Error creating API Client\n")
 			}
 
 			for _, name := range names {
 				name = strings.TrimSpace(name)
-				currAuri, err := api.Resolve(name)
+				currAuri, err := alias.Resolve(name)
 
 				if err == nil && currAuri != nil {
 					json, _ := currAPIClient.GetModelJson(currAuri)
@@ -869,7 +872,7 @@ var stopCmd = &cobra.Command{
 		for _, name := range args {
 			name = strings.TrimSpace(name)
 			if kindStr == "" {
-				duri, err := api.Resolve(name)
+				duri, err := alias.Resolve(name)
 				if err != nil {
 					log.Fatalf("unknown digi kind from alias given name %s\n", name)
 				}
@@ -927,8 +930,8 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 
-				if aliases, err := api.LocalAlias(); err == nil {
-					api.PrintAlias(aliases)
+				if aliases, err := alias.LocalAlias(); err == nil {
+					alias.PrintAlias(aliases)
 				} else {
 					log.Fatalln(err)
 				}
@@ -940,12 +943,12 @@ var (
 			}
 
 			// parse the duri
-			duri, err := api.ParseAuri(args[0])
+			duri, err := apicore.ParseAuri(args[0])
 			if err != nil {
 				log.Fatalf("unable to parse duri %s: %v\n", args[0], err)
 			}
 
-			a := &api.Alias{
+			a := &alias.Alias{
 				Duri: &duri,
 				Name: args[1],
 			}
@@ -961,16 +964,16 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			s, _ := cmd.Flags().GetBool("set")
 			if s {
-				if err := api.DiscoverAliasAndSet(); err != nil {
+				if err := alias.DiscoverAliasAndSet(); err != nil {
 					log.Fatalln("unable to discover and set alias: ", err)
 				}
 				return
 			}
 
-			if aliases, err := api.DiscoverAlias(); err != nil {
+			if aliases, err := alias.DiscoverAlias(); err != nil {
 				log.Fatalln("unable to discover aliases: ", err)
 			} else {
-				api.PrintAlias(aliases)
+				alias.PrintAlias(aliases)
 			}
 		},
 	}
@@ -979,7 +982,7 @@ var (
 		Short: "Clear all aliases",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := api.ClearAlias(); err != nil {
+			if err := alias.ClearAlias(); err != nil {
 				log.Fatalln("unable to clear alias: ", err)
 			}
 		},
@@ -989,7 +992,7 @@ var (
 		Short: "Resolve an alias",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := api.ResolveFromLocal(args[0]); err != nil {
+			if err := alias.ResolveFromLocal(args[0]); err != nil {
 				log.Fatalf("unable to resolve alias %s: %v\n", args[0], err)
 			}
 		},
@@ -1037,7 +1040,7 @@ var checkCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		v, _ := cmd.Flags().GetInt8("verbosity")
 		for _, name := range args {
-			duri, err := api.Resolve(name)
+			duri, err := alias.Resolve(name)
 			if err != nil {
 				log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
 			}

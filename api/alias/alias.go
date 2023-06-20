@@ -1,10 +1,11 @@
-package api
+package alias
 
 import (
 	"fmt"
 
 	"github.com/spf13/viper"
 
+	"digi.dev/digi/api/client"
 	"digi.dev/digi/api/config"
 	"digi.dev/digi/pkg/core"
 )
@@ -92,7 +93,7 @@ func ClearAlias() error {
 // DiscoverAlias search the apiserver for all custom resources and
 // generate aliases for them and set the local aliases.
 func DiscoverAlias() ([]*Alias, error) {
-	duris, err := Discover()
+	duris, err := client.Discover()
 	if err != nil {
 		return nil, err
 	}

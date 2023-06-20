@@ -2,6 +2,8 @@ package space
 
 import (
 	"context"
+	"digi.dev/digi/api/mount"
+	"digi.dev/digi/api/pipe"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,7 +17,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"digi.dev/digi/api"
 	"digi.dev/digi/api/config"
 	"digi.dev/digi/api/k8s"
 	"digi.dev/digi/cmd/digi/helper"
@@ -26,14 +27,14 @@ const DefaultMountRetry = 3
 
 var (
 	controllers = map[string]bool{
-		"lake":    true,
-		"syncer":  true,
-		"mounter": true,
-		"emqx":    true,
-		"emqx-auth":    true,
-		"net":     true,
-		"sourcer": true,
-		"pipelet": true,
+		"lake":      true,
+		"syncer":    true,
+		"mounter":   true,
+		"emqx":      true,
+		"emqx-auth": true,
+		"net":       true,
+		"sourcer":   true,
+		"pipelet":   true,
 		// ...
 	}
 )
@@ -53,19 +54,19 @@ var MountCmd = &cobra.Command{
 		sources := args[:len(args)-1]
 		target := args[len(args)-1]
 
-		op := api.MOUNT
+		op := mount.MOUNT
 		if d, _ := cmd.Flags().GetBool("yield"); d {
-			op = api.YIELD
+			op = mount.YIELD
 		}
 		if d, _ := cmd.Flags().GetBool("activate"); d {
-			op = api.ACTIVATE
+			op = mount.ACTIVATE
 		}
 		if d, _ := cmd.Flags().GetBool("delete"); d {
-			op = api.UNMOUNT
+			op = mount.UNMOUNT
 		}
 		numRetry, _ := cmd.Flags().GetInt("num-retry")
 
-		mt, err := api.NewMounter(sources, target, op, mode, numRetry)
+		mt, err := mount.NewMounter(sources, target, op, mode, numRetry)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -82,13 +83,13 @@ var pipeCmd = &cobra.Command{
 	Aliases: []string{"p"},
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var pp *api.Piper
+		var pp *pipe.Piper
 		var err error
 
 		if len(args) == 1 {
-			pp, err = api.NewChainPiperFromStr(args[0])
+			pp, err = pipe.NewChainPiperFromStr(args[0])
 		} else {
-			pp, err = api.NewPiper(args[0], args[1])
+			pp, err = pipe.NewPiper(args[0], args[1])
 		}
 
 		if err != nil {
@@ -113,7 +114,7 @@ var startCmd = &cobra.Command{
 		registryFile, _ := cmd.Flags().GetString("registry-file")
 		secretsFile, _ := cmd.Flags().GetString("secrets-file")
 		params := map[string]string{
-			"CR": registryFile,
+			"CR":      registryFile,
 			"SECRETS": secretsFile,
 		}
 

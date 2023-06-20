@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"digi.dev/digi/api/alias"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,7 +16,6 @@ import (
 	"strings"
 	"syscall"
 
-	"digi.dev/digi/api"
 	"digi.dev/digi/pkg/core"
 	"github.com/creack/pty"
 	"golang.org/x/term"
@@ -138,7 +138,7 @@ func CreateAlias(kind *core.Kind, name, namespace string) error {
 		Name:      name,
 		Namespace: namespace,
 	}
-	alias := api.Alias{
+	alias := alias.Alias{
 		Name: name,
 		Duri: auri,
 	}

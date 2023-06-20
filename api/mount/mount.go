@@ -1,13 +1,16 @@
-package api
+package mount
 
 import (
 	"encoding/json"
 	"fmt"
 	"strings"
 
-	"digi.dev/digi/space"
 	"github.com/tidwall/sjson"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	"digi.dev/digi/api/client"
+	"digi.dev/digi/api/core"
+	"digi.dev/digi/space"
 )
 
 const (
@@ -27,12 +30,12 @@ type Mounter struct {
 
 func NewMounter(sourceNames []string, targetName string, op int, mode string, numRetry int) (*Mounter, error) {
 	var mounts []*space.Mount
-	target, err := ParseAuri(targetName)
+	target, err := core.ParseAuri(targetName)
 	if err != nil {
 		return nil, err
 	}
 	for _, name := range sourceNames {
-		source, err := ParseAuri(name)
+		source, err := core.ParseAuri(name)
 		if err != nil {
 			return nil, err
 		}
@@ -52,7 +55,7 @@ func NewMounter(sourceNames []string, targetName string, op int, mode string, nu
 }
 
 func (m *Mounter) Do() error {
-	c, err := NewClient()
+	c, err := client.NewClient()
 	if err != nil {
 		return fmt.Errorf("unable to create k8s client: %v", err)
 	}

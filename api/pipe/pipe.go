@@ -1,4 +1,4 @@
-package api
+package pipe
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 
+	apicore "digi.dev/digi/api/core"
 	"digi.dev/digi/pkg/core"
 	syncv1 "digi.dev/digi/space/sync/pkg/apis/digi/v1"
 )
@@ -26,12 +27,12 @@ type ChainPiper struct {
 }
 
 func NewPiper(s, t string) (*Piper, error) {
-	si, err := ParseAuri(s)
+	si, err := apicore.ParseAuri(s)
 	if err != nil {
 		return nil, err
 	}
 
-	ti, err := ParseAuri(t)
+	ti, err := apicore.ParseAuri(t)
 	if err != nil {
 		return nil, err
 	}
