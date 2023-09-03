@@ -108,7 +108,7 @@ prepare-deploy:
 	rsync -r $(driver_dir)/deploy $(build_dir) || true
 	# app specific configs overwrite the generic ones
 	rsync -r $(digi_config) $(build_dir)/deploy || true
-	rsync $(SECRETS) $(build_dir)/deploy/templates || true
+	rsync --min-size=1 (SECRETS) $(build_dir)/deploy/templates || true
 prepare: | prepare-build-dir prepare-build prepare-deploy
 
 .PHONY: build clear-manifest
