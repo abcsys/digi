@@ -1,7 +1,6 @@
 package helper
 
 import (
-	"digi.dev/digi/api/alias"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,6 +15,7 @@ import (
 	"strings"
 	"syscall"
 
+	"digi.dev/digi/api/alias"
 	"digi.dev/digi/pkg/core"
 	"github.com/creack/pty"
 	"golang.org/x/term"

@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"digi.dev/digi/api"
 	"digi.dev/digi/api/alias"
 	"digi.dev/digi/api/build"
 	"digi.dev/digi/api/client"
@@ -874,7 +875,7 @@ var stopCmd = &cobra.Command{
 			if kindStr == "" {
 				duri, err := alias.Resolve(name)
 				if err != nil {
-					log.Fatalf("unknown digi kind from alias given name %s\n", name)
+					log.Fatalf("unknown digi kind from alias given name %s: %v\n", name, err)
 				}
 				kind = &duri.Kind
 			}
@@ -1139,5 +1140,13 @@ var vizCmd = &cobra.Command{
 			cmdStr = "viz-space"
 		}
 		_ = helper.RunMake(params, cmdStr, true, false)
+	},
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print CLI version",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(api.Version())
 	},
 }

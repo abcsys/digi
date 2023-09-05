@@ -16,6 +16,7 @@ func init() {
 
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
 	RootCmd.PersistentFlags().BoolP("quiet", "q", false, "Hide output")
+	RootCmd.AddCommand(versionCmd)
 
 	RootCmd.AddCommand(configCmd)
 	configCmd.Flags().StringP("repo", "r", "", "Digi kind repository")
@@ -99,11 +100,7 @@ func init() {
 
 	RootCmd.AddCommand(attachCmd)
 	attachCmd.Flags().BoolP("bash", "b", false, "Use bash in remote session")
-
 	RootCmd.AddCommand(connectCmd)
-
-	RootCmd.AddCommand(vizCmd)
-	RootCmd.AddCommand(sidecar.RootCmd)
 
 	RootCmd.AddCommand(space.RootCmd)
 	RootCmd.AddCommand(lake.RootCmd)
@@ -111,6 +108,7 @@ func init() {
 	lake.QueryCmd.Flags().BoolP("remote", "r", false, "Query remote dspace through anysource")
 
 	RootCmd.AddCommand(box.RootCmd)
-
 	RootCmd.AddCommand(net.RootCmd)
+	RootCmd.AddCommand(sidecar.RootCmd)
+	RootCmd.AddCommand(vizCmd)
 }

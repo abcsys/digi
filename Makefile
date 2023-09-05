@@ -13,6 +13,8 @@ HOMEABS:=$(shell cd ~; pwd)
 SOURCE = $(GOPATH)/src/digi.dev/digi
 
 VERSION = $(shell git describe --tags --dirty --always)
+LDFLAGS = -X digi.dev/digi/api.version=$(VERSION)
+BUILD_COMMANDS = ./cmd/digi ./cmd/dq ./cmd/ds ./cmd/di ./cmd/dbox
 
 PREREQUISITES = git docker kubectl helm watch jq rsync
 K := $(foreach exec,$(PREREQUISITES),\
@@ -26,11 +28,11 @@ dep:
 
 .PHONY: digi neat ctx install
 digi:
-	cd cmd/; go install ./digi ./dq ./ds ./di ./dbox
+	@go install -ldflags='$(LDFLAGS)' $(BUILD_COMMANDS)
 neat:
-	cd sidecar/neat; go install .
+	@cd sidecar/neat; go install .
 ctx:
-	cd sidecar/ctx/cmd/ctx; go install .
+	@cd sidecar/ctx/cmd/ctx; go install .
 install: | digi neat ctx
 	@mkdir $(HOMEDIR) >/dev/null 2>&1 || true
 	@mkdir $(HOMEDIR)/pv >/dev/null 2>&1 || true
