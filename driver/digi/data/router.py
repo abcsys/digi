@@ -173,6 +173,9 @@ class Egress:
         self._syncs = dict()
 
         for name, eg in config.items():
+            digi.pool.create_branch_if_not_exist(name)
+            # TBD garbage collect unused branches
+
             if eg.get("driver_managed", False) \
                     or eg.get("pause", False):
                 continue
@@ -184,7 +187,7 @@ class Egress:
             if eg.get("de_id", False):
                 out_flow += f"| {flow_lib.de_id}"
             if eg.get("link", False):
-                id = f"{digi.name}/{self.name}"
+                id = f"{digi.name}/{name}"
                 out_flow += f"| {flow_lib.link(id)}"
 
             if pipelet_offload:
@@ -211,9 +214,6 @@ class Egress:
                     owner=digi.name,
                 )
                 self._syncs[name] = _sync
-
-            # TBD garbage collect unused branches
-            digi.pool.create_branch_if_not_exist(name)
 
     def restart(self, config: dict):
         self.stop()
