@@ -53,6 +53,7 @@ class Sync(threading.Thread):
 
         threading.Thread.__init__(self)
         self._stop_flag = threading.Event()
+        self._stop_flag.set()
 
     def run(self):
         self._stop_flag.clear()
@@ -64,6 +65,9 @@ class Sync(threading.Thread):
             self._event_loop()
 
     def stop(self):
+        if self._stop_flag.is_set():
+            return
+
         self._stop_flag.set()
         self.join()
 

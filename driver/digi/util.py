@@ -477,6 +477,7 @@ class Loop(threading.Thread):
         self.loop_interval = loop_interval
         self.loop_interval_fn: Callable = loop_interval_fn
         self._stop_flag = threading.Event()
+        self._stop_flag.set()
 
     def run(self):
         self._stop_flag.clear()
@@ -489,9 +490,11 @@ class Loop(threading.Thread):
             time.sleep(i)
 
     def stop(self):
+        if self._stop_flag.is_set():
+            return
+
         self._stop_flag.set()
         self.join()
-
     def reset(self, loop_interval: float = None,
               loop_interval_fn: Callable = None) -> None:
         if loop_interval is not None:
