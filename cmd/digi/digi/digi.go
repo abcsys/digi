@@ -1150,3 +1150,12 @@ var versionCmd = &cobra.Command{
 		fmt.Println(api.Version())
 	},
 }
+
+var ChatCmd = &cobra.Command{
+	Use:   "chat",
+	Short: "Interact with digis in natural language",
+	Run: func(cmd *cobra.Command, args []string) {
+		// TBD
+		fmt.Println("Not implemented")
+	},
+}

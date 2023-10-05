@@ -2,8 +2,6 @@ package space
 
 import (
 	"context"
-	"digi.dev/digi/api/mount"
-	"digi.dev/digi/api/pipe"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -19,6 +17,8 @@ import (
 
 	"digi.dev/digi/api/config"
 	"digi.dev/digi/api/k8s"
+	"digi.dev/digi/api/mount"
+	"digi.dev/digi/api/pipe"
 	"digi.dev/digi/cmd/digi/helper"
 	"digi.dev/digi/space"
 )
@@ -27,14 +27,13 @@ const DefaultMountRetry = 3
 
 var (
 	controllers = map[string]bool{
-		"lake":      true,
-		"syncer":    true,
-		"mounter":   true,
-		"emqx":      true,
-		"emqx-auth": true,
-		"net":       true,
-		"sourcer":   true,
-		"pipelet":   true,
+		"lake":    true,
+		"syncer":  true,
+		"mounter": true,
+		"emqx":    true,
+		"net":     true,
+		"sourcer": true,
+		"pipelet": true,
 		// ...
 	}
 )

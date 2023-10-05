@@ -111,4 +111,5 @@ func init() {
 	RootCmd.AddCommand(net.RootCmd)
 	RootCmd.AddCommand(sidecar.RootCmd)
 	RootCmd.AddCommand(vizCmd)
+	RootCmd.AddCommand(ChatCmd)
 }
