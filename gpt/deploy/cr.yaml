@@ -1,0 +1,5 @@
+apiVersion: gpt.digi.dev/v1
+kind: Gpt
+metadata:
+  name: {{ .Values.name }}
+spec: {}

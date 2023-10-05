@@ -1,0 +1,9 @@
+group: gpt.digi.dev
+image: silveryfu/gpt.v1.gpt.digi.dev:latest
+imagepull: Always
+kind: Gpt
+mounter: false
+name: gpt
+namespace: default
+plural: gpts
+version: v1
