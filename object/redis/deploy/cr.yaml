@@ -1,0 +1,5 @@
+apiVersion: object.digi.dev/v1
+kind: Redis
+metadata:
+  name: {{ .Values.name }}
+spec: {}

@@ -1,0 +1,9 @@
+group: object.digi.dev
+image: silveryfu/redis.v1.object.digi.dev:latest
+imagepull: Always
+kind: Redis
+mounter: false
+name: redis
+namespace: default
+plural: redis
+version: v1

@@ -1,0 +1,3 @@
+group: object.digi.dev
+version: v1
+kind: Redis
