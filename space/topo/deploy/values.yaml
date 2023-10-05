@@ -1,0 +1,9 @@
+group: space.digi.dev
+image: silveryfu/topo.v1.space.digi.dev:latest
+imagepull: Always
+kind: Topo
+mounter: false
+name: topo
+namespace: default
+plural: topos
+version: v1

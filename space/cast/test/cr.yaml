@@ -1,0 +1,5 @@
+apiVersion: space.digi.dev/v1
+kind: Cast
+metadata:
+  name: cast
+spec: {}

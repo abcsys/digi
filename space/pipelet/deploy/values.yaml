@@ -1,9 +1,0 @@
-group: knactor.io
-image: taraspriadka/pipeletor.v1.knactor.io:latest
-imagepull: Always
-kind: Pipeletor
-mounter: false
-name: pipeletor
-namespace: default
-plural: pipeletors
-version: v1
