@@ -1,0 +1,22 @@
+apiVersion: digi.dev/v1
+kind: Sync
+metadata:
+  name: sync-test
+spec:
+  mode: match
+  source:
+    kind:
+      group: digi.dev
+      version: v1
+      name: MockLamp
+    name: mock-lamp-1
+    namespace: default
+    path: .spec.power
+  target:
+    kind:
+      group: digi.dev
+      version: v1
+      name: MockLamp
+    name: mock-lamp-2
+    namespace: default
+    path: .spec.power

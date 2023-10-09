@@ -1,0 +1,105 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: syncs.digi.dev
+spec:
+  group: digi.dev
+  names:
+    kind: Sync
+    listKind: SyncList
+    plural: syncs
+    singular: sync
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        description: Sync is the Schema for the syncs API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SyncSpec defines the desired state of Sync
+            properties:
+              mode:
+                type: string
+              source:
+                description: Auri identifies a model or its attributes when a path
+                  is given
+                properties:
+                  kind:
+                    description: model schema
+                    properties:
+                      group:
+                        description: Model schema group
+                        type: string
+                      name:
+                        description: Schema name; first letter capitalized, e.g.,
+                          Roomba
+                        type: string
+                      version:
+                        description: Schema version
+                        type: string
+                    type: object
+                  name:
+                    description: name of the model
+                    type: string
+                  namespace:
+                    description: namespace of the model
+                    type: string
+                  path:
+                    description: path to attribute(s) in the model; if path empty,
+                      Auri points to the model
+                    type: string
+                type: object
+              target:
+                description: Auri identifies a model or its attributes when a path
+                  is given
+                properties:
+                  kind:
+                    description: model schema
+                    properties:
+                      group:
+                        description: Model schema group
+                        type: string
+                      name:
+                        description: Schema name; first letter capitalized, e.g.,
+                          Roomba
+                        type: string
+                      version:
+                        description: Schema version
+                        type: string
+                    type: object
+                  name:
+                    description: name of the model
+                    type: string
+                  namespace:
+                    description: namespace of the model
+                    type: string
+                  path:
+                    description: path to attribute(s) in the model; if path empty,
+                      Auri points to the model
+                    type: string
+                type: object
+            type: object
+          status:
+            description: SyncStatus defines the observed state of Sync
+            properties:
+              done:
+                type: boolean
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

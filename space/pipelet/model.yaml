@@ -1,0 +1,42 @@
+---
+group: knactor.io
+version: v1
+kind: Pipeletor
+meta:
+  name: string
+  consolidated: boolean
+egress:
+  benchmarks: object
+---
+group: knactor.io
+version: v1
+kind: Pipelet
+control:
+  intent:
+    openapi:
+      properties:
+        src: 
+          items:
+            type: string
+          type: array
+        dst: 
+          items:
+            type: string
+          type: array
+        flow: 
+          type: string
+        interval: 
+          type: number
+        eoio: 
+          type: boolean                  
+        action:
+          type: string
+      type: object
+  status:
+    openapi:
+      properties:
+        assigned: 
+          type: string
+        active: 
+          type: boolean
+      type: object

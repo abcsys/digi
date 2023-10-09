@@ -1,5 +1,0 @@
-apiVersion: space.digi.dev/v1
-kind: Sync
-metadata:
-  name: {{ .Values.name }}
-spec: {}
